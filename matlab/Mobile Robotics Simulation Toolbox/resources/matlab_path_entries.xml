@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<paths>
+  <path>.</path>
+  <path>doc</path>
+  <path>doc\html</path>
+  <path>doc\images</path>
+  <path>examples</path>
+  <path>examples\matlab</path>
+  <path>examples\matlab\environment</path>
+  <path>examples\matlab\kinematics</path>
+  <path>examples\matlab\multirobot</path>
+  <path>examples\matlab\sensors</path>
+  <path>examples\navigation_rl</path>
+  <path>examples\navigation_rl\utils</path>
+  <path>examples\simulink</path>
+  <path>examples\simulink\kinematics</path>
+  <path>examples\simulink\multirobot</path>
+  <path>examples\simulink\sensors</path>
+  <path>examples\soccer</path>
+  <path>examples\soccer\datatypes</path>
+  <path>examples\soccer\utils</path>
+  <path>src</path>
+  <path>src\environment</path>
+  <path>src\images</path>
+  <path>src\kinematics</path>
+</paths>
