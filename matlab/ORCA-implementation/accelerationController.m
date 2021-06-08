@@ -5,20 +5,26 @@
 %applied to each agent.
 
 %Arguments:
-%   agentPositions: An Nx2 double where the position of the ith agent 
-%   is agentPosition(i,:).
-%   agentVelocities: An Nx2 double where the velocity of the ith agent 
-%   is agentVelocities(i,:).
+%   agentPositions: An numAgentsx2 double where the position of the ith
+%       agent is agentPosition(i,:).
+%   agentVelocities: An numAgentsx2 double where the velocity of the ith 
+%       agent is agentVelocities(i,:).
+%   prefVelocities: An numAgentsx2 double where the velocity that the ith
+%       agent wants to travel at is perfVelocities(i,:).
 %   sensingRange: A double radius in which an agent can notice
-%   others.
+%       others.
 %   agentRadius: A double radius of the robots size.
+%   timeHorizon: Used to compute a VO with a specific timeHorizon.
 
 %Returns:
-%   accelerationInputs: An Nx2 double where the acceleration of the ith
-%   agent is accelerationInputs(i,:).
-function accelerationInputs = accelerationController(agentPositions, agentVelocities, sensingRange, agentRadius)
+%   accelerationInputs: An numAgentsx2 double where the acceleration of the
+%       ith agent is accelerationInputs(i,:).
+function accelerationInputs = accelerationController(agentPositions, agentVelocities, prefVelocities, sensingRange, agentRadius, timeHorizon)
+    %Allocates accelerationInputs as numAgentsx2 double
+    accelerationInputs = zeros(size(agentPositions,1),2);
+
     %For each agent
-    for i = 1:numberOfAgents
+    for i = 1:size(agentPositions,1)
         %For Each agent, find the central agents positions and velocity from the
         %overall state
         centralAgentPosition = agentPositions(i, :);
@@ -31,22 +37,32 @@ function accelerationInputs = accelerationController(agentPositions, agentVeloci
         neighborsVelocities = agentVelocities;
         neighborsVelocities(i, :) = [];
    
-        %Find the relative positions to the neighbors from the central agent so
-        %that you can see if they are in sensing range
+        %Find the relative positions and velocities to the neighbors.
         relPositionOfNeighbors = neighborsPositions - centralAgentPosition;
-        relativeVel = neighborsVelocities - centralAgentVelocity;
+        relativeVels = centralAgentVelocity - neighborsVelocities;
+        
+        %Finds the distance to the neighbors, then removes the agents that
+        %aren't in the sensing range from the list of neighbors.
         distToNeighbors = vecnorm(relPositionOfNeighbors, 2, 2);
-   
-        %Removes the agents that aren't in the sensing range from the list 
-        %of neighbors
         neighborsPositions = neighborsPositions(distToNeighbors <= sensingRange,:);
         neighborsVelocities = neighborsVelocities(distToNeighbors <= sensingRange,:);
         relPositionOfNeighbors = relPositionOfNeighbors(distToNeighbors <= sensingRange,:);
+        relativeVels = relativeVels(distToNeighbors <= sensingRange,:);
         
+        %Uses the info gathered to find the uVectors for escaping the VO's.
         [VOAngle, angleReftoB] = getVO(centralAgentPosition, neighborsPositions, agentRadius);
+        [normalVector, uVector, noAvoidance] = getNormalVector(relativeVels, relPositionOfNeighbors, agentRadius, VOAngle, timeHorizon, angleReftoB, relativeVels);
         
-        %Finds relative velocities of other neighbors
+        %If there's centralAgent's velocity isn't in a VO
+        if noAvoidance == ones(length(noAvoidance),1)
+            %Accelerates back to its preferred velocity
+            toPref = prefVelocities(i,:) - centralAgentVelocity;
+            accelerationInputs(i,:) = toPref./norm(toPref);
+        else
+            %Removes the normalVector for VO's that the central agent isn't inside.
+            normalVector = normalVector(~noAvoidance,:);
         
-        [normalVector, uVector, noAvoidance] = getNormalVector(relativeVels, relPositionOfNeighbors, agentRadius, VOAngle, timeHorizon, angleReftoB, relativeVel);
+            accelerationInputs(i,:) = sum(normalVector);
+        end
     end
 end

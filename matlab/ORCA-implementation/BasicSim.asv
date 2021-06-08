@@ -1,7 +1,7 @@
 clear
 clc
 
-numberOfAgents = 3;
+numberOfAgents = 2;
 agentRadius = 1;
 mapSize = 10;
 timeStep = .05;
@@ -14,7 +14,7 @@ vOptIsZero = true;
 communication = false;
 safetyMargin = 1.2;
 responsibility = 0.5;
-accelerationConstant = 2;
+accelerationConstant = 
 
 %initialize agent positions, velocities, and goal locations
 % agentPositions = [-7,-8;8,-8];
@@ -57,7 +57,7 @@ for t = 0:timeStep:maxTime
     accelerationInputs = accelerationController(agentPositions, agentVelocities, prefVelocities, sensingRange, agentRadius, timeHorizon);
     
     %Applies the acceleration to each agent for timeStep
-    agentVelocities = agentVelocities + accelerationInputs * accelerationConstant * timeStep;
+    agentVelocities = agentVelocities + accelerationInputs * timeStep;
     
     %Handles collisions
     [agentVelocities, numCollisions] = Collider(agentPositions, agentVelocities, agentRadius, timeStep);
