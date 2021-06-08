@@ -60,7 +60,7 @@ for i = 1:size(positionState,1)
    %To find the neighbors positions and velocities, remove the central
    %agents values from the overall state
    neighborsPositions = positionState;
-   neighborsPositions(i, :)= [];
+   neighborsPositions(i, :) = [];
    neighborsVelocities = velocityState;
    neighborsVelocities(i, :) = [];
    
