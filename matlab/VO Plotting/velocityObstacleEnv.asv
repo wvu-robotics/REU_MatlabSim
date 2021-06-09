@@ -15,7 +15,7 @@ classdef velocityObstacleEnv
         l; %Line object array to plot velocity obstacles 
         p; %Patch object array for filling in velocity Obs
         t; %Text object for numbering velocity obstaces
-        a; %Axis object
+        a; %
         lVec; %Line to plot current robot's velocity 
     end
     
@@ -152,7 +152,7 @@ classdef velocityObstacleEnv
                 %Sets up given figures from x = [-xMax,xMax], y = [-yMax,yMax]
                 for i = 1:obj.nFig
                     obj.f(i) = figure;
-                    obj.a(i) = axes;
+                    obj.a(i) = axis;
                     xlim([-xMax,xMax])
                     ylim([-yMax,yMax])
                     obj.lVec(i) = line;
