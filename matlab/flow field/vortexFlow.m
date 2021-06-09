@@ -7,9 +7,9 @@ function [Vxi,Vyi,Psi, Phi] = vortexFlow(xi,yi,S,X,Y)
 r = sqrt((X-xi).^2+(Y-yi).^2);
 theta = atan2(Y-yi,X-xi);
 Vt = -S./(2.*pi.*r);
-Vxi = Vt.*cos(theta+pi);
-Vyi = Vt.*sin(theta+pi);
+Vyi = -Vt.*cos(theta+pi);
+Vxi = Vt.*sin(theta+pi);
 Psi =  log(r).*S./(2.*pi);
-Phi = -S.*theta./(2.*pi)
+Phi = -S.*theta./(2.*pi);
 end
 
