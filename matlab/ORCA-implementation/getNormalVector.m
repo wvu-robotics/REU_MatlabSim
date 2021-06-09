@@ -1,7 +1,7 @@
 %% Function Name: getNormalVector
 % [normalVector, uVector] = getNormalVector(relativeOptVel, relPositionOfNeighbors, agentRadius, VOAngle, timeHorizon)
 %
-% Description: 
+% Description: Determines the normal-vectors and u-vectors with 
 %
 % Assumptions: 
 %
