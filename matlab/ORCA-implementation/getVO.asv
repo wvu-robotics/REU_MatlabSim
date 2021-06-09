@@ -25,7 +25,7 @@
 
 function [VOAngle, AngleRefToB] = getVO(centralAgentPosition, neighborsPositions, agentRadius)
 
-%Determine relative positions and initialize the VOAngle outputs
+%Determine relative positions and initialize the VOAngle out
 relativeNeighborPositions = -centralAgentPosition+neighborsPositions;
 VOAngle = zeros(size(relativeNeighborPositions,1));
 
@@ -40,7 +40,7 @@ end
 
 %AngleRefToB is the angle that the relative position vector to a neighbor
 %makes with the positive x-axis. Add pi if the x-component is negative
-AngleRefToB = mod(atan2(relativeNeighborPositions(:,2), relativeNeighborPositions(:,1)), 2*pi);
+AngleRefToB = mod(atan(relativeNeighborPositions(:,2)./relativeNeighborPositions(:,1)) + (relativeNeighborPositions(:,1)<0)*pi,2*pi);
 
 end
 

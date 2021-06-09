@@ -1,7 +1,7 @@
 clear
 clc
 
-numberOfAgents = 5;
+numberOfAgents = 3;
 agentRadius = 1;
 mapSize = 10;
 timeStep = .05;
