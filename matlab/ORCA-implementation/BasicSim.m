@@ -1,5 +1,6 @@
 clear
 clc
+close all
 numberOfAgents = 3;
 agentRadius = 1;
 mapSize = 10;
@@ -43,21 +44,25 @@ collisions = 0;
 
 VOenv = velocityObstacleEnv(numberOfAgents,1);
 VOenv = VOenv.setRT(2*agentRadius,timeHorizon);
-VOenv = VOenv.setPlot(10,10);
+VOenv = VOenv.setPlot(4,4);
 
 figPS = figure('Name', 'Position Space');
-% ([-mapSize mapSize -mapSize mapSize])
+axis([-mapSize mapSize -mapSize mapSize])
 
-for i = 1:numberOfAgents
-    lineAgent(i) = line;
-    set(lineAgent(i),'color', 'b')
-    linePath(i) = line;
-    set(linePath(i),'color', 'b')
-end
+
 lineGoalLocations = line;
 set(lineGoalLocations, 'Marker', '*', ...
                        'LineStyle', 'none', ...
                        'Color', [1 0 0]);
+                   
+for i = 1:numberOfAgents
+    lineAgent(i) = line;
+    textAgentNumber(i) = text;
+    set(textAgentNumber(i), 'String', i)
+    set(lineAgent(i),'color', 'b')
+    linePath(i) = line;
+    set(linePath(i),'color', 'b')
+end
 
 for t = 0:timeStep:maxTime
     counter = counter + 1;
@@ -77,9 +82,12 @@ for t = 0:timeStep:maxTime
    for i = 1:numberOfAgents
        drawCircle(lineAgent(i),agentPositions(i,1), ...
                   agentPositions(i,2),agentRadius);
+
 %        plot(path(1:counter,1,i),path(1:counter,2,i), 'b.');   
        set(linePath(i),'xdata',path(1:counter,1,i), ...
-                       'ydata',path(1:counter,2,i));
+                       'ydata',path(1:counter,2,i));       
+       set(textAgentNumber(i), "Position", [agentPositions(i,1)  ...
+                                            agentPositions(i,2)]);
    end
    pause(0.001)
    
