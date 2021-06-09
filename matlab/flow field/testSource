@@ -1,0 +1,12 @@
+%test source
+
+[Vxi,Vyi,Psi1,Phi] = sourceFlow(0,0,2*pi,1,0)
+[Vxi,Vyi,Psi1,Phi] = sourceFlow(0,0,2*pi,0,1)
+[Vxi,Vyi,Psi1,Phi] = sourceFlow(0,0,2*pi,-1,.1)
+[Vxi,Vyi,Psi1,Phi] = sourceFlow(0,0,2*pi,-1,-.1)
+[Vxi,Vyi,Psi1,Phi] = sourceFlow(0,0,2*pi,-1,0)
+[Vxi,Vyi,Psi1,Phi] = sourceFlow(0,0,2*pi,0,-1)
+
+
+
+

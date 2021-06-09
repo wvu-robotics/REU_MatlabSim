@@ -1,7 +1,7 @@
 clear
 clc
 
-numberOfAgents = 5;
+numberOfAgents = 3;
 agentRadius = 1;
 mapSize = 10;
 timeStep = .05;
@@ -11,7 +11,6 @@ timeHorizon = 10;
 sensingRange = 20;
 velocityDiscritisation = 0.05;
 vOptIsZero = true;
-communication = false;
 safetyMargin = 1.2;
 responsibility = 0.5;
 
@@ -51,7 +50,7 @@ for t = 0:timeStep:maxTime
    end
    velInput = (goalLocations - agentPositions)./vecnorm(goalLocations - agentPositions, 2, 2) * maxVelocity;
       
-   velocityControls = ORCAController(agentPositions, agentVelocities, velInput, timeHorizon, sensingRange, agentRadius*safetyMargin, maxVelocity, velocityDiscritisation, vOptIsZero, communication, responsibility);
+   velocityControls = ORCAController(agentPositions, agentVelocities, velInput, timeHorizon, sensingRange, agentRadius*safetyMargin, maxVelocity, velocityDiscritisation, vOptIsZero, responsibility);
    [newVelocities, numCollisions] = Collider(agentPositions, velocityControls, agentRadius, timeStep);
    agentPositions =  agentPositions + newVelocities * timeStep;
    agentVelocities = newVelocities;
