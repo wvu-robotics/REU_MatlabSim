@@ -32,7 +32,7 @@
 %---------------------------------------------------------
 
 
-function velocityControls = ORCAController(positionState, velocityState, preferedVelocities, timeHorizon, sensingRange, agentRadius, maxVelocity, velocityDiscritisation, vOptIsZero, communication, responsibility)
+function velocityControls = ORCAController(positionState, velocityState, preferedVelocities, timeHorizon, sensingRange, agentRadius, maxVelocity, velocityDiscritisation, vOptIsZero, responsibility)
 
 %Initialize the output velocity controls
 velocityControls = zeros(size(positionState,1),2);
@@ -45,10 +45,6 @@ for i = 1:length(possibleVelocities)
         possibleVelControls((i-1)*length(possibleVelocities)+j, 1) = possibleVelocities(i);
         possibleVelControls((i-1)*length(possibleVelocities)+j, 2) = possibleVelocities(j);
     end
-end
-
-if communication
-   velocityState = preferedVelocities;
 end
 
 for i = 1:size(positionState,1)    

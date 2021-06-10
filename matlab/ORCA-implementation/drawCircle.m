@@ -1,4 +1,4 @@
-function drawCircle(x,y,r)
+function drawCircle(objLine,x,y,r)
 %x and y are the coordinates of the center of the circle
 %r is the radius of the circle
 %0.01 is the angle step, bigger values will draw the circle faster but
@@ -6,5 +6,6 @@ function drawCircle(x,y,r)
 ang=0:0.01:2*pi; 
 xp=r*cos(ang);
 yp=r*sin(ang);
-plot(x+xp,y+yp,'b');
+set(objLine, 'xdata', x+xp, ...
+             'ydata', y+yp);
 end

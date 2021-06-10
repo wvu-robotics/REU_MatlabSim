@@ -1,8 +1,8 @@
 %% Acceleration Controller
 
 %Desription: Given the positions and velocities of all agents, as well as
-%their sensingRange, returns the appropriate acceleration that should be
-%applied to each agent.
+%their sensingRange, returns an acceleration that first moves the velocity
+%quickly out of a VO, then moves it to the prefVelocity.
 
 %Arguments:
 %   agentPositions: An numAgentsx2 double where the position of the ith
