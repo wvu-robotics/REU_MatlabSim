@@ -18,22 +18,22 @@ responsibility = 0.5;
 % agentPositions = [-7,-8;8,-8];
 % goalLocations = [8,8;-8,8];
 
-%Random positions around a circle
-% agentPositions = zeros(numberOfAgents, 2);
-% goalLocations = zeros(numberOfAgents, 2);
-% for i = 1:numberOfAgents
-% theta = rand()*2*pi;
-% agentPositions(i,:) = [cos(theta),sin(theta)]*mapSize*(.7+(rand()-0.5)*.2);
-% goalLocations(i,:) = [cos(theta+pi),sin(theta+pi)]*mapSize*(.7+(rand()-0.5)*.2);
-% end
-
+% Random positions around a circle
 agentPositions = zeros(numberOfAgents, 2);
 goalLocations = zeros(numberOfAgents, 2);
 for i = 1:numberOfAgents
-    theta = 2*pi/numberOfAgents * (i-1);
-    agentPositions(i,:) = [cos(theta),sin(theta)]*mapSize*(.9+(rand()-0.5)*.1);
-    goalLocations(i,:) = [cos(theta+3.9*pi/4),sin(theta+3.9*pi/4)]*mapSize*(.9+(rand()-0.5)*.1);
+theta = rand()*2*pi;
+agentPositions(i,:) = [cos(theta),sin(theta)]*mapSize*(.7+(rand()-0.5)*.2);
+goalLocations(i,:) = [cos(theta+pi),sin(theta+pi)]*mapSize*(.7+(rand()-0.5)*.2);
 end
+
+% agentPositions = zeros(numberOfAgents, 2);
+% goalLocations = zeros(numberOfAgents, 2);
+% for i = 1:numberOfAgents
+%     theta = 2*pi/numberOfAgents * (i-1);
+%     agentPositions(i,:) = [cos(theta),sin(theta)]*mapSize*(.9+(rand()-0.5)*.1);
+%     goalLocations(i,:) = [cos(theta+3.9*pi/4),sin(theta+3.9*pi/4)]*mapSize*(.9+(rand()-0.5)*.1);
+% end
 
 
 
@@ -63,8 +63,8 @@ for i = 1:numberOfAgents
     linePath(i) = line;
     set(linePath(i),'color', 'b')
 end
-
 for t = 0:timeStep:maxTime
+
     counter = counter + 1;
    for i = 1:numberOfAgents
       path(counter,:,i) = agentPositions(i, :);
