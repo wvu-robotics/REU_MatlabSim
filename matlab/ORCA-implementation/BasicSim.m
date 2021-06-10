@@ -1,13 +1,13 @@
 clear
 clc
 close all
-numberOfAgents = 3;
+numberOfAgents = 2;
 agentRadius = 1;
-mapSize = 10;
+mapSize = 15;
 timeStep = .05;
 maxTime = 80;
 maxVelocity = .5;
-timeHorizon = 10;
+timeHorizon = 20;
 sensingRange = 20;
 velocityDiscritisation = 0.05;
 vOptIsZero = true;
@@ -42,9 +42,15 @@ path = zeros(length(0:timeStep:maxTime)-1,2,numberOfAgents);
 counter = 0;
 collisions = 0;
 
-VOenv = velocityObstacleEnv(numberOfAgents,1);
+VOenv = velocityObstacleEnv(numberOfAgents);
 VOenv = VOenv.setRT(2*agentRadius,timeHorizon);
-VOenv = VOenv.setPlot(4,4);
+VOenv = VOenv.setPlot(1,1,1);
+% 
+ VOenv = VOenv.addGraphicsVO(1,2);
+
+% for i = 2:(numberOfAgents)
+%     VOenv = VOenv.addGraphicsVO(1,i);
+% end
 
 figPS = figure('Name', 'Position Space');
 axis([-mapSize mapSize -mapSize mapSize])
@@ -91,8 +97,15 @@ for t = 0:timeStep:maxTime
    end
    pause(0.001)
    
-   VOenv.displayVO(agentPositions',agentVelocities',1);
-   VOenv.drawVector(agentVelocities,1);
+   VOenv = VOenv.setVO(agentPositions',1);
+   
+   
+   VOenv.drawVector(agentVelocities(1,:)-agentVelocities(2,:),1);
+   VOenv.displayRelativeVO(1,2);
+%    
+%    VOenv.drawVector(agentVelocities(1,:),1);
+%    VOenv.displayAgentVO(1,agentVelocities');
+  
    
    if max(vecnorm(agentPositions - goalLocations,2,2)) < 0.2
       break; 

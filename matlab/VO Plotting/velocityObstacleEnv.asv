@@ -56,11 +56,15 @@ classdef velocityObstacleEnv
                          %of the velocity obstacle circle and 
                          %other robot's current velocity.
                          pRelVec = (pose(:,rNum) - pose(:,rNum + i))/obj.tho;
+                         obj.originVO(i,:)= -[pRelVec(1) pRelVec(2)] ;
                     else
                         %for robots below rNum 
                         pRelVec = (pose(:,rNum) - pose(:,rNum+i-obj.N))./obj.tho;
-                    end 
-                        obj.originVO(i,:)= -[pRelVec(1) pRelVec(2)] ;
+                        
+                        
+%                         Vb = vel(:,rNum+i-obj.N);
+                     end 
+                      
                     %This condition determines if a vehicle collides
                     if (obj.R/obj.tho)/norm(pRelVec) < 1
                         thetaDiffVO = asin((obj.R/obj.tho)/norm(pRelVec));
@@ -100,6 +104,11 @@ classdef velocityObstacleEnv
                        
                             obj.xVO(i) = {[flip(xVO2) xVarc xVO1]};
                             obj.yVO(i) = {[flip(yVO2) yVarc yVO1]};
+             
+                        
+                        %Sets all figure object to the velocity obstacle
+%                         obj.xVO(i) = obj.xVO + Vb(1)*ones(1,length(obj.xVO));
+%                         obj.yVO(i) = obj.yVO + Vb(2)*ones(1,length(obj.yVO));
 
                     else
                         %Sets all figure object to the velocity obstacle
@@ -146,8 +155,8 @@ classdef velocityObstacleEnv
                                                'ydata',yVOtemp, ...
                                                'FaceColor', [0 1 1]);
                         
-                   set(obj.t(rNum,list(i) - 1),'position',[obj.originVO(list(i) - 1,1) + iRobotVelX(1), ...
-                                                           obj.originVO(list(i) - 1,2) + iRobotVelY(1), 0], ...
+                   set(obj.t(rNum,list(i) - 1),'position',[obj.originVO(list(i) - 1,1) + xVOtemp, ...
+                                                           obj.originVO(list(i) - 1,2) 0], ...
                                                            'String', rNum + list(i) - 1);
                        
                end
@@ -170,13 +179,13 @@ classdef velocityObstacleEnv
                     obj.f(fNum) = figure('Name',append('Velocity Space For Robot ',string(fNum))); 
                     obj.a(fNum) = axes;
                     ylabel('Vy')
-                    xlabel('Vx')
+                    ylabel('Vx')
                     xlim([-xMax,xMax])
                     ylim([-yMax,yMax])
                     obj.lVec(fNum) = line;
             end
             
-            function obj = addGraphicsVO(obj, fNUM, VOnum)
+            function obj = addVO(obj, fNUM, VOnum)
                         obj.l(fNUM,VOnum - 1) = line;
                         obj.p(fNUM,VOnum - 1) = patch;
                         obj.t(fNUM,VOnum - 1) = text;     
