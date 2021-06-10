@@ -2,19 +2,20 @@ classdef velocityObstacleEnv
     %Definition: This class creates an eviroment that can produce figures
     %that shows different objects in velocity space. 
     properties(Access = public)
-        xVO  {mustBeNumeric} %These variables are saved for later use
-        yVO  {mustBeNumeric} %These variables are saved for later use
+        xVO  {mustBeNumeric} %Set of velocity obsticle x-coornates
+        yVO  {mustBeNumeric} %Set of velocity obsticle y-coornates
         N    {mustBeNumeric} %Number of robots to simulate
         nFig {mustBeNumeric} %Number of figure to create
         tho  {mustBeNumeric} %Tho for velocity obstace
-        R    {mustBeNumeric} %Radius of circle for velocity obs 
+        R    {mustBeNumeric} %Radius of self + other robot
     end
     properties(Access = private)
-       lastTheta0VO = 0; %Used to deterine last angle for edge case
+        lastTheta0VO = 0; %Used to deterine last angle for edge case
         f; %Figure object array for creating figures
         l; %Line object array to plot velocity obstacles 
         p; %Patch object array for filling in velocity Obs
         t; %Text object for numbering velocity obstaces
+        a; %Axis object
         lVec; %Line to plot current robot's velocity 
     end
     
@@ -148,9 +149,10 @@ classdef velocityObstacleEnv
             end
             
             function obj = setPlot(obj,xMax,yMax)
-                %Sets up given figures
+                %Sets up given figures from x = [-xMax,xMax], y = [-yMax,yMax]
                 for i = 1:obj.nFig
-                    obj.f(i) = figure(i);
+                    obj.f(i) = figure;
+                    obj.a(i) = axes;
                     xlim([-xMax,xMax])
                     ylim([-yMax,yMax])
                     obj.lVec(i) = line;

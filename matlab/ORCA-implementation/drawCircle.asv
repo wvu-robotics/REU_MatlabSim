@@ -6,6 +6,7 @@ function drawCircle(objLine,x,y,r)
 ang=0:0.01:2*pi; 
 xp=r*cos(ang);
 yp=r*sin(ang);
-set(objLine, 'xdata', x+xp, ...
-             'ydata', y+yp);
+plot(x+xp,y+yp,'b');
+set(objLine, 'xValue', x+xp, ...
+             'yValue',y+yp);
 end

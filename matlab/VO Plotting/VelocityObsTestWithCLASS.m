@@ -37,9 +37,9 @@ close all
 r = rateControl(1/sampleTime);
 R = 2*env.robotRadius;
 
-VOenv = velocityObstacleEnv(n,1);
+VOenv = velocityObstacleEnv(n,4);
 VOenv = VOenv.setRT(R, tho);
-VOenv = VOenv.setPlot(50,50);
+VOenv = VOenv.setPlot(10,10);
 
 
 for T = 2:length(t)
@@ -63,12 +63,12 @@ for T = 2:length(t)
             NewVel(1:2,j) = vel(1:2,T-1,j);
         end     
         %For mulitple plots
-%             VOenv = VOenv.displayVO( NewPose,NewVel,i);
-%             VOenv.drawVector(NewVel(:,i),i);
+            VOenv = VOenv.displayVO( NewPose,NewVel,i);
+            VOenv.drawVector(NewVel(:,i),i);
     end
     %For one plot.
-    VOenv = VOenv.displayVO( NewPose,NewVel,1);
-    VOenv.drawVector(NewVel(:,1),1);
+%     VOenv = VOenv.displayVO( NewPose,NewVel,1);
+%     VOenv.drawVector(NewVel(:,1),1);
     
     
     % Update visualization
