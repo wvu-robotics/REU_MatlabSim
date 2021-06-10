@@ -20,7 +20,7 @@
  %[U2,V2,PSI9, PHI2] = sourceFlow(-5,0,-2*pi,X,Y);
  %[U2,V2,PSI10, PHI2] = sourceFlow(5,0,2*pi,X,Y);
  %[U2,V2,PSI11, PHI2] = doubletFlow(0,0,.5,X,Y);
- [U2,V2,PSI11,PHI2] = objectFlow(0,0,0,1,.5,X,Y);
+ [U2,V2,PSI11,PHI2] = objectFlow(5,3,0,1,.5,X,Y);
 
   %[Vxi,Vyi,PSI3,PHI3] = baseWorld(0,0,10,10,2*pi,X,Y);
   %[Vxi,Vyi,PSI4,PHI3] = uniformFlow(9,9,10,10,-.5,X,Y);
@@ -37,7 +37,7 @@ V = V2;
 figure()
 contour(X,Y,PSI,  -2*pi:.2:2*pi, 'ShowText', 'on');  %0:.2:5
 hold on
-quiver(X,Y,U,V,0);
+quiver(X,Y,V,U,0);
 hold on;
 %contour(X,Y,PHI, -2*pi:.2:2*pi);
 hold off
