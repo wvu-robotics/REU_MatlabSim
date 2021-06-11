@@ -9,7 +9,7 @@ classdef velocityObstacleEnv
         nFig {mustBeNumeric} %Number of figure to create
         tho  {mustBeNumeric} %Tho for velocity obstace
         R    {mustBeNumeric} %Radius of self + other robot
-        listVO; %list of all VO objects robot numbers 
+        listVO; %list of all VO objects robot numbers
     end
     properties(Access = private)
         lastTheta0VO = 0; %Used to deterine last angle for edge case
@@ -18,7 +18,7 @@ classdef velocityObstacleEnv
         p; %Patch object array for filling in velocity Obs
         t; %Text object for numbering velocity obstaces
         a; %Axis object
-        lVec; %Line to plot current robot's velocity 
+        lVec; %Line to plot current robot's velocity
     end
     
     
@@ -43,7 +43,6 @@ classdef velocityObstacleEnv
                 %Pose should be a 2 X obj.N matrix holding positions
                 %Vel should be a 2 X obj.N matrix holding velocities
                 %Vel and Pose columns NEED TO BE IN ORDER by robot number
-                
                 
                 obj.xVO = cell(obj.N-1,1);
                 obj.yVO = cell(obj.N-1,1);
