@@ -7,6 +7,9 @@ addpath("C:\Users\dqish\Documents\GitHub\REU_MatlabSim\matlab\flow field")
 %xlim([0 1])
 %ylim([0 1])
 %hold on
+clear
+clc
+close all
 
 n = 10; %Number of Robots
 XY = 1 * rand(2,n); %Next point, right now completely random
@@ -17,7 +20,7 @@ for i=1:n
 % %  grid minor;
     hold on
     axis([0 1 0 1])
-    pause(.5)%how fast or slow each point plots
+    %pause(.5)%how fast or slow each point plots
 end
 
 %Invader Team Spawn is random----------------------------------------------
@@ -36,7 +39,7 @@ for i=1:a
     plot(AB(1,i),AB(2,i),'+r','MarkerSize',6)
     hold on
     axis([0 1 0 1])
-    pause(.5) %how fast or slow each point plots
+    %pause(.5) %how fast or slow each point plots
 end
 
 %Goal Spawn is fixed------------------------------------------------------
@@ -70,7 +73,7 @@ XY(2,:) = XY(2,:) + V2*.1;
 
 % figure()
 % plot3(X,Y,PSI)
-pause(.001);
+%pause(.001);
 end
 %  ui = -1*(AB(1) - .5);
 %  vi = -1*(AB(1) - .5);
