@@ -9,7 +9,7 @@ classdef velocityObstacleEnv
         nFig {mustBeNumeric} %Number of figure to create
         tho  {mustBeNumeric} %Tho for velocity obstace
         R    {mustBeNumeric} %Radius of self + other robot
-        listVO; 
+        listVO; %list of all VO objects robot numbers 
     end
     properties(Access = private)
         lastTheta0VO = 0; %Used to deterine last angle for edge case
@@ -116,6 +116,8 @@ classdef velocityObstacleEnv
             end
             
             function displayRelativeVO(obj,rNum,rNum2)
+                %displays relative velocity for the robot rNum and rNum2 on
+                %rNums figure
                         xVOtemp = cell2mat(obj.xVO(rNum2 - 1));
                         yVOtemp = cell2mat(obj.yVO(rNum2 - 1));
                         set(obj.l(rNum,rNum2 - 1),'xdata', xVOtemp, ...
@@ -132,6 +134,8 @@ classdef velocityObstacleEnv
             end
             
             function displayAgentVO(obj,rNum,robotsVel) 
+                %Displays the figure of robot rNUM given the velocities of
+                %all other agents robotsVel
                 list = obj.listVO(1,:); 
                for i = 1:length(list)
                    xVOtemp = cell2mat(obj.xVO(list(i) - 1));
@@ -157,33 +161,38 @@ classdef velocityObstacleEnv
             
             
             
-            function drawVector(obj,Velocity, rNum)
+            function drawVector(obj,Velocity, rNum, lineNum)
                 %Draws vector for a given velocity onto a figure of rNum
-                set(obj.lVec(rNum),'xdata',[0 Velocity(1)], ...
-                                   'ydata',[0 Velocity(2)], ...
-                                   'color', [1 0 0]); 
+                set(obj.lVec(rNum, lineNum),'xdata',[Velocity(1) Velocity(2)], ...
+                                   'ydata',[Velocity(3) Velocity(4)])
             end
             
             function obj = setPlot(obj,fNum,xMax,yMax)
                 %Sets up given figures from x = [-xMax,xMax], y = [-yMax,yMax]
-               
                     obj.f(fNum) = figure('Name',append('Velocity Space For Robot ',string(fNum))); 
                     obj.a(fNum) = axes;
                     ylabel('Vy')
                     xlabel('Vx')
                     xlim([-xMax,xMax])
                     ylim([-yMax,yMax])
-                    obj.lVec(fNum) = line;
             end
             
             function obj = addGraphicsVO(obj, fNUM, VOnum)
-                        obj.l(fNUM,VOnum - 1) = line;
-                        obj.p(fNUM,VOnum - 1) = patch;
-                        obj.t(fNUM,VOnum - 1) = text;     
-                        set(obj.l(fNUM,VOnum - 1), 'Parent', obj.a(fNUM))
-                        set(obj.p(fNUM,VOnum - 1), 'Parent', obj.a(fNUM))
-                        set(obj.t(fNUM,VOnum - 1), 'Parent', obj.a(fNUM))
+                %Adds a VO objects to the figure that allows the VO to be
+                %displayed on the desired figure (fNUM). VOnum is used to
+                %represent the desired robot VO to be saved.
+                        obj.l(fNUM,VOnum - 1) = line('Parent', obj.a(fNUM));
+                        obj.p(fNUM,VOnum - 1) = patch('Parent', obj.a(fNUM));
+                        obj.t(fNUM,VOnum - 1) = text('Parent', obj.a(fNUM), ...
+                                                    'Clipping', true);     
                         obj.listVO(fNUM,length(obj.listVO)+1) = VOnum;
+            end
+            
+            function obj = addVector(obj, fNUM,color ,lineNumber) 
+                % Adds a vector to the desired figure (fNUM) and is indexed
+                % by lineNumber
+                obj.lVec(fNUM, lineNumber) = line('Parent', obj.a(fNUM), ...
+                                                  'color', color);
             end
        end 
 end

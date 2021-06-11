@@ -45,8 +45,8 @@ collisions = 0;
 VOenv = velocityObstacleEnv(numberOfAgents);
 VOenv = VOenv.setRT(2*agentRadius,timeHorizon);
 VOenv = VOenv.setPlot(1,1,1);
-% 
- VOenv = VOenv.addGraphicsVO(1,2);
+VOenv = VOenv.addVector(1,'g',1);
+VOenv = VOenv.addGraphicsVO(1,2);
 
 % for i = 2:(numberOfAgents)
 %     VOenv = VOenv.addGraphicsVO(1,i);
@@ -99,8 +99,9 @@ for t = 0:timeStep:maxTime
    
    VOenv = VOenv.setVO(agentPositions',1);
    
+   relVel = agentVelocities(1,:)-agentVelocities(2,:);
    
-   VOenv.drawVector(agentVelocities(1,:)-agentVelocities(2,:),1);
+   VOenv.drawVector([0 relVel(1) 0 relVel(2)],1, 1);
    VOenv.displayRelativeVO(1,2);
 %    
 %    VOenv.drawVector(agentVelocities(1,:),1);
@@ -111,6 +112,7 @@ for t = 0:timeStep:maxTime
       break; 
    end
 end
+
 
 % writerObj = VideoWriter('test1.avi');
 % open(writerObj);

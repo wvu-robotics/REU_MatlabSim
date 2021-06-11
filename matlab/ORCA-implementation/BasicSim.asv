@@ -9,7 +9,7 @@ maxTime = 80;
 maxVelocity = .5;
 timeHorizon = 20;
 sensingRange = 20;
-velocityDiscritisation = 0.01;
+velocityDiscritisation = 0.05;
 vOptIsZero = true;
 safetyMargin = 1.2;
 responsibility = 0.5;
@@ -45,12 +45,13 @@ collisions = 0;
 VOenv = velocityObstacleEnv(numberOfAgents);
 VOenv = VOenv.setRT(2*agentRadius,timeHorizon);
 VOenv = VOenv.setPlot(1,1,1);
+VOenv = VOenv.addVector(1,'g',1);
 % 
-% VOenv = VOenv.addGraphicsVO(1,5);
+ VOenv = VOenv.addGraphicsVO(1,2);
 
-for i = 2:(numberOfAgents)
-    VOenv = VOenv.addGraphicsVO(1,i);
-end
+% for i = 2:(numberOfAgents)
+%     VOenv = VOenv.addGraphicsVO(1,i);
+% end
 
 figPS = figure('Name', 'Position Space');
 axis([-mapSize mapSize -mapSize mapSize])
@@ -100,17 +101,18 @@ for t = 0:timeStep:maxTime
    VOenv = VOenv.setVO(agentPositions',1);
    
    
-%    VOenv.drawVector(agentVelocities(1,:)-agentVelocities(2,:),1);
-%    VOenv.displayRelativeVO(1,5);
-   
-   VOenv.drawVector(agentVelocities(1,:),1);
-   VOenv.displayAgentVO(1,agentVelocities');
+   VOenv.drawVector(agentVelocities(1,:)-agentVelocities(2,:)',1);
+   VOenv.displayRelativeVO(1,2);
+%    
+%    VOenv.drawVector(agentVelocities(1,:),1);
+%    VOenv.displayAgentVO(1,agentVelocities');
   
    
    if max(vecnorm(agentPositions - goalLocations,2,2)) < 0.2
       break; 
    end
 end
+
 
 % writerObj = VideoWriter('test1.avi');
 % open(writerObj);
