@@ -2,7 +2,7 @@ clear
 clc
 close all
 
-numberOfAgents = 7;
+numberOfAgents = 3;
 agentRadius = 1;
 mapSize = 10;
 timeStep = .05;
@@ -118,4 +118,3 @@ end
 %     
 % end
 % close(writerObj);
-
