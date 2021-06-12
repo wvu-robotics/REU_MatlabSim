@@ -210,13 +210,13 @@ for t = 1:3000
    %--------------------------------------------------------------------%
    disp(toc)
    
-   F(t) = getframe;
+%    F(t) = getframe(gcf);
 end
 
-video = VideoWriter('Crossing_Streams', 'MPEG-4');
-open(video);
-writeVideo(video, F);
-close(video)
+% video = VideoWriter('Crossing_Streams', 'MPEG-4');
+% open(video);
+% writeVideo(video, F);
+% close(video)
 
 
 
