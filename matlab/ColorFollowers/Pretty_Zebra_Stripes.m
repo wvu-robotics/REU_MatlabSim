@@ -2,8 +2,8 @@ close all
 clear
 clc
 
-numAgents = 6000; %number of agents
-mapSize = 100; %x and y dimension of map
+numAgents = 45000; %number of agents
+mapSize = 300; %x and y dimension of map
 environment = zeros(mapSize, mapSize, 6); %X, Y for RGB and "contains agent" and GoalX,GoalY
 sensingRadius = 2; %Radius of sensing range for each agent (square sensing range)
 neighborToGoalForceRatio = 25;
