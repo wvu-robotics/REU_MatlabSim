@@ -4,7 +4,7 @@ clc
 close all
 
 %Constants of the simulation
-numberOfAgents = 3;
+numberOfAgents = 4;
 agentRadius = 1;
 mapSize = 10;
 timeStep = .05;
@@ -13,7 +13,7 @@ maxVelocity = .5;
 timeHorizon = 10;
 sensingRange = 20;
 velocityDiscritisation = 0.05;
-vOptIsZero = true;
+vOptIsZero = false;
 safetyMargin = 1.2;
 responsibility = 0.5;
 accelerationConstant = .5;
@@ -23,22 +23,22 @@ accelerationConstant = .5;
 % goalLocations = [8,8;-8,8];
 
 %Random positions around a circle
-agentPositions = zeros(numberOfAgents, 2);
-goalLocations = zeros(numberOfAgents, 2);
-for i = 1:numberOfAgents
-    theta = rand()*2*pi;
-    agentPositions(i,:) = [cos(theta),sin(theta)]*mapSize*(.7+(rand()-0.5)*.2);
-    goalLocations(i,:) = [cos(theta+pi),sin(theta+pi)]*mapSize*(.7+(rand()-0.5)*.2);
-end
-
-%Uniform points around a circle
 % agentPositions = zeros(numberOfAgents, 2);
 % goalLocations = zeros(numberOfAgents, 2);
 % for i = 1:numberOfAgents
-%     theta = 2*pi/numberOfAgents * (i-1);
-%     agentPositions(i,:) = [cos(theta),sin(theta)]*mapSize*(.9+(rand()-0.5)*.1);
-%     goalLocations(i,:) = [cos(theta+3.9*pi/4),sin(theta+3.9*pi/4)]*mapSize*(.9+(rand()-0.5)*.1);
+%     theta = rand()*2*pi;
+%     agentPositions(i,:) = [cos(theta),sin(theta)]*mapSize*(.7+(rand()-0.5)*.2);
+%     goalLocations(i,:) = [cos(theta+pi),sin(theta+pi)]*mapSize*(.7+(rand()-0.5)*.2);
 % end
+
+%Uniform points around a circle
+agentPositions = zeros(numberOfAgents, 2);
+goalLocations = zeros(numberOfAgents, 2);
+for i = 1:numberOfAgents
+    theta = 2*pi/numberOfAgents * (i-1);
+    agentPositions(i,:) = [cos(theta),sin(theta)]*mapSize*(.9+(rand()-0.5)*.1);
+    goalLocations(i,:) = [cos(theta+3.9*pi/4),sin(theta+3.9*pi/4)]*mapSize*(.9+(rand()-0.5)*.1);
+end
 
 %Creates velocities, paths, time step counter, and collision counter
 agentVelocities = zeros(numberOfAgents,2);
@@ -82,13 +82,14 @@ for t = 0:timeStep:maxTime
     for i = 1:numberOfAgents
         path(counter,:,i) = agentPositions(i, :);
     end
-    %Computes the velocity controls for the robots 
-    velInput = (goalLocations - agentPositions)./vecnorm(goalLocations - agentPositions, 2, 2) * maxVelocity;
-    velocityControls = ORCAController(agentPositions, agentVelocities, velInput, timeHorizon, sensingRange, agentRadius, maxVelocity, velocityDiscritisation, vOptIsZero, responsibility);
+    %Computes the velocity controls for the robots
+    velocityInputs = (goalLocations - agentPositions)./vecnorm(goalLocations - agentPositions, 2, 2) * maxVelocity;
+    accelerationInputs = accelerationController(agentPositions, agentVelocities, velocityInputs, sensingRange, agentRadius, timeHorizon);
+    agentVelocities = agentVelocities + accelerationConstant * accelerationInputs * timeStep;
     
-    %Handles collisions and updates positions
-    [agentVelocities, numCollisions] = Collider(agentPositions, velocityControls, agentRadius, timeStep);
-    agentPositions =  agentPositions + agentVelocities * timeStep;
+    %Updates positions & handles collisions
+    agentPositions = agentPositions + agentVelocities * timeStep;
+    [agentPositions, agentVelocities, numCollisions] = Collider(agentPositions, agentVelocities, agentRadius);
     collisions = collisions + numCollisions;
     
     %Draws all graphics on appropriate figures
