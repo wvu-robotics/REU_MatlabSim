@@ -51,13 +51,15 @@ angleOfNormalRight = mod((angleReftoB - VOAngle - pi/2), 2*pi);
 
 
 for i = 1:size(relativeVel, 1) %for each neighbor
+    relVelAngle = mod(atan2(relativeVel(i, 2), relativeVel(i, 1)),2*pi);
+    
     %First determine whether to go left or right and set the angle of normal
     %This if determines if the angle reference to B is left or right of
     %the relative velocity
-    if angleReftoB(i) - mod(atan2(relativeVel(i, 2), relativeVel(i, 1)),2*pi) > 0
-        angleOfNormal = angleOfNormalRight(i);
-    else
+    if mod(relVelAngle - angleReftoB(i),2*pi) < pi
         angleOfNormal = angleOfNormalLeft(i);
+    else
+        angleOfNormal = angleOfNormalRight(i);
     end
     
     %Then find the rotation matrix cooresponding to that angle and apply it
