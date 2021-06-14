@@ -7,37 +7,83 @@ clc
 % mapSize = 100;
 % sensingRadius = 8;
 % neighborToGoalForceRatio = 0.072;
+%spawnType = 'RandomSpawn';
 %===================================================================
-%
-%
-%
-%
+% numAgents = 500;
+% mapSize = 100;
+% sensingRadius = 10;
+% neighborToGoalForceRatio = 0.01;
+% spawnType = 'OpposingCoordinatedSpawn';
 %==================================================================
 
 
-numAgents = 8000; %number of agents
-mapSize = 150; %x and y dimension of map
-sensingRadius = 4; %Radius of sensing range for each agent (square sensing range)
-neighborToGoalForceRatio = 0.05; %Ratio of the force from the goal point to the force exerted by one agent of the same color
+numAgents = 50000; %number of agents
+mapSize =300; %x and y dimension of map
+sensingRadius = 5; %Radius of sensing range for each agent (square sensing range)
+neighborToGoalForceRatio = 0.0; %Ratio of the force from the goal point to the force exerted by one agent of the same color
 
 environment = zeros(mapSize, mapSize, 6); %X, Y for RGB and "contains agent" and GoalX,GoalY
 imageResize = 10; %Makes the plot bigger
 
-%Place agents randomly on the map
-for i = 1:numAgents
-    new = false;
-    while not(new)
-        randx = randi(mapSize);
-        randy = randi(mapSize);
-        if environment(randx,randy,4) == 0
-           new = true; 
-        end
-    end
-    environment(randx,randy,4) = 1; %The row coordinate is x, the column coordinate is y
-end
+spawnType = 'RandomSpawn';
+%spawnType = 'CoordinatedSpawn';
+%spawnType = 'OpposingCoordinatedSpawn';
 
-%Set the goal positions of each agent to a random point on the map
-environment(:,:,5:6) = randi(mapSize,[mapSize,mapSize,2]) .* environment(:,:,4);
+switch spawnType
+    case 'RandomSpawn'
+        %Place agents randomly on the map
+        for i = 1:numAgents
+            new = false;
+            while not(new)
+                randx = randi(mapSize);
+                randy = randi(mapSize);
+                if environment(randx,randy,4) == 0
+                    new = true;
+                end
+            end
+            environment(randx,randy,4) = 1; %The row coordinate is x, the column coordinate is y
+        end
+        
+        %Set the goal positions of each agent to a random point on the map
+        environment(:,:,5:6) = randi(mapSize,[mapSize,mapSize,2]) .* environment(:,:,4);
+    case 'CoordinatedSpawn'
+      %Place agents in the top left corner of the map
+        for i = 1:numAgents
+            new = false;
+            while not(new)
+                randx = randi(mapSize/4);
+                randy = randi(mapSize/4);
+                if environment(randx,randy,4) == 0
+                    new = true;
+                end
+            end
+            environment(randx,randy,4) = 1; %The row coordinate is x, the column coordinate is y
+        end
+        
+        %Set the goal positions of each agent to a random point on the map
+        environment(:,:,5:6) = randi(mapSize/2,[mapSize,mapSize,2]) .* environment(:,:,4); 
+        environment(:,:,5:6) = environment(:,:,5:6) + mapSize/2;
+    case 'OpposingCoordinatedSpawn'
+        for i = 1:numAgents
+            new = false;
+            while not(new)
+                randx = randi(mapSize/4);
+                randy = randi(mapSize/4);
+                if mod(i,2) == 0
+                   randy = randy + mapSize*3/4; 
+                   environment(randx,randy,5:6) = randi(mapSize/2,[1,1,2]); 
+                   environment(randx,randy,5) = environment(randx,randy,5) + mapSize/2;
+                else
+                   environment(randx,randy,5:6) = randi(mapSize/2,[1,1,2]); 
+                   environment(randx,randy,5:6) = environment(randx,randy,5:6) + mapSize/2;
+                end
+                if environment(randx,randy,4) == 0
+                    new = true;
+                end
+            end
+            environment(randx,randy,4) = 1; %The row coordinate is x, the column coordinate is y
+        end
+end
 
 %Create matrix of indexes
 IndexMat = zeros(mapSize, mapSize, 2); 
@@ -69,26 +115,60 @@ imshow(floor(environment(:,:,1:3))./colorSum*1.5.*environment(:,:,4));
 
 %===========================Main Loop==========================%
 while true
-   tic
-   %find number of agents who have reached their goal points
-   numAtGoal = sum(sum(vecnorm(environment(:,:,5:6) - IndexMat,2,3) == 0));
-   %erase agents who have reached their goal points
-   environment(:,:,:) = environment(:,:,:) .* (vecnorm(environment(:,:,5:6) - IndexMat,2,3) ~= 0);
-   
-   %spawn a new agent for each one that was erased
-   for i = 1:numAtGoal
-       new = false;
-       while not(new)
-           randx = randi(mapSize);
-           randy = randi(mapSize);
-           if environment(randx,randy,4) == 0
-               new = true;
-           end
-       end
-       environment(randx,randy,4) = 1; %The row coordinate is x, the column coordinate is y
-       %Set new random goal point
-       environment(randx,randy,5:6) = randi(mapSize,size(environment(randx,randy,5:6)));
-   end
+    tic
+    %find number of agents who have reached their goal points
+    numAtGoal = sum(sum(vecnorm(environment(:,:,5:6) - IndexMat,2,3) == 0));
+    %erase agents who have reached their goal points
+    environment(:,:,:) = environment(:,:,:) .* (vecnorm(environment(:,:,5:6) - IndexMat,2,3) ~= 0);
+    
+    %spawn a new agent for each one that was erased
+    for i = 1:numAtGoal
+        
+        new = false;
+        switch spawnType
+            case 'RandomSpawn'
+                while not(new)
+                    randx = randi(mapSize);
+                    randy = randi(mapSize);
+                    if environment(randx,randy,4) == 0
+                        new = true;
+                    end
+                end
+                environment(randx,randy,4) = 1; %The row coordinate is x, the column coordinate is y
+                %Set new random goal point
+                environment(randx,randy,5:6) = randi(mapSize,size(environment(randx,randy,5:6)));
+            case 'CoordinatedSpawn'
+                new = false;
+                while not(new)
+                    randx = randi(mapSize/4);
+                    randy = randi(mapSize/4);
+                    if environment(randx,randy,4) == 0
+                        new = true;
+                    end
+                end
+                environment(randx,randy,4) = 1; %The row coordinate is x, the column coordinate is y
+                environment(randx,randy,5:6) = randi(mapSize/2,size(environment(randx,randy,5:6)));
+                environment(randx,randy,5:6) = environment(randx,randy,5:6) + mapSize/2;
+            case 'OpposingCoordinatedSpawn'
+                    new = false;
+                    while not(new)
+                        randx = randi(mapSize/4);
+                        randy = randi(mapSize/4);
+                        if mod(i,2) == 0
+                            randy = randy + mapSize*3/4;
+                            environment(randx,randy,5:6) = randi(mapSize/2,[1,1,2]);
+                            environment(randx,randy,5) = environment(randx,randy,5) + mapSize/2;
+                        else
+                            environment(randx,randy,5:6) = randi(mapSize/2,[1,1,2]);
+                            environment(randx,randy,5:6) = environment(randx,randy,5:6) + mapSize/2;
+                        end
+                        if environment(randx,randy,4) == 0
+                            new = true;
+                        end
+                    end
+                    environment(randx,randy,4) = 1; %The row coordinate is x, the column coordinate is y
+        end
+    end
    
    %Update unitToGoal
    unitToGoal = (environment(:,:,5:6) - IndexMat)./vecnorm(environment(:,:,5:6) - IndexMat, 2, 3);
