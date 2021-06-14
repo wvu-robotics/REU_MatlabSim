@@ -51,7 +51,7 @@ function accelerationInputs = accelerationController(agentPositions, agentVeloci
         
         %Uses the info gathered to find the uVectors for escaping the VO's.
         [VOAngle, angleReftoB] = getVO(centralAgentPosition, neighborsPositions, agentRadius);
-        [normalVector, uVector, noAvoidance] = getNormalVector(relativeVels, relPositionOfNeighbors, agentRadius, VOAngle, timeHorizon, angleReftoB, relativeVels);
+        [normalVector, ~, noAvoidance] = getNormalVector(relativeVels, relPositionOfNeighbors, agentRadius, VOAngle, timeHorizon, angleReftoB, relativeVels);
         
         %If there's centralAgent's velocity isn't in a VO
         if noAvoidance == ones(length(noAvoidance),1)
