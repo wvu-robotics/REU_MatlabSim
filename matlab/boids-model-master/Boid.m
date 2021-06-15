@@ -1,6 +1,7 @@
 classdef Boid
     
     properties
+        ID
         position
         velocity
         acceleration
@@ -12,10 +13,15 @@ classdef Boid
         Kc
         path
         laser
+        bearing
+        particles
+        neighbors
+        detection_range
     end
     
     methods
-        function obj = Boid(position_x,  position_y, Ks, Ka,Kc, numBoids, time)
+        function obj = Boid(position_x,  position_y, Ks, Ka,Kc, numBoids, ID)
+            obj.ID = ID;
             obj.acceleration = [0 0];
             
             angle = (2*pi).*rand;
@@ -33,6 +39,7 @@ classdef Boid
             %obj.path = zeros(time,4);
             obj.path = [position_x, position_y, obj.velocity(1), obj.velocity(2),0];
             obj.laser = zeros(1,numBoids);
+            obj.particles = zeros(3,numBoids);
         end
         
         
@@ -77,8 +84,11 @@ classdef Boid
             obj.velocity = obj.velocity./norm(obj.velocity).*obj.max_speed;
             obj.position = obj.position + obj.velocity;
             obj.acceleration = [0 0];
+            
             omega = atan2(obj.velocity(2)-vel_old(2),obj.velocity(1)-vel_old(1));
             obj.path = [obj.path;[obj.position + obj.velocity, obj.velocity./norm(obj.velocity).*obj.max_speed, omega]];
+            obj.particles(1,:) = obj.particles(1,:) + obj.velocity(1);
+            obj.particles(2,:) = obj.particles(2,:) + obj.velocity(2);
         end
         
         function [steer] = seek(obj, target)
