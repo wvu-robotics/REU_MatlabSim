@@ -41,8 +41,13 @@ function [newPositions, newVelocities, numCollisions] = Collider(agentPositions,
                 %Gets the unit vector pointing from agent i to neighbor j,
                 %then saves it in collisionNormalVectors
                 normalVector = relNeighborPositions(j,:)/norm(relNeighborPositions(j,:));
-                collisionNormalVectors(i,j,:) = normalVector;
-                collisionNormalVectors(j,i,:) = -normalVector;
+                if j < i
+                    collisionNormalVectors(i,j,:) = normalVector;
+                    collisionNormalVectors(j,i,:) = -normalVector;
+                else % If j >= i
+                    collisionNormalVectors(i,j+1,:) = normalVector;
+                    collisionNormalVectors(j+1,i,:) = -normalVector;
+                end
                 
                 %Gets the distance to eject neighbor j plus a buffer.
                 distToChange = 2.05*agentRadius - norm(relNeighborPositions(j,:));
@@ -54,7 +59,7 @@ function [newPositions, newVelocities, numCollisions] = Collider(agentPositions,
                 if j < i
                     agentPositions(j,:) = relNeighborPositions(j,:) + centralAgentPosition;
                 else % If j >= i
-                    agentPositions(j + 1,:) = relNeighborPositions(j,:) + centralAgentPosition;
+                    agentPositions(j+1,:) = relNeighborPositions(j,:) + centralAgentPosition;
                 end
             end
         end
@@ -95,7 +100,7 @@ function [newPositions, newVelocities, numCollisions] = Collider(agentPositions,
                     else
                         
                         %Applies and stores the restriction
-                        centralAgentVelocity = centralAgentVelocity - dot(centralAgentVelocity,restriction);
+                        centralAgentVelocity = centralAgentVelocity - dot(centralAgentVelocity,restriction) * restriction;
                         pastRestriction = restriction;
                     end
                 end

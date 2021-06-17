@@ -5,14 +5,14 @@ close all
 
 %Defines the constants for ...
 %   World Building
-numberOfAgents = 4;
+numberOfAgents = 5;
 agentRadius = 1;
 mapSize = 10;
 timeStep = .05;
 maxTime = 80;
 
 %   VO's and ORCA
-timeHorizon = 1000;
+timeHorizon = 10;
 sensingRange = 20;
 velocityDiscritisation = 0.05;
 vOptIsZero = false;
@@ -23,28 +23,52 @@ responsibility = 0.5;
 safetyMargin = 1.2;
 idealSpeed = .5;
 maxSpeed = 2;
-accelConstant = .5;
+accelConstant = 1;
 
+%Save initial positions and goals from prior simulations here
+% initPositions = [1.86299880512322,6.51542585217289;0.960419995516048,7.22028526875964;4.37467238987571,6.17043589066931;-1.76989042995170,6.22814772952889;5.71578642889612,3.70330635172856];
+% goalLocations = [-1.95290103085754,-6.82983898228681;-0.918895987729643,-6.90811436111527;-3.58656289699211,-5.05881456974011;1.93034814927321,-6.79278967762108;-5.21145205506266,-3.37654384699775];
+% numberOfAgents = 5;
 
-%initialize agent positions, velocities, and goal locations
-% agentPositions = [-7,-8;8,-8];
-% goalLocations = [8,8;-8,8];
+%Initialize close agents that need to move past each other
+% initPositions = [1.2,0;-1.2,0];
+% goalLocations = [-9,0;9,0];
+% numberOfAgents = 2;
+
+%Initialize one agent and a herd moving toward each other
+% initPositions = [9,0;  ...
+%                  -5,2;  ...
+%                  -5,-2; ...
+%                  -7,3;  ...
+%                  -7,0;  ...
+%                  -7,-3; ...
+%                  -9,2;  ...
+%                  -9,-2];
+% goalLocations = [-9,0;  ...
+%                   9,2;  ...
+%                   9,-2; ...
+%                   7,3;  ...
+%                   7,0;  ...
+%                   7,-3; ...
+%                   5,2;  ...
+%                   5,-2];
+% numberOfAgents = 8;
 
 %Random positions around a circle
-agentPositions = zeros(numberOfAgents, 2);
+initPositions = zeros(numberOfAgents, 2);
 goalLocations = zeros(numberOfAgents, 2);
 for i = 1:numberOfAgents
     theta = rand()*2*pi;
-    agentPositions(i,:) = [cos(theta),sin(theta)]*mapSize*(.7+(rand()-0.5)*.2);
+    initPositions(i,:) = [cos(theta),sin(theta)]*mapSize*(.7+(rand()-0.5)*.2);
     goalLocations(i,:) = [cos(theta+pi),sin(theta+pi)]*mapSize*(.7+(rand()-0.5)*.2);
 end
 
 %Uniform points around a circle
-% agentPositions = zeros(numberOfAgents, 2);
+% initPositions = zeros(numberOfAgents, 2);
 % goalLocations = zeros(numberOfAgents, 2);
 % for i = 1:numberOfAgents
 %     theta = 2*pi/numberOfAgents * (i-1);
-%     agentPositions(i,:) = [cos(theta),sin(theta)]*mapSize*(.9+(rand()-0.5)*.1);
+%     initPositions(i,:) = [cos(theta),sin(theta)]*mapSize*(.9+(rand()-0.5)*.1);
 %     goalLocations(i,:) = [cos(theta+3.9*pi/4),sin(theta+3.9*pi/4)]*mapSize*(.9+(rand()-0.5)*.1);
 % end
 
@@ -85,6 +109,8 @@ end
 pause(2);
 
 %Main Simulation Loop
+agentPositions = initPositions;
+
 for t = 0:timeStep:maxTime
     counter = counter + 1;
     for i = 1:numberOfAgents
@@ -97,15 +123,14 @@ for t = 0:timeStep:maxTime
     
     %Computes the acceleration to the ORCAVelocities.
     accelInputs = ORCAVelocites - agentVelocities;
-    accelInputs = accelInputs./vecnorm(accelInputs,2,2);
+    for i = 1:numberOfAgents
+        if norm(accelInputs(i,:)) > 0
+            accelInputs(i,:) = accelInputs(i,:) ./ norm(accelInputs(i,:));
+        end
+    end
     
     %Applies the accelerations to the current velocities and caps velocity
     agentVelocities = agentVelocities + accelConstant * accelInputs * timeStep;
-    for i = 1:size(agentVelocities,1)
-        if norm(agentVelocities(i,:)) > maxSpeed
-            agentVelocities(i,:) = maxSpeed * agentVelocities(i,:) ./ norm(agentVelocities(i,:));
-        end
-    end
     
     %Updates positions & handles collisions
     agentPositions = agentPositions + agentVelocities * timeStep;
