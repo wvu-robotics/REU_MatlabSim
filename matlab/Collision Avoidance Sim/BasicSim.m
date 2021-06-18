@@ -18,9 +18,8 @@ velocityDiscritisation = 0.05;
 vOptIsZero = false;
 responsibility = 0.5;
 
-%Control Constants and Limitations
-
-safetyMargin = 1.2;
+%   Control Constants and Limitations
+safetyMargin = 1.1;
 idealSpeed = .5;
 maxSpeed = 2;
 accelConstant = 1;
@@ -119,7 +118,7 @@ for t = 0:timeStep:maxTime
     %Computes collision free ORCAVelocities that are closest to the
     %idealVelocities.
     idealVelocities = (goalLocations - agentPositions)./vecnorm(goalLocations - agentPositions, 2, 2) * idealSpeed;
-    ORCAVelocites = ORCAController(agentPositions, agentVelocities, idealVelocities, timeHorizon, sensingRange, agentRadius, maxSpeed, velocityDiscritisation, vOptIsZero, responsibility);
+    ORCAVelocites = modifiedORCAController(agentPositions, agentVelocities, idealVelocities, timeHorizon, sensingRange, agentRadius, maxSpeed, velocityDiscritisation, vOptIsZero, responsibility);
     
     %Computes the acceleration to the ORCAVelocities.
     accelInputs = ORCAVelocites - agentVelocities;
@@ -129,8 +128,11 @@ for t = 0:timeStep:maxTime
         end
     end
     
+    %Finds potential field force
+%     potentInputs = potentField(agentPositions, sensingRange, agentRadius, safetyMargin);
+    
     %Applies the accelerations to the current velocities and caps velocity
-    agentVelocities = agentVelocities + accelConstant * accelInputs * timeStep;
+    agentVelocities = agentVelocities + (accelConstant * accelInputs) * timeStep;
     
     %Updates positions & handles collisions
     agentPositions = agentPositions + agentVelocities * timeStep;
