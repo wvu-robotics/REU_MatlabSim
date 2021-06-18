@@ -7,8 +7,13 @@ for r = 1:numbots
     x = round(80*rand(1,1)) + 10;
     y = round(80*rand(1,1)) + 10;
     env(x,y,1) = 1;
-    env(x,y,2) = rand(1,1);
+    env(x,y,2) = 0;%rand(1,1);
 end
+
+env(50,50,1) = 1;
+env(50,50,2) = 1;
+env(50,50,3) = 1;
+
 
 subplot(1,3,1)
 imshow(env(:,:,1));
@@ -24,31 +29,37 @@ title("flash")
 
 for t = 1:1000000
     
+    if mod(t,500) >= 490
+        env(50,50,3) = 1;
+    end
+    
     for x = 1:100
         for y = 1:100
             if env(x,y,1) == 1
                 
                 FORCE = [0,0];
                 %search local enviorment for flashes
+                got_flash = 0;
                 for i = x-5:x+5
                     for j = y-5:y+5
                         if env(i,j,3) == 1
-                            env(x,y,2) = env(x,y,2) + .01;
+                            got_flash = 1;
                             
-                            if env(x,y,3) == 1 && i ~= x && j ~= y
-                                dx= i-x;
-                                dy =j-y;
-                                d = norm([dx,dy]);
-                               FORCE = FORCE + [ (dx/(d*d)) , (dy/(d*d)) ]; 
-                            end
+%                             if env(x,y,3) == 1 && i ~= x && j ~= y
+%                                 dx= i-x;
+%                                 dy =j-y;
+%                                 d = norm([dx,dy]);
+%                                FORCE = FORCE + [ (dx/(d*d)) , (dy/(d*d)) ]; 
+%                             end
                             
                         end
-                        
-                            
+      
                     end
                 end
-                
-                env(x,y,2) = env(x,y,2) + .05;
+                if got_flash == 1
+                    env(x,y,2) = env(x,y,2) + .5;
+                end
+                %env(x,y,2) = env(x,y,2) + .05;
                 
                 % random walk the agent + influence
                 totF = norm(FORCE);
@@ -98,7 +109,7 @@ for t = 1:1000000
     imagesc(env(:,:,3))
     title("flash")
     
-    set(gcf,'WindowState','fullscreen')
+   % set(gcf,'WindowState','fullscreen')
     
-    pause(.00001)
+    pause(.033)
 end

@@ -19,12 +19,16 @@
 %       easier but less conservative)
 %   sensingRange (Radius at which other agents can be sensed)
 %   agentRadius (Radius of agents)
-%   maxVelocity
-%   velocityDiscritisation
+%   maxVelocity (Maximum velocity that an agent can achieve)
+%   velocityDiscritisation (Discritization size of velocity space)
+%   vOptIsZero (Boolian that is true if you want vOPT to be zero for all
+%       agents.)
+%   responsibility (responsibility taken by each agent to get out of the
+%       velocity obstacle. Should be 0.5)
 %
 % Outputs:
 %   velocityControls (Vx, Vy velocity controls of each agent with each
-%   row as one agent)
+%       row as one agent)
 %
 % $Revision: R2020b$ 
 % $Author: Stephen Jacobs$
@@ -32,7 +36,7 @@
 %---------------------------------------------------------
 
 
-function velocityControls = ORCAController(positionState, velocityState, preferedVelocities, timeHorizon, sensingRange, agentRadius, maxVelocity, velocityDiscritisation, vOptIsZero, communication, responsibility)
+function velocityControls = ORCAController(positionState, velocityState, preferedVelocities, timeHorizon, sensingRange, agentRadius, maxVelocity, velocityDiscritisation, vOptIsZero, responsibility)
 
 %Initialize the output velocity controls
 velocityControls = zeros(size(positionState,1),2);
@@ -47,20 +51,17 @@ for i = 1:length(possibleVelocities)
     end
 end
 
-if communication
-   velocityState = preferedVelocities;
-end
-
+%Comput the velocity controls for each agent one at a time
 for i = 1:size(positionState,1)    
    %For Each agent, find the central agents positions and velocity from the
-   %overall state
+   %state input
    centralAgentPosition = positionState(i, :);
    centralAgentVelocity = velocityState(i, :);
    
    %To find the neighbors positions and velocities, remove the central
-   %agents values from the overall state
+   %agents values from the state input
    neighborsPositions = positionState;
-   neighborsPositions(i, :)= [];
+   neighborsPositions(i, :) = [];
    neighborsVelocities = velocityState;
    neighborsVelocities(i, :) = [];
    
@@ -93,7 +94,10 @@ for i = 1:size(positionState,1)
    %velocities and pick the best one
    acceptableVelocities = possibleVelControls(acceptability == 1, :);
    distFromPrefered = vecnorm(acceptableVelocities - preferedVelocities(i, :), 2, 2);
+   %The 'best' velocuty is the allowed velocity closest to the prefered
+   %velocity
    [~, bestVelocityIndex] = min(distFromPrefered);
+   %add the best acceptable velocity to hte velocityControls output
    velocityControls(i, :) = acceptableVelocities(bestVelocityIndex, :);
 end
 end

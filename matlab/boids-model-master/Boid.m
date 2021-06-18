@@ -1,6 +1,7 @@
 classdef Boid
     
     properties
+        ID
         position
         velocity
         acceleration
@@ -10,12 +11,22 @@ classdef Boid
         Ks
         Ka
         Kc
+        Kh
         path
         laser
+        bearing
+        particles
+        neighbors
+        detection_range
+        mean_position
+        covariance
+        home
+        
     end
     
     methods
-        function obj = Boid(position_x,  position_y, Ks, Ka,Kc, numBoids, time)
+        function obj = Boid(position_x,  position_y, Ks, Ka,Kc, numBoids, ID)
+            obj.ID = ID;
             obj.acceleration = [0 0];
             
             angle = (2*pi).*rand;
@@ -29,15 +40,18 @@ classdef Boid
             obj.Ks = Ks;
             obj.Ka = Ka;
             obj.Kc = Kc;
+            obj.Kh = 1;
             
             %obj.path = zeros(time,4);
             obj.path = [position_x, position_y, obj.velocity(1), obj.velocity(2),0];
             obj.laser = zeros(1,numBoids);
+            obj.particles = zeros(3,numBoids);
         end
         
         
         function obj = apply_force(obj, sep_force, coh_force,  ali_force)
-            obj.acceleration = obj.acceleration+sep_force+coh_force+ali_force;
+            home_force = obj.seek(obj.home);
+            obj.acceleration = obj.acceleration+sep_force+coh_force+ali_force+obj.Kh*home_force;
         end
         
         
@@ -77,21 +91,24 @@ classdef Boid
             obj.velocity = obj.velocity./norm(obj.velocity).*obj.max_speed;
             obj.position = obj.position + obj.velocity;
             obj.acceleration = [0 0];
+            
             omega = atan2(obj.velocity(2)-vel_old(2),obj.velocity(1)-vel_old(1));
             obj.path = [obj.path;[obj.position + obj.velocity, obj.velocity./norm(obj.velocity).*obj.max_speed, omega]];
+            obj.particles(1,:) = obj.particles(1,:) + obj.velocity(1);
+            obj.particles(2,:) = obj.particles(2,:) + obj.velocity(2);
         end
         
         function [steer] = seek(obj, target)
             desired = target - obj.position;
-            desired = norm(desired);
+           % desired = norm(desired);
             desired = desired*obj.max_speed;
             
             steer = desired-obj.velocity;
-            steer = steer./norm(steer).*obj.max_force;
+            steer = steer.*obj.max_force;
         end
         
         function [steer] = seperate(obj, boids)
-            desired_separation = 100.0; %%%%%%%%%% communication range
+            desired_separation = obj.detection_range; %%%%%%%%%% communication range
             steer = [0,0];
             count = 0;
             positions = zeros(2,length(boids));
@@ -123,7 +140,7 @@ classdef Boid
         end
         
         function steer = align(obj, boids)
-            neighbor_dist = 50;
+            neighbor_dist = obj.detection_range;
             sum = [0 0];
             count = 0;
             steer = [0 0];
