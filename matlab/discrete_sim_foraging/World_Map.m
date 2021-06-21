@@ -38,12 +38,12 @@ classdef World_Map < handle & matlab.mixin.Copyable
         
         function draw_world(obj)
             %Sum all the layers together and draw them 
-            %Redo this by making layer 1 the "draw" layer
             drawing = obj.map(:,:,obj.obs_layer)*1 + obj.map(:,:,obj.food_layer)*2 + (obj.map(:,:,obj.robot_layer) & obj.ones_map) *7;
-            imagesc(drawing);    
+            %imagesc(drawing);    
+            colormap(colorcube);
+            pcolor(drawing);
             axis image;
-            
-            %pcolor(obj.map(:,:,1);
+
         end
         
         function gen_map(obj)
