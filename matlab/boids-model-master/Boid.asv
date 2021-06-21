@@ -50,8 +50,8 @@ classdef Boid
         
         
         function obj = apply_force(obj, sep_force, coh_force,  ali_force)
-            home_force = obj.seek(obj.home);
-            obj.acceleration = obj.acceleration+sep_force+coh_force+ali_force+obj.Kh*home_force;
+            home_force = obj.seek(obj.goal);
+            obj.acceleration = obj.acceleration+sep_force+coh_force+ali_force+goal_force;
         end
         
         
@@ -100,7 +100,7 @@ classdef Boid
         
         function [steer] = seek(obj, target)
             desired = target - obj.position;
-           % desired = norm(desired);
+            desired = norm(desired);
             desired = desired*obj.max_speed;
             
             steer = desired-obj.velocity;
@@ -140,7 +140,7 @@ classdef Boid
         end
         
         function steer = align(obj, boids)
-            neighbor_dist = obj.detection_range;
+            neighbor_dist = 50;
             sum = [0 0];
             count = 0;
             steer = [0 0];

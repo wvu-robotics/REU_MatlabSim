@@ -51,7 +51,6 @@ end
 relativeOptVel = centralOptVel - neighborsOptVels;
 relPositionOfNeighbors = neighborsPositions - centralAgentPosition;
 
-
 %find normalVectors and uVectors for each velocity obstacle using
 %getNormalVector
 [normalVector, uVector, noAvoidance] = getNormalVector(relativeOptVel, relPositionOfNeighbors, agentRadius, VOAngle, timeHorizon, AngleRefToB, relativeVel);
@@ -76,7 +75,7 @@ else
         psi(i) = theta + pi/2;
         
         %adjustedVel describes the point that the half plane line goes through
-        adjustedVel = centralOptVel + responsibility*uVector(i,:);
+        adjustedVel = centralOptVel + responsibility * uVector(i,:);
         
         %b is the y-intercept of the half plane line
         b(i) = adjustedVel(2) - tan(psi(i)) * adjustedVel(1);
