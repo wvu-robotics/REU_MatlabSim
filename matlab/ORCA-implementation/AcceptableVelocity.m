@@ -31,7 +31,7 @@
 % $Date: June 4, 2021$
 %---------------------------------------------------------
 
-function acceptability = AcceptableVelocity(centralAgentPosition, centralAgentVelocity, neighborsPositions, neighborsVelocities, agentRadius, possibleVelControls, timeHorizon, vOptIsZero, responsibility)
+function [acceptability, psi , b, normalVector]= AcceptableVelocity(centralAgentPosition, centralAgentVelocity, neighborsPositions, neighborsVelocities, agentRadius, possibleVelControls, timeHorizon, vOptIsZero, responsibility)
 
 %Initialize Output
 acceptability = ones(size(possibleVelControls,1),1);
@@ -65,19 +65,21 @@ uVector(noAvoidance == 1, :) = [];
 %based on their velocity obstacle
 if size(normalVector,1) == 0 %If there are no neighbors that need to be avoided, all velocities are acceptable
     acceptability(:) = 1;
+    psi = 0;
+    b = 0;
 else
     for i = 1:size(normalVector,1) %For each neighbor that needs to be avoided
         %Theta is the positive angle of every normal vector from the positive  x axis
         theta = mod(atan2(normalVector(i,2),normalVector(i,1)),2*pi);
         
         %Psi is the angle of the tangent line of the half plane
-        psi = theta + pi/2;
+        psi(i) = theta + pi/2;
         
         %adjustedVel describes the point that the half plane line goes through
         adjustedVel = centralOptVel + responsibility*uVector(i,:);
         
         %b is the y-intercept of the half plane line
-        b = adjustedVel(2) - tan(psi) * adjustedVel(1);
+        b(i) = adjustedVel(2) - tan(psi(i)) * adjustedVel(1);
         
         %Check if the discritized velocities are inside or outside the half
         %plane
@@ -87,12 +89,15 @@ else
             %It is better to start with every velocity allowed and then
             %remove velocities based on the half plane so that you don't
             %overwrite previous ommissions
-            if ((normalVector(i,2) > 0) && (possibleVelControls(j,2) < tan(psi)*possibleVelControls(j,1)+b)) || ((normalVector(i,2) < 0) && (possibleVelControls(j,2) > tan(psi)*possibleVelControls(j,1)+b))
+            if ((normalVector(i,2) > 0) && (possibleVelControls(j,2) < tan(psi(i))*possibleVelControls(j,1)+b(i))) || ((normalVector(i,2) < 0) && (possibleVelControls(j,2) > tan(psi(i))*possibleVelControls(j,1)+b(i)))
                 acceptability(j) = 0;
             end
         end
     end
 end
+psi = {psi};
+b = {b};
+normalVector = {normalVector};
 end
 
 

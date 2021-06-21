@@ -218,15 +218,15 @@ classdef velocityObstacleEnv
                     for i = 1:(length(obj.halfPlane(fNum,:))-1)
                         if length(newPsi) >= i  
                             Ymax = tan(newPsi(i))*(obj.xMax + 10) + newB(i);
-                            Ymin = tan(newPsi(i))*-(obj.xMax + 10) + newB(i);
+                            Ymin = tan(newPsi(i))*-(obj.xMax - 10) + newB(i);
 %                             set(obj.halfPlane(fNum,i + fNum),'xdata', [-obj.xMax, obj.xMax], ...
 %                                                        'ydata', [Ymin Ymax], ...
 %                                                        'visible', 'on');  
-                            YminP = 20*newNV(i,2) + Ymin;
-                            YmaxP = 20*newNV(i,2) + Ymax;
-                            XminP = 20*newNV(i,1) - (obj.xMax+10);
-                            XmaxP = 20*newNV(i,1) + (obj.xMax+10) ;
-                            set(obj.halfPlanePatch(fNum,i + fNum), 'xdata',[-(obj.xMax+10), (obj.xMax+10 ), XmaxP, XminP ]  ...
+                            YminP = 5*newNV(i,2) + Ymin;
+                            YmaxP = 5*newNV(i,2) + Ymax;
+                            XminP = 5*newNV(i,1) - (obj.xMax +10);
+                            XmaxP = 5*newNV(i,1) + obj.xMax  ;
+                            set(obj.halfPlanePatch(fNum,i + fNum), 'xdata',[-obj.xMax , obj.xMax , XmaxP, XminP ]  ...
                                                            , 'ydata',[Ymin , Ymax , YmaxP , YminP ]...
                                                            , 'visible', 'on');
                         else
