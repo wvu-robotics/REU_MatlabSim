@@ -49,11 +49,12 @@ classdef Robot < handle
         end
 
         
-        function xy = move(obj)
+        function xy = move(obj,obj_2)
             %TODO split this into multiple funcs for different behaviours!
             %use persistence
             %check for boundaries
             %move the robot in a random direction
+            obj_2.max_x = 5;
             disp("moving robot");
             temp_x = obj.x;
             temp_y = obj.y;
@@ -125,6 +126,7 @@ classdef Robot < handle
                 obj.y = size(obj.local_map.map,1);
             end
 
+            %
             if(obj.local_map.map(obj.x, obj.y, 2) >0)
                 obj.x = temp_x;
                 obj.y = temp_y;
