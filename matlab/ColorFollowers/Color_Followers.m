@@ -17,10 +17,10 @@ clc
 %==================================================================
 
 
-numAgents = 50000; %number of agents
-mapSize =300; %x and y dimension of map
+numAgents = 5000; %number of agents
+mapSize =100; %x and y dimension of map
 sensingRadius = 5; %Radius of sensing range for each agent (square sensing range)
-neighborToGoalForceRatio = 0.0; %Ratio of the force from the goal point to the force exerted by one agent of the same color
+neighborToGoalForceRatio = 0.5; %Ratio of the force from the goal point to the force exerted by one agent of the same color
 
 environment = zeros(mapSize, mapSize, 6); %X, Y for RGB and "contains agent" and GoalX,GoalY
 imageResize = 10; %Makes the plot bigger
