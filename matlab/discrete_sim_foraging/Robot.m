@@ -8,8 +8,8 @@ classdef Robot < handle
         y = 1;
         wallet = 2;
         battery =3;
-        last_heading =4;
-        local_map = 'a'; %= World_Map("a")
+        last_heading;
+        local_map;% = 'a'; %= World_Map("a")
     end
     
     methods
@@ -47,24 +47,29 @@ classdef Robot < handle
         function xy = get_xy(obj)
             xy = [obj.x,obj.y];
         end
-        %TODO
-        %Returns a handle to the object when called
+
         function val = get(obj)
             val = obj;
         end
         
-        %check for if on food
-        %use persistence
-        %check for boundaries
-        %move the robot in a random direction
+        
         function xy = move(obj)
+            %use persistence
+            %check for boundaries
+            %move the robot in a random direction
             disp("moving robot");
             temp_x = obj.x;
             temp_y = obj.y;
-            dir = obj.last_heading + randi([-1,1]);
-            dir = mod(dir,8);
+            dir = obj.last_heading + randi([-3,3]);
+            dir = mod(dir,8);%wrap around heading value
+            if(dir == 0)
+                dir = 1;
+            end
             obj.last_heading = dir;
             disp(dir);
+            
+            dir = randi([1,8]);
+            obj.last_heading = dir;
             
             if dir == 1
                 obj.x = obj.x;
@@ -108,14 +113,14 @@ classdef Robot < handle
             if(obj.y < 1)
                 obj.y = 1;
             end
+            if(obj.y > size (obj.local_map.map,1))
+                obj.y = size(obj.local_map.map,1);
+            end
 
-            %scan surrounding area
-            disp("obj.x is " + obj.x);
-
-            if(obj.local_map.map(obj.x, obj.y, 1) >0)
+            if(obj.local_map.map(obj.x, obj.y, 2) >0)
                 obj.x = temp_x;
                 obj.y = temp_y;
-                disp("oopsy woopsy, I crashed!");
+                %disp("oopsy woopsy, I crashed!");
             end
            xy = [obj.x, obj.y];
 
