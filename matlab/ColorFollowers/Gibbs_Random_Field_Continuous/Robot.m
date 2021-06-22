@@ -13,6 +13,7 @@ classdef Robot < handle
         color;
         VMax = 1.5;
         sigma = 0.4;
+        stepSize = 0.5;
         
         %All just random values for now, need to be tuned
         %------------------------------------------------
@@ -21,18 +22,17 @@ classdef Robot < handle
         epsilon = 0.04;
         epsilon_not = 0.04;
         alpha = 1;
-        r_not = 5;
-        mass = 0.5;
+        r_not = 10;
+        mass = 0.05;
         %------------------------------------------------
         
-        local_map;
         neighborList;
-        sensingRange = 5;
+        sensingRange = 20;
         timeStep;
     end
     
     methods
-        function obj = Robot(id,x,y, ts, col, map_in)
+        function obj = Robot(id,x,y, ts, col)
             %ROBOT Construct an instance of this class
             obj.x = x; %init x coord
             obj.y = y;
@@ -41,7 +41,6 @@ classdef Robot < handle
             obj.id = id; %A unique ID for the robot
             obj.color = col;
             
-            obj.local_map = map_in;
             obj.timeStep = ts;
         end
         
@@ -94,14 +93,14 @@ classdef Robot < handle
         %agent and puts them in neighborList
         function getNeighbors(obj, worldObj)
             obj.neighborList = [];
-            for i = obj.x-obj.sensingRange:obj.x+obj.sensingRange
-                for j = obj.y-obj.sensingRange:obj.y+obj.sensingRange
-                    if i > 0 && i < worldObj.max_x && j > 0 && j < worldObj.max_y
-                        if worldObj.worldMap.map(i,j,worldObj.robot_layer) ~= 0
-                            obj.neighborList(length(obj.neighborList)+1) = worldObj.worldMap.map(i,j,worldObj.robot_layer);
-                        end
-                    end
-                end
+            
+            for i = 1:length(worldObj.robot_list)
+               relativeX = worldObj.robot_list(i).x - obj.x;
+               relativeY = worldObj.robot_list(i).y - obj.y;
+               distance = norm([relativeX,relativeY]);
+               if distance < obj.sensingRange && worldObj.robot_list(i).id ~= obj.id
+                  obj.neighborList = [obj.neighborList, worldObj.robot_list(i).id];
+               end
             end
         end
         
@@ -136,7 +135,7 @@ classdef Robot < handle
             
             closeObstacles = obj.ObstacleAvoidingPotential(worldObj, propVel);
             OAPotential = 0;
-            for i = 1:length(closeObstacles)
+            for i = 1:size(closeObstacles,1)
                 radius = norm([propX, propY] - closeObstacles(i,:));
                 chargeProduct = abs(obj.charge * obj.obs_charge);
                 OAPotential = OAPotential + (obj.epsilon * (6/(obj.alpha - 6) * exp(obj.alpha)...
@@ -162,17 +161,48 @@ classdef Robot < handle
             end
             
             KENeighbor = 0.5 * group_mass * (VxSum^2 + VySum^2);
-            KESelf = 0.5 * obj.mass * norm(obj.VMax - propVel)^2;
+            KESelf = 0.5 * obj.mass * (obj.VMax - norm(propVel))^2;
         end
         
         %This function find the list of obstacles that are close to the
         %central agent for use in the Coulomb buckingham function
         function closeObstacles = ObstacleAvoidingPotential(obj, worldObj, propVel)
-            [obsXs, obsYs] = find(worldObj.worldMap.map(:,:,worldObj.obs_layer));
-            obstacleLocations = [obsXs, obsYs];
-            [propX,propY] = obj.kinematicModel(propVel);
-            distToObstacles = vecnorm([obsXs, obsYs] - [propX,propY],2,2);
-            closeObstacles = obstacleLocations(distToObstacles <= obj.sensingRange);
+            
+            %make set of points on the walls
+            tempWall = ones(length(1:obj.stepSize:worldObj.max_x),1)*worldObj.max_y;
+            topWall = [(1:obj.stepSize:worldObj.max_x)', tempWall];
+            tempWall = zeros(length(1:obj.stepSize:worldObj.max_x),1);
+            bottomWall = [(1:obj.stepSize:worldObj.max_x)', tempWall];
+            tempWall = ones(length(1:obj.stepSize:worldObj.max_y),1)*worldObj.max_x;
+            rightWall = [tempWall, (1:obj.stepSize:worldObj.max_y)'];
+            tempWall = zeros(length(1:obj.stepSize:worldObj.max_y),1);
+            leftWall = [tempWall, (1:obj.stepSize:worldObj.max_y)'];
+            
+            %Make a list of close obstacles and check if the agent can see
+            %any of the walls
+            closeObstacles = [];
+            if obj.truex - obj.sensingRange < 0
+                theta = asin(obj.truex/obj.sensingRange);
+                bottomBound = obj.truey - obj.sensingRange*cos(theta);
+                topBound = obj.truey + obj.sensingRange*cos(theta);
+                closeObstacles = [closeObstacles; leftWall(leftWall(:,2) > bottomBound & leftWall(:,2) < topBound,:)];
+            elseif obj.truex + obj.sensingRange > worldObj.max_x
+                theta = asin((worldObj.max_x - obj.truex)/obj.sensingRange);
+                bottomBound = obj.truey - obj.sensingRange*cos(theta);
+                topBound = obj.truey + obj.sensingRange*cos(theta);
+                closeObstacles = [closeObstacles; rightWall(rightWall(:,2) > bottomBound & rightWall(:,2) < topBound,:)];
+            end
+            if obj.truey - obj.sensingRange < 0
+                theta = asin(obj.truey/obj.sensingRange);
+                bottomBound = obj.truex - obj.sensingRange*cos(theta);
+                topBound = obj.truex + obj.sensingRange*cos(theta);
+                closeObstacles = [closeObstacles; bottomWall(bottomWall(:,1) > bottomBound & bottomWall(:,1) < topBound,:)];
+            elseif obj.truey + obj.sensingRange > worldObj.max_y
+                theta = asin((worldObj.max_y - obj.truey)/obj.sensingRange);
+                bottomBound = obj.truex - obj.sensingRange*cos(theta);
+                topBound = obj.truex + obj.sensingRange*cos(theta);
+                closeObstacles = [closeObstacles; topWall(topWall(:,1) > bottomBound & topWall(:,1) < topBound,:)];
+            end
         end
         
         %This function calculates the probability of a given proposed
