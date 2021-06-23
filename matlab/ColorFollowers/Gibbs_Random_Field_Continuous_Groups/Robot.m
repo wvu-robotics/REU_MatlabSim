@@ -12,19 +12,19 @@ classdef Robot < handle
         Vy = 0;
         goalX = 1;
         goalY = 1;
-        color;
+        color = 1;
         VMax = 0.5;
-        sigma = 0.4;
-        stepSize = 0.5;
-        goalPotentialSlope = 1;
-        goalAllowance = 1;
+        sigma = 0.8;
+        stepSize = 2;
+        goalPotentialExp = 1.2;
+        goalAllowance = 8;
         RGB = [0 0 0];
         
         %All just random values for now, need to be tuned
         %------------------------------------------------
         charge = 4;
-        maxChargeProduct = 16;
-        obs_charge = 0.5;
+        maxChargeProduct = 30;
+        obs_charge = 0.1;
         epsilon = 0.04;
         epsilon_not = 0.04;
         alpha = 1;
@@ -33,19 +33,18 @@ classdef Robot < handle
         %------------------------------------------------
         
         neighborList;
-        sensingRange = 20;
+        sensingRange = 5;
         timeStep;
     end
     
     methods
-        function obj = Robot(id,x,y, ts, col)
+        function obj = Robot(id,x,y, ts)
             %ROBOT Construct an instance of this class
             obj.x = x; %init x coord
             obj.y = y;
             obj.truex = x;
             obj.truey = y;
             obj.id = id; %A unique ID for the robot
-            obj.color = col;
             
             obj.timeStep = ts;
         end
@@ -57,9 +56,18 @@ classdef Robot < handle
         end
         
         %Sets the agent's goal to a random XY Position in the map
-        function randomGoal(obj, worldObj)
-            obj.goalX = randi(worldObj.max_x);
-            obj.goalY = randi(worldObj.max_y);
+        function newGoal(obj, worldObj, type)
+            switch type
+                case 'random'
+                    obj.goalX = randi(worldObj.max_x);
+                    obj.goalY = randi(worldObj.max_y);
+                case 'topRight'
+                    obj.goalX = randi([round(worldObj.max_x*3/4),worldObj.max_x]);
+                    obj.goalY = randi([round(worldObj.max_y*3/4),worldObj.max_y]);
+                case 'topLeft'
+                    obj.goalX = randi(round(worldObj.max_x/4));
+                    obj.goalY = randi([round(worldObj.max_y*3/4),worldObj.max_y]);
+            end
         end
 
         %This takes the newVelocity output by the grf method and uses it to
@@ -111,7 +119,8 @@ classdef Robot < handle
                relativeY = worldObj.robot_list(i).y - obj.y;
                distance = norm([relativeX,relativeY]);
                if distance < obj.sensingRange && worldObj.robot_list(i).id ~= obj.id
-                  obj.neighborList = [obj.neighborList, worldObj.robot_list(i).id];
+                  %obj.neighborList = [obj.neighborList, worldObj.robot_list(i).id];
+                  obj.neighborList = [obj.neighborList, i];
                end
             end
         end
@@ -150,7 +159,7 @@ classdef Robot < handle
                 %the angular difference is 0, this is -maxChargeProduct
                 chargeProduct = angularGoalDistToNeighbor/pi * 2 * obj.maxChargeProduct - obj.maxChargeProduct;
                 
-                CBPotential = CBPotential + (obj.epsilon * (6/(obj.alpha - 6) * exp(obj.alpha)...
+                CBPotential = CBPotential + (obj.epsilon * (6/(obj.alpha - 6) * 2.718^(obj.alpha)...
                     * (1 - radius/obj.r_not) - obj.alpha/(obj.alpha - 6) * (obj.r_not/radius)^6)...
                     + chargeProduct/(4*pi*obj.epsilon_not*radius));
             end
@@ -160,7 +169,7 @@ classdef Robot < handle
             for i = 1:size(closeObstacles,1)
                 radius = norm([propX, propY] - closeObstacles(i,:));
                 chargeProduct = abs(obj.charge * obj.obs_charge);
-                OAPotential = OAPotential + (obj.epsilon * (6/(obj.alpha - 6) * exp(obj.alpha)...
+                OAPotential = OAPotential + (obj.epsilon * (6/(obj.alpha - 6) * 2.718^(obj.alpha)...
                     * (1 - radius/obj.r_not) - obj.alpha/(obj.alpha - 6) * (obj.r_not/radius)^6)...
                     + chargeProduct/(4*pi*obj.epsilon_not*radius));
             end
@@ -237,7 +246,7 @@ classdef Robot < handle
             goalPotential = GoalPotential(obj, mcmcChain(1,:));
             potentialChain = KENeighbor + KESelf + CBPotential + OAPotential + goalPotential;
             
-            for i = 1:20
+            for i = 1:15
                
                 propVx = normrnd(obj.Vx, obj.sigma);
                 propVy = normrnd(obj.Vy, obj.sigma);
@@ -272,7 +281,7 @@ classdef Robot < handle
         function goalPotential = GoalPotential(obj, propVel)
             [propX, propY] = kinematicModel(obj, propVel);
             distToGoal = norm([obj.goalX - propX, obj.goalY - propY]);
-            goalPotential = distToGoal * obj.goalPotentialSlope;
+            goalPotential = distToGoal^obj.goalPotentialExp;
         end
         
         %This checks if the agent is close enough to their goal to be
