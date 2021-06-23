@@ -1,4 +1,4 @@
-%% Function Name: AcceptableVelocity
+%% Prioritized Acceptable Velocities
 % acceptability = AcceptableVelocity(centralAgentPosition, centralAgentVelocity, neighborsPositions, neighborsVelocities, radius, possibleVelControls)
 %
 % Description: Determines the acceptability of each velocity in the allowed
@@ -17,10 +17,6 @@
 %   agentRadius (Radius of all agents)
 %   possibleVelControls (discritized velocity space as mx2 matrix)
 %   timeHorizon (time for guarnteed colision avoidance)
-%   vOptIsZero (boolian for choosing if vOPT is zero or is the current
-%       velocity)
-%   responsibility (Amount of responsibility each agent takes to get out of
-%       the velocity obstacle. Usually 0.5)
 %
 % Outputs:
 %   acceptability (nx1 logial that encodes which velocities in the velocity
@@ -31,7 +27,7 @@
 % $Date: June 4, 2021$
 %---------------------------------------------------------
 
-function acceptability = AcceptableVelocity(centralAgentPosition, centralAgentVelocity, neighborsPositions, neighborsVelocities, agentRadius, possibleVelControls, timeHorizon, vOptIsZero, responsibility)
+function acceptability = prioritizedAcceptableVelocities(centralAgentPosition, centralAgentVelocity, neighborsPositions, neighborsVelocities, agentRadius, possibleVelControls, timeHorizon)
 
     %Initialize Output
     acceptability = ones(size(possibleVelControls,1),1);
@@ -44,10 +40,6 @@ function acceptability = AcceptableVelocity(centralAgentPosition, centralAgentVe
     centralOptVel = centralAgentVelocity;
     neighborsOptVels = neighborsVelocities;
     relativeVel = centralAgentVelocity - neighborsVelocities;
-    if vOptIsZero
-        centralOptVel = [0,0];
-        neighborsOptVels = zeros(size(neighborsOptVels));
-    end
     relativeOptVel = centralOptVel - neighborsOptVels;
     relPositionOfNeighbors = neighborsPositions - centralAgentPosition;
 
@@ -55,55 +47,45 @@ function acceptability = AcceptableVelocity(centralAgentPosition, centralAgentVe
     %getNormalVector
     [normalVector, uVector, noAvoidance] = getNormalVector(relativeOptVel, relPositionOfNeighbors, agentRadius, VOAngle, timeHorizon, AngleRefToB, relativeVel);
 
-    %Remove the normalVectors and uVectors for neighbors that don't need to be
-    %avoided
+    %Remove the normalVectors, uVectors, positions, and velocities for
+    %neighbors that don't need to be avoided
     normalVector(noAvoidance == 1,:) = [];
     uVector(noAvoidance == 1, :) = [];
-
-    %for each neighbor, update the acceptability of all velocities in the velocity space 
-    %based on their velocity obstacle
-    if size(normalVector,1) == 0 %If there are no neighbors that need to be avoided, all velocities are acceptable
+    neighborsPositions(noAvoidance == 1,:) = [];
+    neighborsVelocities(noAvoidance ==1,:) = [];
+    
+    %If no neighbors need to be avoided
+    if size(normalVector,1) == 0
+        %All velocities are acceptable
         acceptability(:) = 1;
+        
     else
-        for i = 1:size(normalVector,1) %For each neighbor that needs to be avoided
-            %Theta is the positive angle of every normal vector from the positive  x axis
-            theta = mod(atan2(normalVector(i,2),normalVector(i,1)),2*pi);
-
-            %Psi is the angle of the tangent line of the half plane
-            psi = theta + pi/2;
-
-            %adjustedVel describes the point that the half plane line goes through
-            adjustedVel = centralOptVel + responsibility * uVector(i,:);
-
-            %b is the y-intercept of the half plane line
-            b = adjustedVel(2) - tan(psi) * adjustedVel(1);
-
-            %Check if the discritized velocities are inside or outside the half
-            %plane
+        %For each neighbor that needs to be avoided, update the acceptability
+        %of all velocities in the velocity space based on their velocity
+        %obstacle
+        for i = 1:size(normalVector,1)
+            
+            %Calculates the time until a collision with the neighbor
+            time = timeTilCollision(centralAgentPosition, neighborsPositions(i,:), centralAgentVelocity, neighborsVelocities(i,:), agentRadius);
+            
+            %Time shouldn't be NaN, since the neighbors that didn't need to
+            %be avoided where removed.
+            if isnan(time)
+                responsibility = .5
+            %Calculates the responsibility that it should take given time
+            elseif time < 3
+                responsibility = .5;
+            else
+                responsibility = .5 / ((time - 3)^2 + 1);
+            end
+            
+            %Checkes each possible velocity to ensure it's acceptable
             for j = 1:size(possibleVelControls,1)
-                %If the y component of the normal vector is positive, allowed
-                %velocities are above the half plane line and vise versa
-                %It is better to start with every velocity allowed and then
-                %remove velocities based on the half plane so that you don't
-                %overwrite previous ommissions
-                if ((normalVector(i,2) > 0) && (possibleVelControls(j,2) < tan(psi)*possibleVelControls(j,1)+b)) || ((normalVector(i,2) < 0) && (possibleVelControls(j,2) > tan(psi)*possibleVelControls(j,1)+b))
+                %Uses the condition written in the ORCA paper
+                if dot(possibleVelControls(j,:) - centralOptVel - responsibility * uVector(i,:), normalVector(i,:)) < 0
                     acceptability(j) = 0;
                 end
             end
         end
     end
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
