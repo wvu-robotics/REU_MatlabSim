@@ -80,7 +80,7 @@ function velocityControls = modifiedORCAController(positionState, velocityState,
         %velocities are acceptable. Else, the velocity control is just the
         %prefered velocity
         if size(neighborsPositions,1) ~= 0
-            acceptability = AcceptableVelocity(centralAgentPosition, centralAgentVelocity, neighborsPositions, neighborsVelocities, agentRadius, possibleVelControls, timeHorizon, vOptIsZero,responsibility);
+            acceptability = AcceptableVelocity(centralAgentPosition, centralAgentVelocity, neighborsPositions, neighborsVelocities, agentRadius, possibleVelControls, timeHorizon, vOptIsZero, responsibility);
             if sum(acceptability) == 0
                 velocityControls(i, :) = [0,0];
                 continue;
