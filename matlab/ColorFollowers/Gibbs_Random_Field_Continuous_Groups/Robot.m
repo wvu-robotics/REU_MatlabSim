@@ -22,12 +22,21 @@ classdef Robot < handle
         
         %All just random values for now, need to be tuned
         %------------------------------------------------
+%         charge = 4;
+%         maxChargeProduct = 30;
+%         obs_charge = 0.1;
+%         epsilon = 0.1;
+%         epsilon_not = 0.1;
+%         alpha = 2;
+%         r_not = 8;
+%         mass = 0.05;
+        
         charge = 4;
         maxChargeProduct = 30;
         obs_charge = 0.1;
-        epsilon = 0.04;
-        epsilon_not = 0.04;
-        alpha = 1;
+        epsilon = 0.05;
+        epsilon_not = 0.1;
+        alpha = 4;
         r_not = 10;
         mass = 0.05;
         %------------------------------------------------
@@ -67,6 +76,9 @@ classdef Robot < handle
                 case 'topLeft'
                     obj.goalX = randi(round(worldObj.max_x/4));
                     obj.goalY = randi([round(worldObj.max_y*3/4),worldObj.max_y]);
+                case 'bottomLeft'
+                    obj.goalX = randi(round(worldObj.max_x/4));
+                    obj.goalY = randi(round(worldObj.max_y/4));
             end
         end
 
