@@ -143,8 +143,15 @@ classdef velocityObstacleEnv
                for i = 1:length(list)
                    xVOtemp = cell2mat(obj.xVO(list(i) - 1));
                    yVOtemp = cell2mat(obj.yVO(list(i) - 1));
-                   iRobotVelX = robotsVel(1,list(i))*ones(1,length(xVOtemp));
-                   iRobotVelY = robotsVel(2,list(i))*ones(1,length(xVOtemp));
+                   if ~isempty(xVOtemp)
+                        iRobotVelX = robotsVel(1,list(i))*ones(1,length(xVOtemp));
+                        iRobotVelY = robotsVel(2,list(i))*ones(1,length(xVOtemp));
+                   else
+                       iRobotVelX = 0;
+                       iRobotVelX = 0;
+                       xVOtemp = 0;
+                       yVOtemp = 0;
+                   end
                    xVOtemp = xVOtemp + iRobotVelX;
                    yVOtemp = yVOtemp + iRobotVelY;
                    set(obj.l(rNum,list(i) - 1),'xdata', xVOtemp, ...
