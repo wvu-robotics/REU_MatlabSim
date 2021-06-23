@@ -3,30 +3,21 @@ clc;
 clear all;
 close all;
 
-init_food_num = 10;
-init_density_food = 5;
-init_num_bots = 1;
-init_home_loc = [10,10]; %home location in X-Y
-
-%where to randomly spawn the robots in
-robot_home_bounds = [0,10];
-
-%set up a world object with a world bitmap image
+init_density_food = 1;
+init_num_bots = 80; %Making this too high breaks the placement functionality!
+%init_home_loc = [10,10]; %home location in X-Y
 
 %Set up simluation
 world1 = World("world_image_1.png");
-world1.gen_bots(10);
-world1.gen_food(1,1);
-%world1.place_bots(10,10); %Doesn't place robots on map yet! Only the robots know where they are
+world1.gen_bots(init_num_bots);
+world1.gen_food(init_density_food);
+%world1.place_bots(35,35);
 
 for i = 1:1
     disp("Starting Simulation!");
-    for ii=0:100000 %move robot
-        %[j, Fs] = audioread('/home/z/doh.mp3');
-        %sound(j, Fs, 16);
+    for ii=0:100000 %simulation ticks
         world1.tick();
-        %world1.draw_world();
-        pause(.1);
+        pause(.01);
     end
 
 end

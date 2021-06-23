@@ -1,36 +1,35 @@
 classdef Robot < handle
     %ROBOT Summary of this class goes here
-    %   Detailed explanation goes here
-    
+    %One robot object for each simulated robot. The robot decides how it
+    %will move and returns it's actions to the owning class.
     properties
         id = 0;
         x = 1;
         y = 1;
         wallet = 2;
         battery =3;
-        last_heading =4;
-        local_map = 'a'; %= World_Map("a")
+        last_heading;
+        local_map;
+        move_state; %use this to store if we should be doing a levy jump etc
     end
     
     methods
         function obj = Robot(id,x,y,wallet,battery,heading,map_in)
             %ROBOT Construct an instance of this class
-%             if nargin > 0
-%             obj.Value = v;
-%             end
             obj.x = x; %init x coord
+            obj.y = y;
             obj.id = id; %A unique ID for the robot
-            obj.y = y; %init y coord %%%CHANGE BACK!!!!!!!!
             obj.wallet = wallet; %init amount of money
             obj.battery = battery;
-            if (heading == 0)
-            obj.last_heading = randi([1,8]); %Start out with a random direction of travel
+            
+            obj.local_map = map_in;
+
+            
+            if (heading == 0) %If we start with no specified init direction pick a random one
+                obj.last_heading = randi([1,8]);
             else
                 obj.last_heading = heading;
             end
-            
-            %obj.local_map = World_Map(map_in);
-            obj.local_map = map_in;
             
         end
         
@@ -45,51 +44,66 @@ classdef Robot < handle
         end
         
         function xy = get_xy(obj)
+            %Returns a tuple of the robots present X and Y coords
             xy = [obj.x,obj.y];
         end
-        %TODO
-        %Returns a handle to the object when called
-        function val = get(obj)
-            val = obj;
-        end
+
         
-        %check for if on food
-        %use persistence
-        %check for boundaries
-        %move the robot in a random direction
-        function xy = move(obj)
+        function xy = move(obj,obj_2)
+            %TODO split this into multiple funcs for different behaviours!
+            %use persistence
+            %check for boundaries
+            %move the robot in a random direction
+            obj_2.max_x = 5;
             disp("moving robot");
             temp_x = obj.x;
             temp_y = obj.y;
-            dir = obj.last_heading + randi([-1,1]);
-            dir = mod(dir,8);
+            
+            step_size = 1;
+            
+            dir = obj.last_heading + randi([-3,3]);
+            dir = mod(dir,8);%wrap around heading value
+            if(dir == 0)
+                dir = 1;
+            end
             obj.last_heading = dir;
             disp(dir);
             
+            %hacky levy walk implementation, spin out to new function
+            chance = rand;
+            if( chance < 0.01)
+                step_size = 5;
+            end
+            
+            dir = randi([1,8]);
+            obj.last_heading = dir;
+            
+            
+            
             if dir == 1
                 obj.x = obj.x;
-                obj.y = obj.y+1;
+                obj.y = obj.y+step_size;
             elseif (dir == 2)
-                obj.x = obj.x-1;
-                obj.y = obj.y+1;
+                obj.x = obj.x-step_size;
+                obj.y = obj.y+step_size;
             elseif (dir == 3)
-                obj.x = obj.x-1;
+                obj.x = obj.x-step_size;
                 obj.y = obj.y;
             elseif (dir == 4)
-                obj.x = obj.x-1;
-                obj.y = obj.y-1;
+                obj.x = obj.x-step_size;
+                obj.y = obj.y-step_size;
             elseif (dir == 5)
                 obj.x = obj.x;
-                obj.y = obj.y-1;
+                obj.y = obj.y-step_size;
             elseif (dir == 6)
-                obj.x = obj.x+1;
-                obj.y = obj.y-1;
+                obj.x = obj.x+step_size;
+                obj.y = obj.y-step_size;
             elseif (dir == 7)
-                obj.x = obj.x+1;
+                obj.x = obj.x+step_size;
                 obj.y = obj.y;
             elseif (dir == 8)
-                obj.x = obj.x+1;
-                obj.y = obj.y+1;
+                obj.x = obj.x+step_size;
+                obj.y = obj.y+step_size;
             end           
             
             %pick up food
@@ -108,14 +122,15 @@ classdef Robot < handle
             if(obj.y < 1)
                 obj.y = 1;
             end
+            if(obj.y > size (obj.local_map.map,1))
+                obj.y = size(obj.local_map.map,1);
+            end
 
-            %scan surrounding area
-            disp("obj.x is " + obj.x);
-
-            if(obj.local_map.map(obj.x, obj.y, 1) >0)
+            %
+            if(obj.local_map.map(obj.x, obj.y, 2) >0)
                 obj.x = temp_x;
                 obj.y = temp_y;
-                disp("oopsy woopsy, I crashed!");
+                %disp("oopsy woopsy, I crashed!");
             end
            xy = [obj.x, obj.y];
 

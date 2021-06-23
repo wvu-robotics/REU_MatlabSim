@@ -36,8 +36,11 @@
 %---------------------------------------------------------
 
 
-function velocityControls = ORCAController(positionState, velocityState, preferedVelocities, timeHorizon, sensingRange, agentRadius, maxVelocity, velocityDiscritisation, vOptIsZero, responsibility)
+function [velocityControls, psi, b, normalVector] = ORCAController(positionState, velocityState, preferedVelocities, timeHorizon, sensingRange, agentRadius, maxVelocity, velocityDiscritisation, vOptIsZero, responsibility)
 
+psi = cell(size(positionState,1),1);
+b = cell(size(positionState,1),1);
+normalVector = cell(size(positionState,1),1);
 %Initialize the output velocity controls
 velocityControls = zeros(size(positionState,1),2);
 
@@ -80,9 +83,10 @@ for i = 1:size(positionState,1)
    %velocities are acceptable. Else, the velocity control is just the
    %prefered velocity
    if size(neighborsPositions,1) ~= 0
-       acceptability = AcceptableVelocity(centralAgentPosition, centralAgentVelocity, neighborsPositions, neighborsVelocities, agentRadius, possibleVelControls, timeHorizon, vOptIsZero,responsibility);
+       [acceptability, psi(i), b(i),normalVector(i)] = AcceptableVelocity(centralAgentPosition, centralAgentVelocity, neighborsPositions, neighborsVelocities, agentRadius, possibleVelControls, timeHorizon, vOptIsZero,responsibility);
        if sum(acceptability) == 0
            velocityControls(i, :) = [0,0];
+
            continue;
        end
    else

@@ -6,7 +6,7 @@ numAgents = 45000; %number of agents
 mapSize = 300; %x and y dimension of map
 environment = zeros(mapSize, mapSize, 6); %X, Y for RGB and "contains agent" and GoalX,GoalY
 sensingRadius = 2; %Radius of sensing range for each agent (square sensing range)
-neighborToGoalForceRatio = 25;
+neighborToGoalForceRatio = 20;
 
 %Place agents randomly on the map
 for i = 1:numAgents
@@ -53,7 +53,7 @@ colorSum = environment(:,:,1) + environment(:,:,2) + environment(:,:,3);
 imshow(floor(environment(:,:,1:3))./colorSum*1.5.*environment(:,:,4));
 
 %===========================Main Loop==========================%
-while true
+for t = 1:500
    tic
    %find number of agents who have reached their goal points
    numAtGoal = sum(sum(vecnorm(environment(:,:,5:6) - IndexMat,2,3) == 0));
@@ -101,7 +101,13 @@ while true
    imshow(img);
    %--------------------------------------------------------------------%
    disp(toc)
+F(t) = getframe(gcf);
 end
+
+ video = VideoWriter('Zebra_Stripes', 'MPEG-4');
+ open(video);
+ writeVideo(video, F);
+ close(video)
 
 
 function environment = moveAgents(environment, unitToGoal, sensingRadius, neighborToGoalForceRatio, theta, mapSize)
