@@ -49,7 +49,7 @@ classdef World < handle % handle to make objects callable by reference
                        obj.robot_list(i,1).newGoal(obj, type);
                    end
                case 'doubleCoordinated'
-                   if neededBots <= 25
+                   if neededBots <= 18
                       return;
                    end
                    prevLength = length(obj.robot_list);
@@ -66,6 +66,25 @@ classdef World < handle % handle to make objects callable by reference
                            obj.robot_list(i,1).newGoal(obj, type);
                        end
                    end
+               case 'opposingGroups'
+                   if neededBots <= 25
+                      return;
+                   end
+                   prevLength = length(obj.robot_list);
+                   for w=1:neededBots %set up each robot object with a ID and a map object
+                       i = prevLength + w;
+                       if rand() > 0.5
+                           obj.robot_list = [obj.robot_list; Robot(i,randi(round(obj.max_x/4)),randi(round(obj.max_y/4)),obj.timeStep)];
+                           type = 'topRight';
+                           obj.robot_list(i,1).newGoal(obj, type);
+                       else
+                           obj.robot_list = [obj.robot_list; Robot(i,randi([round(obj.max_x*3/4),obj.max_x]),...
+                               randi([round(obj.max_y*3/4),obj.max_y]),obj.timeStep)];
+                           type = 'bottomLeft';
+                           obj.robot_list(i,1).newGoal(obj, type);
+                       end
+                   end
+                   
                for i = 1:length(obj.robot_list)
                   obj.robot_list(i).id = i; 
                end

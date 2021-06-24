@@ -4,9 +4,9 @@ clear all;
 close all;
 
 timeStep = 1;
-numColors = 2;
+numColors = 100000;
 worldSize = 100;
-init_num_bots = 30; %Making this too high breaks the placement functionality!
+init_num_bots = 100; %Making this too high breaks the placement functionality!
 %init_home_loc = [10,10]; %home location in X-Y
 
 %Set up simluation
