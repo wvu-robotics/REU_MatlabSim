@@ -1,0 +1,11 @@
+
+mapMaker("JohnMap.png","Test.png");
+
+
+
+function mapMaker(filename,newfile)
+img1 = imread(filename);
+img2 = img1 ~= 0;
+imwrite(img2,newfile);
+
+end
