@@ -1,0 +1,52 @@
+clc
+clear
+close all
+%   World Building
+numberOfAgents = 3;
+agentRadius = .5;
+timeStep = .05;
+maxTime = 100;
+mapSize = 10;
+counter = 0;
+collisions = 0;
+idealSpeed = 1;
+maxSpeed = 2;
+
+%   VO's and ORCA
+timeHorizon = 10;
+sensingRange = 20;
+velocityDiscritisation = 0.05;
+vOptIsZero = true;
+responsibility = 0.5;
+
+f = @testController;
+
+ENV = agentEnv(numberOfAgents,agentRadius,mapSize,timeStep); 
+
+
+initPositions = [-8,-8;-8,-7;-8,-6];
+goalLocations = -initPositions; 
+
+ENV.setAgentPositions(initPositions);
+ENV.setGoalPositions(goalLocations);
+ENV.setAgentVelocities(zeros(numberOfAgents,2));
+for i = 1:numberOfAgents
+    ENV.agents(i).setController(f);
+end 
+
+for t = 0:timeStep:maxTime
+    counter = counter + 1;
+    ENV.tick;
+    for i = 1:numberOfAgents
+        theta = 2*pi/numberOfAgents * (i-1) + (pi/8)*t;
+        goalLocations(i,:) = [cos(theta+3.9*pi/4),sin(theta+3.9*pi/4)]*mapSize*(.9+(rand()-0.5)*.1);
+    end
+    ENV.setGoalPositions(goalLocations);
+    pause(.01)
+end
+ENV.collisions
+
+
+
+
+
