@@ -110,16 +110,15 @@ classdef agentEnv < handle
                     end 
                     agentDistance =   obj.agents( agent+j-disp).pose - controllerPose;
                     noCollisionDistance = obj.agents( agent).getRadius + obj.agents(agent+j-disp).getRadius;
-                    x = norm(agentDistance);
-                    if abs(x-noCollisionDistance) < .000001
-                        break
-                    end
-                    if x < noCollisionDistance
-                       hasCollided = true;
-                       newPose = -noCollisionDistance*(agentDistance/norm(agentDistance))+ obj.agents(agent+j-disp).pose;
-                       obj.agents(agent).velocity = (newPose - obj.agents(agent).pose)/obj.timeStep;
-                       obj.agentCollider(agent , newPose, hasCollided);
-                       break
+                     x = norm(agentDistance);
+                    if ~(abs(x-noCollisionDistance) < .0001)
+                        if x < noCollisionDistance
+                            hasCollided = true;
+                            newPose = -noCollisionDistance*(agentDistance/norm(agentDistance))+ obj.agents(agent+j-disp).pose;
+                            obj.agents(agent).velocity = (newPose - obj.agents(agent).pose)/obj.timeStep;
+                            obj.agentCollider(agent , newPose, hasCollided);
+                            break
+                        end
                     end
                 end
                 if ~hasCollided
