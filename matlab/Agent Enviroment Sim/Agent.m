@@ -5,18 +5,22 @@ classdef Agent < handle
     properties (Access = public)
        pose;
        velocity;
+       velocityControl = [0 0] ;
        path; 
        pathColor;      
        goalPose;
        color = [1 1 1];
        measuredAgents = Agent.empty;
        measuringRange = 3;
+       maxSpeed = .5;
+       idealSpeed = 1;
     end
     
     properties (Access = private)  
         id;
         radius;
         controller;
+        timeStep; 
     end
     
     methods
@@ -34,9 +38,10 @@ classdef Agent < handle
             end
         end
         
-        function obj = Agent(id, radius)
+        function obj = Agent(id, radius, timeStep)
             obj.id = id;
             obj.radius = radius;
+            obj.timeStep = timeStep;
         end
     
         function radius = getRadius(obj)
@@ -53,6 +58,10 @@ classdef Agent < handle
         
         function setController(obj,controller)
             obj.controller = controller;
+        end 
+        
+        function timeStep= getTimeStep(obj)
+            timeStep = obj.timeStep;
         end
     end
 end
