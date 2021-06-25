@@ -29,14 +29,14 @@ classdef World < handle % handle to make objects callable by reference
         function gen_bots(obj)
            %Create a list of our robots with default values of zero
            %each robot will get a copy of the world map.
-           disp("Generating bots!");
+           %disp("Generating bots!");
            neededBots = obj.num_robots - length(obj.robot_list);
            switch obj.spawnType
                case 'random'
                    prevLength = length(obj.robot_list);
                    for w=1:neededBots %set up each robot object with a ID and a map object
                        i = prevLength + w;
-                       obj.robot_list = [obj.robot_list; Robot(i,randi(obj.max_x-1),randi(obj.max_y-1),obj.timeStep)];
+                       obj.robot_list = [obj.robot_list; Robot(randi(obj.max_x-1),randi(obj.max_y-1),obj.timeStep)];
                        type = 'random';
                        obj.robot_list(i,1).newGoal(obj, type);
                    end
@@ -44,7 +44,7 @@ classdef World < handle % handle to make objects callable by reference
                    prevLength = length(obj.robot_list);
                    for w=1:neededBots %set up each robot object with a ID and a map object
                        i = prevLength + w;
-                       obj.robot_list = [obj.robot_list; Robot(i,randi(round(obj.max_x/4)),randi(round(obj.max_y/4)),obj.timeStep)];
+                       obj.robot_list = [obj.robot_list; Robot(randi(round(obj.max_x/4)),randi(round(obj.max_y/4)),obj.timeStep)];
                        type = 'topRight';
                        obj.robot_list(i,1).newGoal(obj, type);
                    end
@@ -56,43 +56,72 @@ classdef World < handle % handle to make objects callable by reference
                    for w=1:neededBots %set up each robot object with a ID and a map object
                        i = prevLength + w;
                        if rand() > 0.5
-                           obj.robot_list = [obj.robot_list; Robot(i,randi(round(obj.max_x/4)),randi(round(obj.max_y/4)),obj.timeStep)];
+                           obj.robot_list = [obj.robot_list; Robot(randi(round(obj.max_x/4)),randi(round(obj.max_y/4)),obj.timeStep)];
                            type = 'topRight';
                            obj.robot_list(i,1).newGoal(obj, type);
                        else
-                           obj.robot_list = [obj.robot_list; Robot(i,randi([round(obj.max_x*3/4),obj.max_x]),...
+                           obj.robot_list = [obj.robot_list; Robot(randi([round(obj.max_x*3/4),obj.max_x]),...
                                randi(round(obj.max_y/4)),obj.timeStep)];
                            type = 'topLeft';
                            obj.robot_list(i,1).newGoal(obj, type);
                        end
                    end
                case 'opposingGroups'
-                   if neededBots <= 25
+                   if neededBots <= 10
                       return;
                    end
                    prevLength = length(obj.robot_list);
                    for w=1:neededBots %set up each robot object with a ID and a map object
                        i = prevLength + w;
                        if rand() > 0.5
-                           obj.robot_list = [obj.robot_list; Robot(i,randi(round(obj.max_x/4)),randi(round(obj.max_y/4)),obj.timeStep)];
+                           obj.robot_list = [obj.robot_list; Robot(randi(round(obj.max_x/4)),randi(round(obj.max_y/4)),obj.timeStep)];
                            type = 'topRight';
                            obj.robot_list(i,1).newGoal(obj, type);
                        else
-                           obj.robot_list = [obj.robot_list; Robot(i,randi([round(obj.max_x*3/4),obj.max_x]),...
+                           obj.robot_list = [obj.robot_list; Robot(randi([round(obj.max_x*3/4),obj.max_x]),...
                                randi([round(obj.max_y*3/4),obj.max_y]),obj.timeStep)];
                            type = 'bottomLeft';
                            obj.robot_list(i,1).newGoal(obj, type);
                        end
                    end
                    
-               for i = 1:length(obj.robot_list)
-                  obj.robot_list(i).id = i; 
-               end
+%                for i = 1:length(obj.robot_list)
+%                   obj.robot_list(i).id = i; 
+%                end
+               case 'depot'
+                   prevLength = length(obj.robot_list);
+                   for w=1:neededBots %set up each robot object with a ID and a map object
+                       if rand() > 0.5
+                           i = prevLength + w;
+                           obj.robot_list = [obj.robot_list; Robot(randi([round(obj.max_x*2/5),round(obj.max_x*3/5)]),randi([round(obj.max_y*2/5),round(obj.max_y*3/5)]),obj.timeStep)];
+                           type = 'edge';
+                           obj.robot_list(i,1).newGoal(obj, type);
+                       else
+                           i = prevLength + w;
+                           randVal = rand();
+                           if randVal < 0.25
+                               %left wall
+                               obj.robot_list = [obj.robot_list; Robot(randi(round(obj.max_x/5)),randi(obj.max_y-1),obj.timeStep)];
+                           elseif randVal < 0.5
+                               %bottom wall
+                               obj.robot_list = [obj.robot_list; Robot(randi(obj.max_x-1),randi(round(obj.max_y/5)),obj.timeStep)];
+                           elseif randVal < 0.75
+                               %right wall
+                               obj.robot_list = [obj.robot_list; Robot(randi([round(obj.max_x*4/5),obj.max_x-1]),randi(obj.max_y-1),obj.timeStep)];
+                           else
+                               %top wall
+                               obj.robot_list = [obj.robot_list; Robot(randi(obj.max_x-1),randi([round(obj.max_x*4/5),obj.max_x-1]),obj.timeStep)];
+                           end
+                           
+                           type = 'center';
+                           obj.robot_list(i,1).newGoal(obj, type);
+                       end
+                   end
            end
         end
         
         function drawWorld(obj)
-            figure(1)
+            %figure(1)
             clf
             hold on
             for i = 1:length(obj.robot_list)
@@ -107,7 +136,7 @@ classdef World < handle % handle to make objects callable by reference
         end
         
         function tick(obj)
-            disp("num_robots " + obj.num_robots);
+            %disp("num_robots " + obj.num_robots);
             for ii = 1:length(obj.robot_list) %make each robot bust a move
                 obj.robot_list(ii).move(obj);
                 obj.robot_list(ii).FindNewColor;
