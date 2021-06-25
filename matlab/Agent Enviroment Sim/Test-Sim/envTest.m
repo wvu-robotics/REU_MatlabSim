@@ -76,7 +76,7 @@ for t = 0:timeStep:maxTime
     ENV.setAgentPositions(agentPositions);
 
     for i = 1:numberOfAgents
-        theta = 2*pi/numberOfAgents * (i-1) + (pi/8)*t;
+        theta = 2*pi/numberOfAgents * (i-1) + (pi/2)*t;
         goalLocations(i,:) = [cos(theta+3.9*pi/4),sin(theta+3.9*pi/4)]*mapSize*(.9+(rand()-0.5)*.1);
     end
     ENV.setGoalPositions(goalLocations);

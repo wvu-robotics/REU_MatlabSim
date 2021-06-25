@@ -21,18 +21,14 @@ responsibility = 0.5;
 
 
 
-ENV = agentEnv(numberOfAgents,agentRadius,mapSize); 
+ENV = agentEnv(numberOfAgents,agentRadius,mapSize,timeStep); 
 
-initPositions = zeros(numberOfAgents, 2);
-goalLocations = zeros(numberOfAgents, 2);
 initPositions = [-8,-8;-8,-7;-8,-6];
 goalLocations = -initPositions; 
-for i = 1:numberOfAgents
-    ENV.setAgentColor(i,[0 0 0]);
-end
+
 ENV.setAgentPositions(initPositions);
 ENV.setGoalPositions(goalLocations);
-
+ENV.setAgentVelocities(zeros(numberOfAgents,2));
 
    
 
@@ -57,27 +53,25 @@ for t = 0:timeStep:maxTime
     %Computes collision free ORCAVelocities that are closest to the
     %idealVelocities.
     for i = 1:numberOfAgents
-        idealNorm = ENV.agents(i).calcIdealNormVec;
-        idealVelocities(i,:) =   idealNorm*idealSpeed;
-        colorVec = [.5*idealNorm+.5,.5];
+        idealUnit = ENV.agents(i).calcIdealUnitVec;
+        idealVelocities(i,:) =   idealUnit*idealSpeed;
+        colorVec = [.5*idealUnit+.5,.5];
         ENV.setAgentColor(i,colorVec);
     end
+    agentPositions = ENV.getAgentPositions;
+    agentVelocities = ENV.getAgentVelocities;
     [agentVelocities, psi, b, normalVector] = ORCAController(agentPositions, agentVelocities, idealVelocities, timeHorizon, sensingRange, agentRadius, maxSpeed, velocityDiscritisation, vOptIsZero, responsibility);
     
-    %Updates positions & handles collisions
-    
-    [agentPositions, agentVelocities, numCollisions] = Collider(agentPositions, agentVelocities, agentRadius);
-    agentPositions = agentPositions + agentVelocities * timeStep;
-    collisions = collisions + numCollisions;
-    ENV.setAgentPositions(agentPositions);
+    ENV.setAgentVelocities(agentVelocities);
+    ENV.updateAgentKinematics;
 
     for i = 1:numberOfAgents
         theta = 2*pi/numberOfAgents * (i-1) + (pi/8)*t;
         goalLocations(i,:) = [cos(theta+3.9*pi/4),sin(theta+3.9*pi/4)]*mapSize*(.9+(rand()-0.5)*.1);
     end
     ENV.setGoalPositions(goalLocations);
-
     pause(.001)
+    ENV.collider;
     ENV.updateGraph;
     VOenv = VOenv.drawHalfPlaneSpace(1,psi,b,normalVector);
     VOenv.drawVector([0, agentVelocities(1,1), 0, agentVelocities(1,2)],1,1);
@@ -87,6 +81,7 @@ for t = 0:timeStep:maxTime
         break;
     end
 end
+ENV.collisions
 
 
 

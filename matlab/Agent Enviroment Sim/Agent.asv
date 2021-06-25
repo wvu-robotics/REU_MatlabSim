@@ -23,7 +23,6 @@ classdef Agent < handle
         function callMeasurement(obj, envObj) 
             disp = 0;
             envAgents = envObj.getNumberOfAgents; 
-            obj.measuredAgents = Agent.empty;
             for i = 1:(envAgents-1)
                 if obj.id + i >  envAgents
                     disp = envAgents;
