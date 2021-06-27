@@ -23,9 +23,7 @@ initPositions = zeros(numberOfAgents,2);
 
 initPositions(1,:) = [0,-9];
 
-d = 9 / (numberOfAgents - 2);
-
-initPositions(2:numberOfAgents,2) = 0:d:9;
+initPositions(2:numberOfAgents,2) = 0:(9/(numberOfAgents - 2)):9;
 
 initPositions(2:2:numberOfAgents,1) = 1;
 initPositions(3:2:numberOfAgents,1) = -1;

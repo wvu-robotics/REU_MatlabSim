@@ -1,16 +1,19 @@
-%% ORCAController
+%% Oval Metric ORCA Controller w/ FeedForward Smoothing
 
-%Description: Sets agent's velocityControl to the velocity that the
-%original ORCA method perscribes
+%Description: Finds the velocities that ORCA deems acceptable, but selects
+%the best of the acceptable based on ovalMetric. Afterward, applies
+%acceleration or feedforward smoothing and sets the velocityControl of
+%agent to agent.velocity + accel.
 
 %Parameter: agent: A 1x1 Agent handle
 
-function ORCAController(agent)
+function ovalORCAController(agent)
     %Constants
     timeHorizon = 10;
     velocityDiscritisation = 0.05;
     vOptIsZero = false;
     responsibility = 0.5;
+    transCost = 5;
     
     %Sets the preferred velocity to point to the goalPose at the idealSpeed
     preferredVelocity = agent.calcIdealUnitVec() * agent.idealSpeed;
@@ -53,7 +56,7 @@ function ORCAController(agent)
             %Uses the acceptability criteria to narrow down the allowed
             %velocities and pick the best one
             acceptableVelocities = possibleVelControls(acceptability == 1, :);
-            distFromPrefered = vecnorm(acceptableVelocities - preferedVelocity, 2, 2);
+            distFromPrefered = ovalMetric(transCost, preferredVelocity, acceptableVelocities);
             
             %The 'best' velocuty is the allowed velocity closest to the
             %prefered velocity
