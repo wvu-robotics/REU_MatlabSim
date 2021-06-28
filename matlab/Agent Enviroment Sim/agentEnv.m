@@ -3,6 +3,7 @@ classdef agentEnv < handle
     %   Detailed explanation goes here
      properties (Access = public)
         agents = Agent.empty;
+        realTime = true
         collisions = 0;
      end
     
@@ -39,10 +40,10 @@ classdef agentEnv < handle
             end
             for i = 1:numberOfAgents
                 obj.agents(i) = Agent(i, agentRadius,timeStep);
-                obj.lineAgent(i) = line('lineWidth', 1);
+                obj.lineAgent(i) = patch('lineWidth', 1, 'facecolor', 'none');
                 obj.textAgentNumber(i) = text;
                 set(obj.textAgentNumber(i), 'String', i)
-                set(obj.lineAgent(i),'color', 'b')
+                set(obj.lineAgent(i),'edgecolor', 'b')
             end
         end
 % Setters
@@ -69,7 +70,7 @@ classdef agentEnv < handle
         
         function setAgentColor(obj,id,color)
             obj.agents(id).color = color;
-            set(obj.lineAgent(id), 'Color', color);
+            set(obj.lineAgent(id), 'edgecolor', color);
         end
         
 %getters       
@@ -93,16 +94,20 @@ classdef agentEnv < handle
 %functionaility
         function physics(obj, id)
                 controllerPose = obj.findAgentControllerKinematics(id);
-                obj.agentCollider(id, controllerPose, false);
+                hasCollided = obj.agentCollider(id, controllerPose, false);
+                if hasCollided
+                   obj.collisions = obj.collisions + 1;
+                end
                 obj.updateAgentKinematics(id);
                 obj.updateAgentPath(id,obj.agents(id).pose);
         end
         
         function updateAgentColor(obj,id)
-            set(obj.lineAgent(id), 'Color', obj.agents(id).color);
+            set(obj.lineAgent(id), 'edgecolor', obj.agents(id).color);
         end
         
-        function agentCollider(obj, agent, controllerPose, hasCollided)
+        function collision = agentCollider(obj, agent, controllerPose, hasCollided)
+                collision = hasCollided;
                 disp = 0;
                 for j = 1:(obj.numberOfAgents-1)
                     if  agent + j > obj.numberOfAgents
@@ -116,7 +121,7 @@ classdef agentEnv < handle
                             hasCollided = true;
                             newPose = -noCollisionDistance*(agentDistance/norm(agentDistance))+ obj.agents(agent+j-disp).pose;
                             obj.agents(agent).velocity = (newPose - obj.agents(agent).pose)/obj.timeStep;
-                            obj.agentCollider(agent , newPose, hasCollided);
+                            collision = obj.agentCollider(agent , newPose, hasCollided);
                             break
                         end
                     end
@@ -170,14 +175,28 @@ classdef agentEnv < handle
             end
         end
         
+        
+        
         function tick(obj)
+           tStart = cputime;
             for i = 1:obj.numberOfAgents
                 obj.agents(i).callMeasurement(obj);
                 obj.agents(i).callController;     
                 obj.physics(i);
+                obj.updateGraph;
             end
-            obj.updateGraph;
-            pause(.001)
+
+            tEnd = cputime - tStart;
+            if obj.realTime
+                if tEnd > obj.timeStep
+                    pause(.0001);
+                else
+                    pause(obj.timeStep - tEnd);
+                end
+            else
+                pause(.0001);
+            end
+            
         end 
     end
 end
