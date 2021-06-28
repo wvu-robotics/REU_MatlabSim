@@ -1,0 +1,82 @@
+Modification: Added ovalMetric to modifiedORCAController
+
+numTimeSteps
+unmod	mod
+779	684
+1601	1601
+811	690
+735	657
+791	693
+806	631
+1601	1601
+665	643
+1601	1601
+1601	1601
+1601	1601
+798	665
+682	669
+1601	1601
+733	617
+1601	1601
+750	656
+776	678
+1601	1601
+650	572
+794	660
+1601	1601
+1601	1601
+681	649
+1601	1601
+741	648
+686	661
+729	633
+1601	1601
+1601	1601
+
+numCollisions
+unmod	mod
+29	17
+80	156
+31	15
+32	17
+23	18
+42	14
+73	114
+17	18
+73	97
+73	82
+58	106
+51	37
+17	15
+56	93
+26	10
+143	126
+37	30
+50	24
+81	85
+20	13
+17	10
+65	100
+49	86
+19	20
+58	77
+18	19
+18	20
+18	12
+66	148
+57	85
+
+numberOfAgents		= 5
+agentRadius		= 1
+mapSize			= 10
+timeStep		= .05
+maxTime			= 80
+timeHorizon		= 10
+sensingRange		= 20
+velocityDiscritisation	= 0.05
+vOptIsZero		= false
+responsibility		= 0.5
+safetyMargin		= 1.1
+idealSpeed		= .5
+maxSpeed		= 2
+accelConstant		= 1

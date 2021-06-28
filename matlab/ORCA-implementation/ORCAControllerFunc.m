@@ -1,4 +1,4 @@
-%% Function Name: Modified ORCA Controller
+%% Function Name: ORCAController
 % velocityControls = ORCAController(postitionState, velocityState, preferedVelocities, tau, sensingRange)
 %
 % Description: This function finds the velocity control outputs for a
@@ -36,8 +36,11 @@
 %---------------------------------------------------------
 
 
-function velocityControls = modifiedORCAController(positionState, velocityState, preferredVelocities, timeHorizon, sensingRange, agentRadius, maxVelocity, velocityDiscritisation, vOptIsZero, responsibility)
+function [velocityControls, psi, b, normalVector] = ORCAControllerFunc(positionState, velocityState, preferedVelocities, timeHorizon, sensingRange, agentRadius, maxVelocity, velocityDiscritisation, vOptIsZero, responsibility)
 
+psi = cell(size(positionState,1),1);
+b = cell(size(positionState,1),1);
+normalVector = cell(size(positionState,1),1);
 %Initialize the output velocity controls
 velocityControls = zeros(size(positionState,1),2);
 
@@ -80,36 +83,24 @@ for i = 1:size(positionState,1)
    %velocities are acceptable. Else, the velocity control is just the
    %prefered velocity
    if size(neighborsPositions,1) ~= 0
-       acceptability = AcceptableVelocity(centralAgentPosition, centralAgentVelocity, neighborsPositions, neighborsVelocities, agentRadius, possibleVelControls, timeHorizon, vOptIsZero,responsibility);
+       [acceptability, psi(i), b(i),normalVector(i)] = AcceptableVelocity(centralAgentPosition, centralAgentVelocity, neighborsPositions, neighborsVelocities, agentRadius, possibleVelControls, timeHorizon, vOptIsZero,responsibility);
        if sum(acceptability) == 0
            velocityControls(i, :) = [0,0];
+
            continue;
        end
    else
-       velocityControls(i, :) = preferredVelocities(i, :);
+       velocityControls(i, :) = preferedVelocities(i, :);
        continue;
    end
    
-   %Uses the acceptability criteria to narrow down the allowed
-   %velocities
+   %Now use the acceptability criteria to narrow down the allowed
+   %velocities and pick the best one
    acceptableVelocities = possibleVelControls(acceptability == 1, :);
-   
-   %Finds the difference in headings between acceptable and preferred
-   %velocities
-   headingDiff = zeros(size(acceptableVelocities,1),1);
-   for vel = 1:size(acceptableVelocities,1)
-       if norm(acceptableVelocities(vel,:)) > 0 && norm(preferredVelocities(i,:)) > 0
-           headingDiff(vel) = acos( dot(preferredVelocities(i,:), acceptableVelocities(vel,:)) / ( norm(preferredVelocities(i,:)) * norm(acceptableVelocities(vel,:)) ) );
-       else
-           headingDiff(vel) = pi;
-       end
-   end
-   
-   magnitudeDiff = abs(norm(preferredVelocities(i,:)) - vecnorm(acceptableVelocities, 2, 2));
-   
+   distFromPrefered = vecnorm(acceptableVelocities - preferedVelocities(i, :), 2, 2);
    %The 'best' velocuty is the allowed velocity closest to the prefered
    %velocity
-   [~, bestVelocityIndex] = min(headingDiff + 5 * magnitudeDiff);
+   [~, bestVelocityIndex] = min(distFromPrefered);
    %add the best acceptable velocity to hte velocityControls output
    velocityControls(i, :) = acceptableVelocities(bestVelocityIndex, :);
 end

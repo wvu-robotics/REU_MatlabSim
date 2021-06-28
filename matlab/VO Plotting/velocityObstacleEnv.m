@@ -19,6 +19,10 @@ classdef velocityObstacleEnv
         t; %Text object for numbering velocity obstaces
         a; %Axis object
         lVec; %Line to plot current robot's velocity
+        halfPlane; %line object that holds half planes
+        halfPlanePatch; %patch to shade in the half plane
+        xMax;
+        yMax;
     end
     
     
@@ -139,8 +143,15 @@ classdef velocityObstacleEnv
                for i = 1:length(list)
                    xVOtemp = cell2mat(obj.xVO(list(i) - 1));
                    yVOtemp = cell2mat(obj.yVO(list(i) - 1));
-                   iRobotVelX = robotsVel(1,list(i))*ones(1,length(xVOtemp));
-                   iRobotVelY = robotsVel(2,list(i))*ones(1,length(xVOtemp));
+                   if ~isempty(xVOtemp)
+                        iRobotVelX = robotsVel(1,list(i))*ones(1,length(xVOtemp));
+                        iRobotVelY = robotsVel(2,list(i))*ones(1,length(xVOtemp));
+                   else
+                       iRobotVelX = 0;
+                       iRobotVelX = 0;
+                       xVOtemp = 0;
+                       yVOtemp = 0;
+                   end
                    xVOtemp = xVOtemp + iRobotVelX;
                    yVOtemp = yVOtemp + iRobotVelY;
                    set(obj.l(rNum,list(i) - 1),'xdata', xVOtemp, ...
@@ -148,11 +159,9 @@ classdef velocityObstacleEnv
                    set(obj.p(rNum,list(i) - 1),'xdata',xVOtemp, ...
                                                'ydata',yVOtemp, ...
                                                'FaceColor', [0 1 1]);
-                        
                    set(obj.t(rNum,list(i) - 1),'position',[obj.originVO(list(i) - 1,1) + iRobotVelX(1), ...
                                                            obj.originVO(list(i) - 1,2) + iRobotVelY(1), 0], ...
                                                            'String', rNum + list(i) - 1);
-                       
                end
                set(obj.f(rNum),'Name', ...
                         append('Real Velocity Space For Robot ',string(rNum)));
@@ -174,6 +183,8 @@ classdef velocityObstacleEnv
                     xlabel('Vx')
                     xlim([-xMax,xMax])
                     ylim([-yMax,yMax])
+                    obj.xMax = xMax;
+                    obj.yMax = yMax;
             end
             
             function obj = addGraphicsVO(obj, fNUM, VOnum)
@@ -183,7 +194,7 @@ classdef velocityObstacleEnv
                         obj.l(fNUM,VOnum - 1) = line('Parent', obj.a(fNUM));
                         obj.p(fNUM,VOnum - 1) = patch('Parent', obj.a(fNUM));
                         obj.t(fNUM,VOnum - 1) = text('Parent', obj.a(fNUM), ...
-                                                    'Clipping', true);     
+                                                     'Clipping', true);     
                         obj.listVO(fNUM,length(obj.listVO)+1) = VOnum;
             end
             
@@ -193,6 +204,46 @@ classdef velocityObstacleEnv
                 obj.lVec(fNUM, lineNumber) = line('Parent', obj.a(fNUM), ...
                                                   'color', color);
             end
+            
+            function obj = addHalfPlane(obj, fNUM, lineNumber)
+                % Adds a halfplane to the desired figure (fNUM) and is indexed
+                % by lineNumber
+                  obj.halfPlane(fNUM, lineNumber) = line('Parent', obj.a(fNUM), ...
+                                                         'visible', 'off');
+                  obj.halfPlanePatch(fNUM, lineNumber) = patch('Parent', obj.a(fNUM), ...
+                                                               'FaceColor', 'b', ...
+                                                               'EdgeColor', 'none', ...
+                                                               'visible', 'off');
+            end
+            
+            
+            function obj = drawHalfPlaneSpace(obj, fNum, psi, b, normalVector)
+                newPsi = cell2mat(psi(fNum));
+                if newPsi ~= 0
+                    newB = cell2mat(b(fNum));
+                    newNV = -cell2mat(normalVector(fNum));
+                    for i = 1:(length(obj.halfPlane(fNum,:))-1)
+                        if length(newPsi) >= i  
+                            Ymax = tan(newPsi(i))*(obj.xMax + 10) + newB(i);
+                            Ymin = tan(newPsi(i))*-(obj.xMax + 10) + newB(i);
+%                             set(obj.halfPlane(fNum,i + fNum),'xdata', [-obj.xMax, obj.xMax], ...
+%                                                        'ydata', [Ymin Ymax], ...
+%                                                        'visible', 'on');  
+                            YminP = 20*newNV(i,2) + Ymin;
+                            YmaxP = 20*newNV(i,2) + Ymax;
+                            XminP = 20*newNV(i,1) - (obj.xMax+10);
+                            XmaxP = 20*newNV(i,1) + (obj.xMax+10) ;
+                            set(obj.halfPlanePatch(fNum,i + fNum), 'xdata',[-(obj.xMax+10), (obj.xMax+10 ), XmaxP, XminP ]  ...
+                                                           , 'ydata',[Ymin , Ymax , YmaxP , YminP ]...
+                                                           , 'visible', 'on');
+                        else
+                            set(obj.halfPlane(fNum,i + fNum), 'visible', 'off');
+                            set(obj.halfPlanePatch(fNum,i + fNum), 'visible', 'off'); 
+                        end
+                    end
+                end 
+            end
+            
        end 
 end
     
