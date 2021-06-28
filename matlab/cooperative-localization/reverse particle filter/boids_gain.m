@@ -1,4 +1,4 @@
-function robot = boids_update(robot,e_max,rho_max)
+function robot = boids_gain(robot,W)
 %UNTITLED9 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -21,15 +21,19 @@ function robot = boids_update(robot,e_max,rho_max)
     mean_error = norm(robot.position - robot.mean_position);
     
      % update boids parameters
-    robot.max_speed = (norm(covar)+2)/(norm(robot.mean_position-robot.position)+1)^2;
-    if robot.max_speed > 5
-        robot.max_speed = 5;
+     d_h = norm(robot.home-robot.mean_position);
+     d_g = norm(robot.goal-robot.mean_position);
+     gains = W*[rho; mean_error; norm(covar); d_h; d_g];
+     
+    robot.max_speed = gains(1);
+    if robot.max_speed > 2
+        robot.max_speed = 2;
     end
-    robot.Ka = rho/rho_max + mean_error/e_max;
-    robot.Kc = (norm(covar) + mean_error^2)/A; %norm([norm(robot.covariance), mean_error^2]);
-    robot.Ks = A/(norm(covar) + mean_error^2);
-    robot.Kh = mean_error^2 * norm(covar)/(A*norm(robot.home-robot.mean_position)^2);
-    robot.Kg = robot.detection_range/(norm(robot.goal-robot.mean_position)*norm(covar));
+    robot.Ka = gains(2);
+    robot.Kc = gains(3);
+    robot.Ks = gains(4);
+    robot.Kh = gains(5);
+    robot.Kg = gains(6);
     
 end
 
