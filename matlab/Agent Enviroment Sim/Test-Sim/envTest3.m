@@ -3,7 +3,7 @@ clear
 close all
 %   World Building
 numberOfAgents = 7;
-agentRadius = .1;
+agentRadius = .5;
 timeStep = .05;
 mapSize = 10;
 counter = 0;
@@ -25,7 +25,7 @@ for i = 1:numberOfAgents
     ENV.setAgentColor(i,'red')
 
 end 
-ENV.pathVisibility(true);
+ENV.pathVisibility(false);
 ENV.realTime = false;
 while(true)
     ENV.tick;
@@ -36,7 +36,7 @@ while(true)
         goalLocations(i,:) = [cos(theta+3.9*pi/4),sin(theta+3.9*pi/4)]*mapSize*(.9+(rand()-0.5)*.1);
     end
     ENV.setGoalPositions(goalLocations);
-    if counter > 60
+    if counter > 20
        break 
     end
 end

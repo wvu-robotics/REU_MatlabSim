@@ -3,7 +3,7 @@ classdef agentEnv < handle
     %   Detailed explanation goes here
      properties (Access = public)
         agents = Agent.empty;
-        realTime = true
+        realTime = true;
         collisions = 0;
      end
     
@@ -14,11 +14,12 @@ classdef agentEnv < handle
         timeStep; 
         figPS;
         figA;
-        lineAgent;
-        textAgentNumber;
-        linePath;
-        lineGoalLocations;
+        lineAgent = patch;
+        textAgentNumber = text;
+        linePath = patch;
+        lineGoalLocations = line;
         goalLocations;
+        isVisible;
      end
     
     methods
@@ -103,7 +104,7 @@ classdef agentEnv < handle
         end
         
         function updateAgentColor(obj,id)
-            set(obj.lineAgent(id), 'edgecolor', obj.agents(id).color);
+            obj.lineAgent(id).EdgeColor = obj.agents(id).color;
         end
         
         function collision = agentCollider(obj, agent, controllerPose, hasCollided)
@@ -135,6 +136,7 @@ classdef agentEnv < handle
             for i = 1:obj.numberOfAgents
                 set(obj.linePath(i),'visible',isVisible)
             end
+            obj.isVisible = isVisible;
         end
         
         function updateAgentPath(obj,agent,pose)
@@ -156,22 +158,21 @@ classdef agentEnv < handle
         end
 
         function updateGraph(obj)
-            set(obj.lineGoalLocations, 'xdata', obj.goalLocations(:,1), ...
-                                       'ydata', obj.goalLocations(:,2));
+            obj.lineGoalLocations.XData =  obj.goalLocations(:,1);
+            obj.lineGoalLocations.YData = obj.goalLocations(:,2);
             for i = 1:obj.numberOfAgents
                 obj.updateAgentColor(i);
                 drawCircle(obj.lineAgent(i),obj.agents(i).pose(1), ...
                                             obj.agents(i).pose(2), ...
-                                            obj.agents(i).getRadius);
-                set(obj.textAgentNumber(i), "Position", ...
-                                            [obj.agents(i).pose(1)  ...
-                                             obj.agents(i).pose(2)]);
+                                            obj.agentRadius);
+                obj.textAgentNumber(i).Position = [obj.agents(i).pose(1)  ...
+                                                   obj.agents(i).pose(2)];     
                                          
-                 yPath = obj.agents(i).path(:,2);
-                 yPath(end) = NaN;
-                set(obj.linePath(i),'xdata',obj.agents(i).path(:,1), ...
-                                    'ydata',yPath, ...
-                                    'FaceVertexCData',obj.agents(i).pathColor)
+                 if obj.isVisible
+                    obj.linePath(i).XData = obj.agents(i).path(:,1);
+                    obj.linePath(i).YData = [obj.agents(i).path(1:(end-1),2); NaN];
+                    obj.linePath(i).FaceVertexCData = obj.agents(i).pathColor;
+                 end
             end
         end
         
