@@ -17,7 +17,7 @@ function ovalORCAController(agent)
     
     %Sets the preferred velocity to point to the goalPose at the idealSpeed
     preferredVelocity = agent.calcIdealUnitVec() * agent.idealSpeed;
-
+    
     %Finds the discritized set of all possible velocities
     possibleVelocities = (-agent.maxSpeed):velocityDiscritisation:(agent.maxSpeed);
     possibleVelControls = zeros(size(possibleVelocities, 2)^2,2);
@@ -49,7 +49,7 @@ function ovalORCAController(agent)
         %If no velocities are acceptable
         if sum(acceptability) == 0
             %Stops
-            agent.velocityControl = [0,0];
+            bestVel = [0,0];
             
         %If there are acceptable velocities
         else
@@ -63,12 +63,20 @@ function ovalORCAController(agent)
             [~, bestVelocityIndex] = min(distFromPrefered);
             
             %Sets the velocityControls output to the best acceptable velocity
-            agent.velocityControl = acceptableVelocities(bestVelocityIndex, :);
+            bestVel = acceptableVelocities(bestVelocityIndex, :);
         end
         
     %If there aren't any neighbors
     else
         %Does what it would do when alone
-        agent.velocityControl = preferredVelocity;
+        bestVel = preferredVelocity;
     end
+    
+    %Given the best velocity, applies an acceleration from the current
+    %velocity toward the best velocity
+    accel = bestVel - agent.velocity;
+    if norm(accel) > 0
+        accel = accel ./ norm(accel);
+    end
+    agent.velocityControl = agent.velocity + accel * agent.timeStep;
 end
