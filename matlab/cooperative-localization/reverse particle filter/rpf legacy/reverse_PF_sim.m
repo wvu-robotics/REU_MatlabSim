@@ -1,6 +1,6 @@
 %reverse_PF sim
 
-numBots = 100;
+numBots = 10;
 range = 5; % detection range
 length = 10; %spawning radius
 dt = 1;      %time step
@@ -19,7 +19,7 @@ end
 
 %% ----------------------------simulate Robots
 figure()
-for t = 1:10
+for t = 1:1000
     for r = 1:numBots %our robot
         for L = 1:numBots % other robot
   
@@ -48,7 +48,7 @@ for t = 1:10
     clf()
     for r = 1:numBots
         plot(ROBOTS(r).pose(1),ROBOTS(r).pose(2),'ks');
-        viscircles([ROBOTS(r).pose(1),ROBOTS(r).pose(2)],range);
+       % viscircles([ROBOTS(r).pose(1),ROBOTS(r).pose(2)],range);
         hold on;
         x_mean = mean(ROBOTS(r).particles(1,ROBOTS(r).particles(3,:) >.5));
         y_mean = mean(ROBOTS(r).particles(2,ROBOTS(r).particles(3,:) >.5));
@@ -64,6 +64,7 @@ for t = 1:10
     
     %% -------------------------------update location of robots
     for r = 1:numBots
+        
         dx = ROBOTS(r).vel*cos(ROBOTS(r).pose(3))*dt;
         dy = ROBOTS(r).vel*sin(ROBOTS(r).pose(3))*dt;
         ROBOTS(r).pose = ROBOTS(r).pose + [dx, dy ,0];
