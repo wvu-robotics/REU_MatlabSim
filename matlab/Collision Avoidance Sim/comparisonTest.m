@@ -1,26 +1,18 @@
 %% Comparison Test
 
-%Description: Runs two different simulations, one with ORCAController,
-%the other with modifiedORCAController, and returns the number of time
+%Description: Runs three different simulations, one with ORCAController,
+%the other with ovalORCAController and feed, and returns the number of time
 %steps each took in the same scenario.
 
 %Parameters:
 %   initPositions: An Nx2 double where the ith agent starts at
 %       initPositions(i,:).
-%   goalLocations: An Nx2 double where the ith agent wants to go to
-%       goalLocations(i,:).
-%   For the rest of the parameters' descriptions, please review BasicSim.m.
 
 %Returns:
-%   numTimeSteps: A 1x2 double where the number of time steps that ORCA
-%       took is numTimeSteps(1), and the number of time steps that
-%       modifiedORCA took is numTimeSteps(2).
-%   numCollisions: A 1x2 double where the number of collisions that ORCA
-%       made is numCollisions(1), and the number of collisions that
-%       modifiedORCA made is numCollisions(2).
-function [numTimeSteps, numCollisions] = comparisonTest(initPositions, goalLocations, agentRadius, timeStep, maxTime, ...
-                                       timeHorizon, sensingRange, velocityDiscritisation, vOptIsZero, ...
-                                       responsibility, idealSpeed, maxSpeed, accelConstant)
+%   
+function [ORCAGoalDist, ORCATravTimes, ovalGoalDist, ovalTravTimes, accelGoalDist, accelTravTimes] ...
+            = comparisonTest(initPositions, goalPath, agentRadius, timeStep, ...
+                             maxTime, idealSpeed, maxSpeed, transCost)
     %Initializes numTimeSteps, numCollisions, and numberOfAgents
     numTimeSteps(2) = 0;
     numCollisions(2) = 0;

@@ -8,8 +8,8 @@
 %Google Drive
 
 %Parameters:
-%   v: A 1x2 double describing the current velocity
 %   pv: A 1x2 double describing the preferred velocity
+%   v: A 1x2 double describing the current velocity
 %   k: A double describing how costly translational changes in velocity are
 
 %Returns:

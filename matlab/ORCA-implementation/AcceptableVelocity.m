@@ -26,12 +26,12 @@
 %   acceptability (nx1 logial that encodes which velocities in the velocity
 %       space are allowed by ORCA)
 %
-% $Revision: R2020b$ 
+% $Revision: R2020b$
 % $Author: Stephen Jacobs$
 % $Date: June 4, 2021$
 %---------------------------------------------------------
 
-function [acceptability, psi , b, normalVector]= AcceptableVelocity(centralAgentPosition, centralAgentVelocity, neighborsPositions, neighborsVelocities, agentRadius, possibleVelControls, timeHorizon, vOptIsZero, responsibility)
+function [acceptability, psi , b, normalVector] = AcceptableVelocity(centralAgentPosition, centralAgentVelocity, neighborsPositions, neighborsVelocities, agentRadius, possibleVelControls, timeHorizon, vOptIsZero, responsibility)
 
 %Initialize Output
 acceptability = ones(size(possibleVelControls,1),1);
