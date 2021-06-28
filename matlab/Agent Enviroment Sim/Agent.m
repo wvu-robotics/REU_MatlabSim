@@ -9,7 +9,7 @@ classdef Agent < handle
        path; 
        pathColor;      
        goalPose;
-       color = [1 1 1];
+       color = [0 0 0];
        measuredAgents = Agent.empty;
        measuringRange = 3;
        maxSpeed = .5;
