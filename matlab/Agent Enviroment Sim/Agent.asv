@@ -21,8 +21,8 @@ classdef Agent < handle
         radius;
         controller;
         timeStep; 
-        extraProperties = cell.empty;
-        extraPropertyList = string.empty;
+        extraProperties;
+        extraPropertyList;
     end
     
     methods
@@ -69,7 +69,7 @@ classdef Agent < handle
         
         function createProperty(obj,propName, input)
            obj.extraPropertyList(length(obj.extraPropertyList) + 1) = propName; 
-           obj.extraProperties(length(obj.extraProperties) + 1) = {[input]};
+           obj.extraProperties(length(obj.extraProperties) + 1) = {input};
         end
         
         function property = getProperty(obj,propName)
@@ -79,7 +79,7 @@ classdef Agent < handle
         
         function setProperty(obj,propName,input)
            index = find(contains(obj.extraPropertyList,propName)); 
-           obj.extraProperties(index) = {[input]};
+           obj.extraProperties(index) = input;
         end
         
     end
