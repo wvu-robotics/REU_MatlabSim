@@ -9,8 +9,8 @@ classdef World < handle % handle to make objects callable by reference
         robot_list = Robot.empty;%Holds all our robot objects
         timeStep;
         spawnType;
-        
-        
+        depotLocs;
+        numDepots = 5;
     end
     
     methods (Access = public)
@@ -49,7 +49,7 @@ classdef World < handle % handle to make objects callable by reference
                        obj.robot_list(i,1).newGoal(obj, type);
                    end
                case 'doubleCoordinated'
-                   if neededBots <= 18
+                   if neededBots <= 1
                       return;
                    end
                    prevLength = length(obj.robot_list);
@@ -117,6 +117,35 @@ classdef World < handle % handle to make objects callable by reference
                            obj.robot_list(i,1).newGoal(obj, type);
                        end
                    end
+               case 'multiDepot'
+                   if length(obj.depotLocs) < 1
+                       obj.depotLocs = [rand(obj.numDepots, 1)*obj.max_x,rand(obj.numDepots, 1)*obj.max_y];
+                   end
+                   prevLength = length(obj.robot_list);
+                   for w=1:neededBots %set up each robot object with a ID and a map object
+                       depot = randi(obj.numDepots);
+                       i = prevLength + w;
+                       obj.robot_list = [obj.robot_list; Robot(obj.depotLocs(depot,1)+rand()-0.5,obj.depotLocs(depot,2)+rand()-0.5,obj.timeStep)];
+                       type = 'multiDepot';
+                       obj.robot_list(i,1).newGoal(obj, type);
+                   end
+               case 'starDepot'
+                   if length(obj.depotLocs) < 1
+                       for i = 1:obj.numDepots
+                           r = obj.max_x*0.4;
+                           theta = 2*pi/obj.numDepots * (i-1);
+                            obj.depotLocs(i,:) = [r*cos(theta)+obj.max_x/2,r*sin(theta)+obj.max_y/2];
+                       end
+                   end
+                   prevLength = length(obj.robot_list);
+                   for w=1:neededBots %set up each robot object with a ID and a map object
+                       depot = randi(obj.numDepots);
+                       i = prevLength + w;
+                       obj.robot_list = [obj.robot_list; Robot(obj.depotLocs(depot,1)+rand()-0.5,obj.depotLocs(depot,2)+rand()-0.5,obj.timeStep)];
+                       type = 'multiDepot';
+                       obj.robot_list(i,1).newGoal(obj, type);
+                   end
+                   
            end
         end
         
@@ -124,11 +153,13 @@ classdef World < handle % handle to make objects callable by reference
             %figure(1)
             clf
             hold on
+            xlim([0,obj.max_x+1]);
+            ylim([0,obj.max_y+1]);
             for i = 1:length(obj.robot_list)
-                xlim([0,obj.max_x+1]);
-                ylim([0,obj.max_y+1]);
+                
                 RGB = obj.robot_list(i).RGB;
                 %RGB = RGB/256;
+                plot(obj.depotLocs(:,1),obj.depotLocs(:,2),'py','MarkerSize', 10,'MarkerFace', [1,1,0]);
                 plot(obj.robot_list(i).truex, obj.robot_list(i).truey, '.', 'MarkerEdge', RGB, 'MarkerSize', 25);
                 set(gca,'Color','k');
             end

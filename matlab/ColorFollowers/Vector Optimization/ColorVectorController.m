@@ -1,6 +1,9 @@
 function ColorVectorController(agent)
 
 unitToGoal = (agent.goalPose - agent.pose)/norm(agent.goalPose - agent.pose);
+if norm(agent.goalPose - agent.pose) == 0
+    unitToGoal = [0,0];
+end
 color = mod(atan2(unitToGoal(2),unitToGoal(1)),2*pi);
 agent.color = FindColor();
 
@@ -16,7 +19,6 @@ for i = 1:length(agent.measuredAgents)
 end
 
 %Find own color(angle to goal in rad) and unit to goal
-unitToGoal = (agent.goalPose - agent.pose)/norm(agent.goalPose - agent.pose);
 color = mod(atan2(unitToGoal(2),unitToGoal(1)),2*pi);
 
 %Find neighbor colors and units to goal
@@ -36,6 +38,8 @@ end
 else
     agent.velocityControl = unitToGoal * agent.maxSpeed;
 end
+
+%% Functions
     function [scalars, vectors] = GetScalarsAndVectors()
         %Find the set of important scalars
         colorVariance = var(neighborColor);

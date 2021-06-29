@@ -6,7 +6,7 @@ agentRadius = .5;
 timeStep = .1;
 mapSize = 15;
 counter = 0;
-maxSpeed = 1;
+maxSpeed = 2;
 sensingRange = 5;
 
 % Parameters for the cost function
@@ -15,31 +15,15 @@ relativeVelCost = 0.01;
 collisionCost = 0.1;
 connectivityBenefit = -0.01;
 
-spawnType = 'random';
-%spawnType = 'opposingGroups';
+%spawnType = 'random';
+spawnType = 'opposingGroups';
 
 
 f = @ColorVectorController;
 
 ENV = agentEnv(numberOfAgents,agentRadius,mapSize,timeStep); 
 
-switch spawnType
-    case 'random'
-        goalLocations = randi([-mapSize,mapSize],numberOfAgents,2); 
-        initPositions = randi([-mapSize,mapSize],numberOfAgents,2);
-    case 'opposingGroups'
-        goalLocations = zeros(numberOfAgents,2); 
-        initPositions = zeros(numberOfAgents,2);
-        for i = 1:numberOfAgents
-           if mod(i,2) == 1
-               goalLocations(i,:) = randi([round(-mapSize),round(-mapSize*2/3)],[1,2]);
-               initPositions(i,:) = randi([round(mapSize*2/3),round(mapSize)],[1,2]);
-           else
-               goalLocations(i,:) = randi([round(mapSize*2/3),round(mapSize)],[1,2]);
-               initPositions(i,:) = randi([round(-mapSize),round(-mapSize*2/3)],[1,2]);
-           end
-        end
-end
+[initPositions, goalLocations] = SpawnAgents(numberOfAgents, spawnType, mapSize);
 
 ENV.setAgentPositions(initPositions);
 ENV.setGoalPositions(goalLocations);
@@ -60,7 +44,7 @@ while(true)
     ENV.tick;
     counter = counter + 1;
     fprintf("Time: %i \n",counter)
-    if counter > 100
+    if counter > 500
        break 
     end
     ENV.agents(1).getTimeStep;
