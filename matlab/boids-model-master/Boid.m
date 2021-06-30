@@ -28,7 +28,7 @@ classdef Boid
         found_goal
         is_beacon
         time_as_beacon
-        Invaders
+        invaders
         Isinvader
         
     end
@@ -43,7 +43,7 @@ classdef Boid
             
             obj.position = [position_x, position_y];
             obj.r = 0;
-            obj.max_speed = 2;
+            obj.max_speed = 3;
             obj.max_force = 0.1;
             
             obj.Ks = Ks;
@@ -64,7 +64,7 @@ classdef Boid
             obj.time_as_beacon = 0;
             obj.is_beacon = 0;
             
-            obj.Invaders = [];
+            obj.invaders = [1;2;3;4];
             obj.Isinvader = 0;
             
         end

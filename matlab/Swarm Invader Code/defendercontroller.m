@@ -1,7 +1,7 @@
 function Velocity = defendercontroller(Robot)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
-Velocity= [2,2];
+Velocity= [3,2];
 S=.1;
 Xi=Robot.invaders(1,1);
 Yi=Robot.invaders(2,1);

@@ -1,7 +1,7 @@
-function Invaders = getinvaders(Robots,Neighbors)
+function Invaders = getinvaders(Robots, Neighbors)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
-Invaders = Robot.invaders;
+Invaders = Robots.invaders;
 
 for r=Neighbors
     if r.Isinvader== 1
@@ -13,7 +13,7 @@ for r=Neighbors
             end
         end
         if newinvader == 1    
-        Invaders = [Invaders,[r.position(1);r.position(2);r.velocity(1),r.velocity(2)]];
+        Invaders = [Invaders,[r.position(1);r.position(2);r.velocity(1);r.velocity(2);1]];
         end
     end
 end
