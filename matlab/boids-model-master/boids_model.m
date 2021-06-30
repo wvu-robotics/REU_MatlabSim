@@ -14,7 +14,7 @@ end
 
 flock=Flock(boids,[640/3 360/3]);
 f = figure;
-plane = Plane(f,[640/3 360/3],boids);
+plane = Plane(f,[610/3 360/3],boids);
 flock.run(plane,time);
 
 figure()

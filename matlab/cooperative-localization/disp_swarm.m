@@ -20,13 +20,13 @@ KG = [];
             states = ROBOTS(r).particles{1}(1:2,ROBOTS(r).particles{1}(3,:) >.5);
             covars = ROBOTS(r).particles{2}(:,:,ROBOTS(r).particles{1}(3,:) > .5);
             %covar =  covar + cov(robot.particles{1}(1:2,robot.particles(3,:) >.5)');
-            [mean_pose,covar] = fusecovint(states,covars);
+           % [mean_pose,covar] = fusecovint(states,covars);
         else
             mean_pose = ROBOTS(r).mean_position;
             covar = ROBOTS(r).covariance;
         end
         
-        error_ellipse(covar, mean_pose)
+       % error_ellipse(covar, mean_pose)
         hold on;
         if sum(ROBOTS(r).color_particles) > 0
            COLOR= ROBOTS(r).color_particles./sum(ROBOTS(r).color_particles);

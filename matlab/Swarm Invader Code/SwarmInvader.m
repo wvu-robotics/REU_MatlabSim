@@ -1,5 +1,5 @@
 %Robot Team Spawn is random------------------------------------------------
-addpath("C:\Users\dqish\Documents\GitHub\REU_MatlabSim\matlab\flow field")
+ addpath("C:\Users\dqish\Documents\GitHub\REU_MatlabSim\matlab\flow field")
 %rng('default')
 %x = rand(15,1);
 %y = rand(15,1);
@@ -11,8 +11,10 @@ clear
 clc
 close all
 
-n = 10; %Number of Robots
+n = 20; %Number of Robots
 XY = 1 * rand(2,n); %Next point, right now completely random
+
+
 figure()
 for i=1:n
     plot(XY(1,i),XY(2,i),'Ob','MarkerSize',6,'MarkerFaceColor','b')
@@ -20,8 +22,14 @@ for i=1:n
 % %  grid minor;
     hold on
     axis([0 1 0 1])
-    %pause(.5)%how fast or slow each point plots
+
+    pause(.5)%how fast or slow each point plots
+
+    
 end
+
+
+    
 
 %Invader Team Spawn is random----------------------------------------------
 
@@ -36,25 +44,25 @@ a = 1; %Number of Invaders
 AB = 1 * rand(2,a); %Next point, right now completely random
 
 for i=1:a
-    plot(AB(1,i),AB(2,i),'+r','MarkerSize',6)
+    plot(AB(1,i),AB(2,i),'+r','MarkerSize',10)
     hold on
     axis([0 1 0 1])
-    %pause(.5) %how fast or slow each point plots
+    pause(.5) %how fast or slow each point plots
 end
 
 %Goal Spawn is fixed------------------------------------------------------
 
-c = 0.5;
-d = 0.5;
+c = 0.2; %X axis
+d = 0.7; %Y axis
 plot(c,d,'dk','Markersize',6,'MarkerFaceColor','k')
-
+pause(.5)
 %Boundary of Game----------------------------------------------------------
 % PSI = PSI11;%Psi;%PSI3+PSI2;
 % PHI = PHI2;%Phi;%PHI3+PHI2;
 
 U = 1*(AB(1) - .5);
 V = 1*(AB(2) - .5);
-for t = 1:200
+for t = 1:250
 [U2,V2,PSI11,PHI2] = objectFlow(AB(1),AB(2),U,V,.1,XY(1,:),XY(2,:));
 %[Vxi,Vyi,PSI,PHI] = doubletFlow(AB(1),AB(2),U,V,5,XY(1,:),XY(2,:));
 hold on;
@@ -73,7 +81,7 @@ XY(2,:) = XY(2,:) + V2*.1;
 
 % figure()
 % plot3(X,Y,PSI)
-%pause(.001);
+pause(.00001);
 end
 %  ui = -1*(AB(1) - .5);
 %  vi = -1*(AB(1) - .5);
@@ -91,6 +99,6 @@ end
 
 % figure()
 % plot3(X,Y,PSI)
-%j = boundary(x,y,0.1);
-%hold on;
-%plot(x(j),y(j));
+% j = boundary(x,y,0.00000001);
+% hold on;
+% plot(x(j),y(j));
