@@ -64,8 +64,7 @@ classdef Boid
             obj.time_as_beacon = 0;
             obj.is_beacon = 0;
             
-            obj.Invaders = [];
-            obj.Isinvader = 0;
+            obj.Invaders = cell(2,1);
             
         end
         
