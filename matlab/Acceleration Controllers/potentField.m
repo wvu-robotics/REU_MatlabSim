@@ -30,11 +30,6 @@ function potentInputs = potentField(agentPositions, sensingRange, agentRadius, s
         relPositionOfNeighbors = neighborsPositions - agentPositions(i,:);
         distToNeighbors = vecnorm(relPositionOfNeighbors, 2, 2);
         
-        %Finds the distance to the neighbors, then removes the agents that
-        %aren't in the sensing range from the list of neighbors.
-        neighborsPositions = neighborsPositions(distToNeighbors <= sensingRange,:);
-        relPositionOfNeighbors = relPositionOfNeighbors(distToNeighbors <= sensingRange,:);
-        
         accel = [0,0];
         
         for j = 1:size(relPositionOfNeighbors,1)

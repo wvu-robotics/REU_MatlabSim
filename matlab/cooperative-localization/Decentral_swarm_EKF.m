@@ -61,7 +61,7 @@ end
 
 I = eye(3*number_of_robots);
 % Identity matrix
-residual = Y_m - Y_p; %???
+residual = Y_m - Y_p;
 % Residual = Current measurement - Expected measurement
 S = H*P_p*(H')+R;
 % Covariance error?

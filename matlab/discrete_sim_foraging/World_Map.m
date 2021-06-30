@@ -21,7 +21,6 @@ classdef World_Map < handle & matlab.mixin.Copyable
         obs_layer = 2;
         food_layer = 3;
         robot_layer = 4;
-        
     end
     
     methods
@@ -38,10 +37,10 @@ classdef World_Map < handle & matlab.mixin.Copyable
         
         function draw_world(obj)
             %Sum all the layers together and draw them 
-            drawing = obj.map(:,:,obj.obs_layer)*1 + obj.map(:,:,obj.food_layer)*2 + (obj.map(:,:,obj.robot_layer) & obj.ones_map) *7;
-            %imagesc(drawing);    
+            drawing = obj.map(:,:,obj.obs_layer)*1 + obj.map(:,:,obj.food_layer)*2 + (obj.map(:,:,obj.robot_layer) & obj.ones_map) *3;
+            imagesc(drawing);    
             colormap(colorcube);
-            pcolor(drawing);
+            %pcolor(drawing);
             axis image;
 
         end
@@ -54,12 +53,10 @@ classdef World_Map < handle & matlab.mixin.Copyable
         
         function spawn_food_map(obj)
             %Spawn food in using a bitmap
-            
         end
         
         function spawn_food_rand(obj,density)
             %Spawn food in randomly
-        
         end
 
 

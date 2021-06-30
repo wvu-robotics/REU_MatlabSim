@@ -3,7 +3,7 @@ clc;
 clear all;
 close all;
 
-init_density_food = 0.05;
+init_density_food = 1;
 init_num_bots = 80; %Making this too high breaks the placement functionality!
 %init_home_loc = [10,10]; %home location in X-Y
 
@@ -17,7 +17,7 @@ for i = 1:1
     disp("Starting Simulation!");
     for ii=0:100000 %simulation ticks
         world1.tick();
-        pause(.3);
+        pause(.01);
     end
 
 end

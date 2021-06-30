@@ -1,0 +1,4 @@
+A = ones(10);
+[m,n]=size(A);
+I = zeros(20);
+I(5:m,5:n) = A

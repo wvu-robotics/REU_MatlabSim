@@ -1,42 +1,6 @@
-%% Function Name: Modified ORCA Controller
-% velocityControls = ORCAController(postitionState, velocityState, preferedVelocities, tau, sensingRange)
-%
-% Description: This function finds the velocity control outputs for a
-% number of agents based on the ORCA method
-%
-% Assumptions: Position space is continuous and the agents are holonomic.
-% The velocity space is discritized in this implementation. The agents are
-% also homogeneous
-%
-% Inputs:
-%   positionState (X,Y positions of each agent arranged with each each
-%       row as one agent)
-%   velocityState (Vx, Vy velocities of each robot arranged with each
-%       row as one agent)
-%   preferedVelocities (Prefered Vx, Vy velocities of each robot arrange
-%       with each row as one agent)
-%   timeHorizon (Time horizon for guarnteed collision avoidance, smaller is
-%       easier but less conservative)
-%   sensingRange (Radius at which other agents can be sensed)
-%   agentRadius (Radius of agents)
-%   maxVelocity (Maximum velocity that an agent can achieve)
-%   velocityDiscritisation (Discritization size of velocity space)
-%   vOptIsZero (Boolian that is true if you want vOPT to be zero for all
-%       agents.)
-%   responsibility (responsibility taken by each agent to get out of the
-%       velocity obstacle. Should be 0.5)
-%
-% Outputs:
-%   velocityControls (Vx, Vy velocity controls of each agent with each
-%       row as one agent)
-%
-% $Revision: R2020b$ 
-% $Author: Stephen Jacobs$
-% $Date: June 4, 2021$
-%---------------------------------------------------------
 
 
-function velocityControls = modifiedORCAController(positionState, velocityState, preferredVelocities, timeHorizon, sensingRange, agentRadius, maxVelocity, velocityDiscritisation, vOptIsZero, responsibility)
+function velocityControls = ovalORCAControllerFunc(positionState, velocityState, preferredVelocities, timeHorizon, sensingRange, agentRadius, maxVelocity, velocityDiscritisation, vOptIsZero, responsibility)
 
     %Initialize the output velocity controls
     velocityControls = zeros(size(positionState,1),2);
@@ -80,7 +44,7 @@ function velocityControls = modifiedORCAController(positionState, velocityState,
         %velocities are acceptable. Else, the velocity control is just the
         %prefered velocity
         if size(neighborsPositions,1) ~= 0
-            acceptability = AcceptableVelocity(centralAgentPosition, centralAgentVelocity, neighborsPositions, neighborsVelocities, agentRadius, possibleVelControls, timeHorizon, vOptIsZero,responsibility);
+            acceptability = AcceptableVelocity(centralAgentPosition, centralAgentVelocity, neighborsPositions, neighborsVelocities, agentRadius, possibleVelControls, timeHorizon, vOptIsZero, responsibility);
             if sum(acceptability) == 0
                 velocityControls(i, :) = [0,0];
                 continue;

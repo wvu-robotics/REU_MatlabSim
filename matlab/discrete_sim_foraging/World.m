@@ -10,7 +10,7 @@ classdef World < handle & matlab.mixin.Copyable % handle to make objects callabl
         worldMap = World_Map.empty;%Holds the true world map
         
         draw_layer = 1;
-        obs_layer = 2;
+        obs_layer = 2; %make pretty with enums :)!!@!
         food_layer = 3;
         robot_layer = 4;
         
@@ -36,6 +36,7 @@ classdef World < handle & matlab.mixin.Copyable % handle to make objects callabl
             food_map = randsrc(obj.max_x, obj.max_y,[1,0;density,1-density]);
             food_map = food_map & (xor(food_map,obj.worldMap.map(:,:,obj.obs_layer)));
             obj.worldMap.map(:,:,obj.food_layer) = food_map *2;
+            %Use for loops to place food precisely?
         end
         
         function gen_bots(obj, num)
@@ -44,8 +45,9 @@ classdef World < handle & matlab.mixin.Copyable % handle to make objects callabl
            disp("Generating bots!");
            obj.num_robots = num;
            for i=1:obj.num_robots %set up each robot object with a ID and a map object
-           obj.robot_list(i,1) = Robot(i,40,40,1,0,1, World_Map("world_image_1.png"));
-           obj.robot_list(i,1).local_map.map(:,:,obj.obs_layer) = obj.worldMap.map(:,:,obj.obs_layer);
+                obj.robot_list(i,1) = Robot(i,40,40,1,0,1, World_Map("world_image_1.png"));
+                %copy in obstacle layer from world into the robot worldmap
+                obj.robot_list(i,1).local_map.map(:,:,obj.obs_layer) = obj.worldMap.map(:,:,obj.obs_layer);
            end
         end
         
@@ -67,7 +69,7 @@ classdef World < handle & matlab.mixin.Copyable % handle to make objects callabl
                 %set the robots current position to zero
                 obj.worldMap.map(curr_xy(1),curr_xy(2),obj.robot_layer) = 0;
                 %Get the new XY where the robot moved to
-                new_xy = obj.robot_list(ii).move();
+                new_xy = obj.robot_list(ii).move(obj);
                 if (obj.worldMap.map(new_xy(1),new_xy(2),obj.food_layer) > 0)
                     obj.worldMap.map(new_xy(1),new_xy(2),obj.food_layer) = 0;
                 end
