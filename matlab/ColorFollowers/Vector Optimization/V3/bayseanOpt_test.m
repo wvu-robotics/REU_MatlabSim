@@ -2,8 +2,8 @@ clear
 clc
 close all
 
-paramRows = 5;
-paramCols = 4;
+paramRows = 7;
+paramCols = 3;
 parameters = optimizableVariable.empty;
 for i = 1:paramRows*paramCols
     name = char(sprintf('param%i',i));
@@ -11,6 +11,6 @@ for i = 1:paramRows*paramCols
 end
 
 timeSteps = 200;
-display = false;
+display = false;i
 fun = @(param)VectorOptimizationRun(param, display, timeSteps);
 results = bayesopt(fun,parameters);
