@@ -2,12 +2,12 @@ clc
 clear
 close all
 %   World Building
-numberOfAgents = 5;
+numberOfAgents = 11;
 agentRadius = .5;
-timeStep = .1;
-mapSize = 10;
+timeStep = .2;
+mapSize = 20;
 counter = 0;
-safetyMargin = 1.1;
+safetyMargin = 2;
 
 
 f = @testController5;
@@ -54,7 +54,7 @@ while(true)
 % %         goalLocations(i,:) = [cos(theta+3.9*pi/4),sin(theta+3.9*pi/4)]*mapSize*(.9+(rand()-0.5)*.1);
 %     end
     ENV.setGoalPositions(goalLocations);
-    if counter > 200
+    if counter > 1000
        break 
     end
 end

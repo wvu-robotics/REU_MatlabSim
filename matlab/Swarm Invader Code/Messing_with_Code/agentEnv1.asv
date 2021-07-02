@@ -94,14 +94,11 @@ classdef agentEnv1 < handle
 %functionaility
         function physics(obj, id)
                 controllerPose = obj.findAgentControllerKinematics(id);
-%% Gets Rid of Collisions 
-% obj.agents(id).velocity = (controllerPose - obj.agents(id).pose)/obj.timeStep;
-%% Adds Collisions
-                hasCollided = obj.agentCollider(id, controllerPose, false);
-                if hasCollided
-                   obj.collisions = obj.collisions + 1;
-                end
-%%
+                obj.velocity = ;
+%                 hasCollided = obj.agentCollider(id, controllerPose, false);
+%                 if hasCollided
+%                    obj.collisions = obj.collisions + 1;
+%                 end
                 obj.updateAgentKinematics(id);
                 obj.updateAgentPath(id,obj.agents(id).pose);
         end
