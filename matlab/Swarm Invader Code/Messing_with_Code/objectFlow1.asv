@@ -5,8 +5,8 @@ function [V_direction] = objectFlow1(invadeposxy, defendposxy,S)
 %   corrdinates X,Y, the source location xi,yi, and strength S
 xi = invadeposxy(1);
 yi = invadeposxy(2);
-ui = xi;
-vi = yi;
+ui = invadeposxy(1);
+vi = invadeposxy(2);
 X = defendposxy(1);
 Y = defendposxy(2);
 
