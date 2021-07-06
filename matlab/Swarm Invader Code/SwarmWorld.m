@@ -1,11 +1,12 @@
 addpath 'C:\Users\dqish\Documents\GitHub\REU_MatlabSim\matlab\cooperative-localization'
 addpath 'C:\Users\dqish\Documents\GitHub\REU_MatlabSim\matlab\boids-model-master'
 addpath 'C:\Users\dqish\Documents\GitHub\REU_MatlabSim\matlab\cooperative-localization\reverse particle filter'
+addpath 'C:\Users\dqish\Documents\GitHub\REU_MatlabSim\matlab\flow field'
 % Boids RPF_sim
 
 % hyper parameters ------------------------------------------------------
 
-numBots = 50;       % number of robots in the world
+numBots = 20;       % number of robots in the world
 spawn_len = 8;     % side length of spawning range, centered around (0,0)
 time = 1000;          % total time steps to run simulation for
 noise = .1;         % variaince of the gaussian noise to apply to laser sensors
@@ -28,7 +29,7 @@ for r = 1:numBots
     ROBOTS(r).Kg = 1;
     ROBOTS(r).found_goal = 0;
 end
-
+ ROBOTS(1).Isinvader=1;
 figure()  %object to display the simulator
 
 % --------------------------------simulate the robots

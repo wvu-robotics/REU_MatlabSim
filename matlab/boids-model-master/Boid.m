@@ -43,7 +43,7 @@ classdef Boid
             
             obj.position = [position_x, position_y];
             obj.r = 0;
-            obj.max_speed = 3;
+            obj.max_speed = 5;
             obj.max_force = 0.1;
             
             obj.Ks = Ks;
@@ -65,6 +65,7 @@ classdef Boid
             obj.is_beacon = 0;
             
             obj.invaders = [1;2;3;4];
+%             obj.invaders = [1;3;2;4];
             obj.Isinvader = 0;
             
         end

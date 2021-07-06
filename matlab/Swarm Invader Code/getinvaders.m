@@ -7,7 +7,7 @@ for r=Neighbors
     if r.Isinvader== 1
         newinvader = 1;
         for i= Invaders
-            if i.ID==r.ID
+            if i==r.ID
                 newinvader=0;
                 %TODO update position of old invader
             end
