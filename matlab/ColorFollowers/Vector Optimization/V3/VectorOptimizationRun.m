@@ -5,9 +5,9 @@ for i = 1:size(parameters,2)
     name = char(sprintf('param%i',i));
     newParameters(i) = parameters.(name);
 end
-newParameters = reshape(newParameters, [5,4]);
+newParameters = reshape(newParameters, [7,3]);
 %   World Building
-numberOfAgents = 15;
+numberOfAgents = 20;
 agentRadius = .5;
 timeStep = .1;
 mapSize = 10;

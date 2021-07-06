@@ -1,6 +1,4 @@
-classdef Agent < handle
-    %UNTITLED3 Summary of this class goes here
-    %   Detailed explanation goes here
+classdef Agent1 < handle
     
     properties (Access = public)
        pose;
@@ -9,9 +7,9 @@ classdef Agent < handle
        path; 
        pathColor;      
        goalPose;
-       color = [1 1 1];
-       measuredAgents = Agent.empty;
-       measuringRange = 3;
+       color = [0 0 0];
+       measuredAgents = Agent1.empty;
+       measuringRange = 1000;
        maxSpeed = .5;
        idealSpeed = 1;
     end
@@ -21,15 +19,15 @@ classdef Agent < handle
         radius;
         controller;
         timeStep; 
-        extraProperties;
-        extraPropertyList;
+        extraProperties = cell.empty;
+        extraPropertyList = string.empty;
     end
     
     methods
         function callMeasurement(obj, envObj) 
             disp = 0;
             envAgents = envObj.getNumberOfAgents; 
-            obj.measuredAgents = Agent.empty;
+            obj.measuredAgents = Agent1.empty;
             for i = 1:(envAgents-1)
                 if obj.id + i >  envAgents
                     disp = envAgents;
@@ -40,7 +38,7 @@ classdef Agent < handle
             end
         end
         
-        function obj = Agent(id, radius, timeStep)
+        function obj = Agent1(id, radius, timeStep)
             obj.id = id;
             obj.radius = radius;
             obj.timeStep = timeStep;
@@ -69,7 +67,7 @@ classdef Agent < handle
         
         function createProperty(obj,propName, input)
            obj.extraPropertyList(length(obj.extraPropertyList) + 1) = propName; 
-           obj.extraProperties(length(obj.extraProperties) + 1) = {input};
+           obj.extraProperties(length(obj.extraProperties) + 1) = {[input]};
         end
         
         function property = getProperty(obj,propName)
@@ -79,8 +77,11 @@ classdef Agent < handle
         
         function setProperty(obj,propName,input)
            index = find(contains(obj.extraPropertyList,propName)); 
-           obj.extraProperties(index) = input;
+           obj.extraProperties(index) = {[input]};
         end
+        function id = getID(obj)
+            id = obj.id;
+        end 
         
     end
 end

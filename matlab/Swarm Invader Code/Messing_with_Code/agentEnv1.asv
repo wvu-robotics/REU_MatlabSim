@@ -1,8 +1,8 @@
-classdef agentEnv < handle
-    %UNTITLED Summary of this class goes here
-    %   Detailed explanation goes here
+classdef agentEnv1 < handle
+
      properties (Access = public)
-        agents = Agent.empty;
+        agents = Agent1.empty;
+        realTime = true;
         collisions = 0;
      end
     
@@ -13,16 +13,17 @@ classdef agentEnv < handle
         timeStep; 
         figPS;
         figA;
-        lineAgent;
-        textAgentNumber;
-        linePath;
-        lineGoalLocations;
+        lineAgent = patch;
+        textAgentNumber = text;
+        linePath = patch;
+        lineGoalLocations = line;
         goalLocations;
+        isVisible;
      end
     
     methods
 %Constructor
-        function obj = agentEnv(numberOfAgents, agentRadius, mapSize, timeStep)
+        function obj = agentEnv1(numberOfAgents, agentRadius, mapSize, timeStep)
             %UNTITLED Construct an instance of this class
             %   Detailed explanation goes here
             obj.numberOfAgents = numberOfAgents;
@@ -38,18 +39,18 @@ classdef agentEnv < handle
                 obj.linePath(i) = patch('EdgeColor','interp','MarkerFaceColor','flat');
             end
             for i = 1:numberOfAgents
-                obj.agents(i) = Agent(i, agentRadius,timeStep);
-                obj.lineAgent(i) = line('lineWidth', 1);
+                obj.agents(i) = Agent1(i, agentRadius,timeStep);
+                obj.lineAgent(i) = patch('lineWidth', 1, 'facecolor', 'none');
                 obj.textAgentNumber(i) = text;
                 set(obj.textAgentNumber(i), 'String', i)
-                set(obj.lineAgent(i),'color', 'b')
+                set(obj.lineAgent(i),'edgecolor', 'b')
             end
         end
 % Setters
         function setAgentPositions(obj,pose)
             for i = 1:obj.numberOfAgents
                 obj.agents(i).pose = pose(i,:);
-                obj.updateAgentPath(i,pose(i,:));
+                %obj.updateAgentPath(i,pose(i,:));
             end 
         end
         
@@ -69,7 +70,7 @@ classdef agentEnv < handle
         
         function setAgentColor(obj,id,color)
             obj.agents(id).color = color;
-            set(obj.lineAgent(id), 'Color', color);
+            set(obj.lineAgent(id), 'edgecolor', color);
         end
         
 %getters       
@@ -93,38 +94,41 @@ classdef agentEnv < handle
 %functionaility
         function physics(obj, id)
                 controllerPose = obj.findAgentControllerKinematics(id);
-                obj.agentCollider(id, controllerPose, false);
+                obj.velocity = ;
+%                 hasCollided = obj.agentCollider(id, controllerPose, false);
+%                 if hasCollided
+%                    obj.collisions = obj.collisions + 1;
+%                 end
                 obj.updateAgentKinematics(id);
                 obj.updateAgentPath(id,obj.agents(id).pose);
         end
         
         function updateAgentColor(obj,id)
-            set(obj.lineAgent(id), 'Color', obj.agents(id).color);
+            obj.lineAgent(id).EdgeColor = obj.agents(id).color;
         end
         
-        function agentCollider(obj, agent, controllerPose, hasCollided)
+        function collision = agentCollider(obj, Agent1, controllerPose, hasCollided)
+                collision = hasCollided;
                 disp = 0;
                 for j = 1:(obj.numberOfAgents-1)
-                    if  agent + j > obj.numberOfAgents
+                    if  Agent1 + j > obj.numberOfAgents
                         disp = obj.numberOfAgents;
                     end 
-                    agentDistance =   obj.agents( agent+j-disp).pose - controllerPose;
-                    noCollisionDistance = obj.agents( agent).getRadius + obj.agents(agent+j-disp).getRadius;
+                    agentDistance =   obj.agents( Agent1+j-disp).pose - controllerPose;
+                    noCollisionDistance = obj.agents( Agent1).getRadius + obj.agents(Agent1+j-disp).getRadius;
                      x = norm(agentDistance);
-                     if abs(x-noCollisionDistance) < .0000000001
-                         
-                     
-                    if x < noCollisionDistance
-                       hasCollided = true;
-                       newPose = -noCollisionDistance*(agentDistance/norm(agentDistance))+ obj.agents(agent+j-disp).pose;
-                       obj.agents(agent).velocity = (newPose - obj.agents(agent).pose)/obj.timeStep;
-                       obj.agentCollider(agent , newPose, hasCollided);
-                       break
+                    if ~(abs(x-noCollisionDistance) < .0001)
+                        if x < noCollisionDistance
+                            hasCollided = true;
+                            newPose = -noCollisionDistance*(agentDistance/norm(agentDistance))+ obj.agents(Agent1+j-disp).pose;
+                            obj.agents(Agent1).velocity = (newPose - obj.agents(Agent1).pose)/obj.timeStep;
+                            collision = obj.agentCollider(Agent1 , newPose, hasCollided);
+                            break
+                        end
                     end
-                     end
                 end
                 if ~hasCollided
-                    obj.agents(agent).velocity = (controllerPose - obj.agents(agent).pose)/obj.timeStep;
+                    obj.agents(Agent1).velocity = (controllerPose - obj.agents(Agent1).pose)/obj.timeStep;
                 end
         end
         
@@ -132,15 +136,16 @@ classdef agentEnv < handle
             for i = 1:obj.numberOfAgents
                 set(obj.linePath(i),'visible',isVisible)
             end
+            obj.isVisible = isVisible;
         end
         
-        function updateAgentPath(obj,agent,pose)
-                if isempty(obj.agents(agent).path)
-                    obj.agents(agent).path(1,:) = pose;
-                    obj.agents(agent).pathColor(1,:) = obj.agents(agent).color;
+        function updateAgentPath(obj,Agent1,pose)
+                if isempty(obj.agents(Agent1).path)
+                    obj.agents(Agent1).path(1,:) = pose;
+                    obj.agents(Agent1).pathColor(1,:) = obj.agents(Agent1).color;
                 else
-                    obj.agents(agent).path(length(obj.agents(agent).path(:,1))+1,:) = pose;
-                    obj.agents(agent).pathColor(length(obj.agents(agent).pathColor(:,1))+1,:) = obj.agents(agent).color;
+                    obj.agents(Agent1).path(length(obj.agents(Agent1).path(:,1))+1,:) = pose;
+                    obj.agents(Agent1).pathColor(length(obj.agents(Agent1).pathColor(:,1))+1,:) = obj.agents(Agent1).color;
                 end       
         end
         
@@ -153,33 +158,46 @@ classdef agentEnv < handle
         end
 
         function updateGraph(obj)
-            set(obj.lineGoalLocations, 'xdata', obj.goalLocations(:,1), ...
-                                       'ydata', obj.goalLocations(:,2));
+            obj.lineGoalLocations.XData =  obj.goalLocations(:,1);
+            obj.lineGoalLocations.YData = obj.goalLocations(:,2);
             for i = 1:obj.numberOfAgents
                 obj.updateAgentColor(i);
                 drawCircle(obj.lineAgent(i),obj.agents(i).pose(1), ...
                                             obj.agents(i).pose(2), ...
-                                            obj.agents(i).getRadius);
-                set(obj.textAgentNumber(i), "Position", ...
-                                            [obj.agents(i).pose(1)  ...
-                                             obj.agents(i).pose(2)]);
+                                            obj.agentRadius);
+                obj.textAgentNumber(i).Position = [obj.agents(i).pose(1)  ...
+                                                   obj.agents(i).pose(2)];     
                                          
-                 yPath = obj.agents(i).path(:,2);
-                 yPath(end) = NaN;
-                set(obj.linePath(i),'xdata',obj.agents(i).path(:,1), ...
-                                    'ydata',yPath, ...
-                                    'FaceVertexCData',obj.agents(i).pathColor)
+                 if obj.isVisible
+                    obj.linePath(i).XData = obj.agents(i).path(:,1);
+                    obj.linePath(i).YData = [obj.agents(i).path(1:(end-1),2); NaN];
+                    obj.linePath(i).FaceVertexCData = obj.agents(i).pathColor;
+                 end
             end
         end
         
+        
+        
         function tick(obj)
+           tStart = cputime;
             for i = 1:obj.numberOfAgents
                 obj.agents(i).callMeasurement(obj);
                 obj.agents(i).callController;     
                 obj.physics(i);
+                obj.updateGraph;
             end
-            obj.updateGraph;
-            pause(.001)
+
+            tEnd = cputime - tStart;
+            if obj.realTime
+                if tEnd > obj.timeStep
+                    pause(.0001);
+                else
+                    pause(obj.timeStep - tEnd);
+                end
+            else
+                pause(.0001);
+            end
+            
         end 
     end
 end

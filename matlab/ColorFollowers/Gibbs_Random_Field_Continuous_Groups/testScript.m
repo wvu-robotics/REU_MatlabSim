@@ -22,18 +22,27 @@ clf
 %                 
 % surf(CBPotential);
 
-r = 0.2;
-theta = [0:0.05:2*pi]';
-circle = [r*cos(theta),r*sin(theta)];
-[x,y] = ginput();
-rect = [x,y];
+% r = 0.2;
+% theta = [0:0.05:2*pi]';
+% circle = [r*cos(theta),r*sin(theta)];
+% [x,y] = ginput();
+% rect = [x,y];
+% 
+% [S, D] = MinkSum(circle, rect);
+% %plot(S(:,1),S(:,2))
+% pgon = polyshape(S(:,1),S(:,2), 'Simplify', false);
+% conv = convhull(pgon);
+% %plot(pgon)
+% hold on
+% plot(conv);
+% d = inpolygon(1.4,1.4,conv.Vertices(:,1),conv.Vertices(:,2));
 
-[S, D] = MinkSum(circle, rect);
-%plot(S(:,1),S(:,2))
+r = 0.2;
+theta = [0:0.1:2*pi]';
+circle = [r*cos(theta),r*sin(theta)];
+[S, D] = MinkSum(circle, circle);
 pgon = polyshape(S(:,1),S(:,2), 'Simplify', false);
 conv = convhull(pgon);
-%plot(pgon)
+plot(pgon)
 hold on
-plot(conv);
-d = inpolygon(1.4,1.4,conv.Vertices(:,1),conv.Vertices(:,2));
-
+%plot(conv);

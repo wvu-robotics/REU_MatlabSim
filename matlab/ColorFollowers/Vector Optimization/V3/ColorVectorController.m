@@ -31,7 +31,7 @@ neighborColor = mod(atan2(neighborUnitToGoal(:,2), unitToGoal(:,1)), 2*pi);
 %multiply the scalars and vectors by the parameters to get the new velocity
 parameters = agent.getProperty('parameters');
 %agent.velocityControl = sum(((parameters*scalars)+1).*vectors);
-agent.velocityControl = sum(((parameters*scalars)).*vectors);
+agent.velocityControl = sum(((parameters*scalars)).*vectors)+unitToGoal*50;
 if norm(agent.velocityControl) > agent.maxSpeed
    agent.velocityControl = agent.velocityControl/norm(agent.velocityControl)*agent.maxSpeed; 
 end
@@ -50,18 +50,23 @@ end
         colorSepFromMean = abs(averageColor - color);
         distToGoal = norm(agent.goalPose - agent.pose);
         
-        scalars(1,1) = colorVariance;
-        scalars(2,1) = agentDensity;
-        scalars(3,1) = colorSepFromMean;
-        scalars(4,1) = distToGoal;
+        %scalars(1,1) = colorVariance;
+        scalars(1,1) = agentDensity;
+        scalars(2,1) = colorSepFromMean;
+        scalars(3,1) = distToGoal;
         
         %Find the set of important Vectors
         unitToGoal;
         %densityGradient = ?
+        if size(neighborVelocities,1) > 1
         averageNeighborVelocity = mean(neighborVelocities)/norm(mean(neighborVelocities));
         if norm(mean(neighborVelocities)) == 0
             averageNeighborVelocity = [0,0];
         end
+        else
+            averageNeighborVelocity = [0,0];
+        end
+
         
         selfColorWeights = abs(neighborColor - color);
         selfColorWeights(selfColorWeights > 2*pi) = 2*pi - selfColorWeights(selfColorWeights > 2*pi);
@@ -71,20 +76,24 @@ end
         oppositeColorWeights(oppositeColorWeights > 2*pi) = 2*pi - oppositeColorWeights(oppositeColorWeights > 2*pi);
         oppositeColorCentroid = FindCentroid(neighborPositions, (pi-oppositeColorWeights));
         
-        
         averageColorWeights = abs(neighborColor - averageColor);
         averageColorWeights(averageColorWeights > 2*pi) = 2*pi - averageColorWeights(averageColorWeights > 2*pi);
         averageColorCentroid = FindCentroid(neighborPositions, (pi-averageColorWeights));
         
-        vectors(1,:) = unitToGoal;
+        vectors(1,:) = [unitToGoal(2), -unitToGoal(1)];
         vectors(2,:) = averageNeighborVelocity;
-        vectors(3,:) = selfColorCentroid;
-        vectors(4,:) = oppositeColorCentroid;
-        vectors(5,:) = averageColorCentroid;
+        averageNeighborVelocity(2);
+        vectors(3,:) = [averageNeighborVelocity(1,2), -averageNeighborVelocity(1,1)];
+        vectors(4,:) = selfColorCentroid;
+        vectors(5,:) = [selfColorCentroid(2), -selfColorCentroid(1)];
+        vectors(6,:) = oppositeColorCentroid;
+        vectors(7,:) = [oppositeColorCentroid(2), -oppositeColorCentroid(1)];
     end
     function centroid = FindCentroid(positions, weights)
         x_bar = sum(weights.*positions(:,1))/sum(weights);
         y_bar = sum(weights.*positions(:,2))/sum(weights);
+        x_bar = x_bar - agent.pose(1);
+        y_bar = y_bar - agent.pose(2);
         centroid = [x_bar, y_bar]/norm([x_bar, y_bar]);
     end
     function col = FindColor()
