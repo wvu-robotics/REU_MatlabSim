@@ -205,7 +205,7 @@ classdef agentEnv < handle
                 else
                     agentsType = obj.obstacles;
                 end
-                    obstacleID = str2num(potentialCollisonID(2:end));
+                    obstacleID = str2num(potentialCollisonID(1:end));
                     
                     relativeHeading = obj.agents(id).heading-agentsType(obstacleID).heading;
                     
