@@ -3,6 +3,7 @@ classdef agentEnv < handle
     %   Detailed explanation goes here
      properties (Access = public)
         agents = Agent.empty;
+%         obstacles = staticObstacle.empty;
         realTime = true;
         collisions = 0;
      end
@@ -12,11 +13,11 @@ classdef agentEnv < handle
         agentRadius;
         mapSize;
         timeStep; 
-        figPS;
-        figA;
+        figPS = figure;
         lineAgent = patch;
         textAgentNumber = text;
         linePath = patch;
+        obstaclePatch = patch
         lineGoalLocations = line;
         goalLocations;
         isVisible;
@@ -131,6 +132,23 @@ classdef agentEnv < handle
                     obj.agents(agent).velocity = (controllerPose - obj.agents(agent).pose)/obj.timeStep;
                 end
         end
+        
+        function createStaticObstacle(obj,shape, pose, heading)
+            if ~isempty(obj.obstacles)
+                obj.obstacles(end + 1) =  obj.obstacles(end + 1).staticObstacle(shape, pose, heading);
+                obstaclePatch(end + 1) = patch('XData', shape(:,1) + pose(1)*ones(length(shape(:,1)),1), ...
+                                               'YData', shape(:,2) + pose(2)*ones(length(shape(:,1)),1), ...
+                                               'FaceColor',[.5 .5 .5],... 
+                                               'edgeColor', 'none');
+            else
+                obj.obstacles(1) =  staticObstacle(shape, pose, heading);
+                obstaclePatch(1) = patch('XData', shape(:,1) + pose(1)*ones(length(shape(:,1)),1), ...
+                                         'YData', shape(:,2) + pose(2)*ones(length(shape(:,1)),1), ...
+                                         'FaceColor',[.5 .5 .5], ... 
+                                         'edgeColor', 'none');
+            end 
+        end
+        
         
         function pathVisibility(obj, isVisible)
             for i = 1:obj.numberOfAgents
