@@ -4,7 +4,7 @@ close all
 %   World Building
 numberOfAgents = 10;
 timeStep = .05;
-mapSize = 10;
+mapSize = 20;
 counter = 0;
 
 f = @testController;
