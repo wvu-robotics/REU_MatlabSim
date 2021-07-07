@@ -53,7 +53,7 @@ function ORCAController(agent)
             %Uses the acceptability criteria to narrow down the allowed
             %velocities and pick the best one
             acceptableVelocities = possibleVelControls(acceptability == 1, :);
-            distFromPrefered = vecnorm(acceptableVelocities - preferedVelocity, 2, 2);
+            distFromPrefered = vecnorm(acceptableVelocities - preferredVelocity, 2, 2);
             
             %The 'best' velocuty is the allowed velocity closest to the
             %prefered velocity

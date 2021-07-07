@@ -13,19 +13,26 @@
 %   radSum: A double for the sum of their radii
 
 %Returns:
-%   voSideVector: A 1x2 double pointing in the direction of 
-function voSideVector = getVOSideVector(relP, relV, radSum)
+%   voSideVector: A 1x2 double pointing in the direction of the side of the
+%       velocity obstacle.
+%   normalVector: A 1x2 double pointing perpendicularly away from the
+%       closest side of that velocity obstacle.
+function [voSideVector, normalVector] = getVOSideVector(relP, relV, radSum)
     
-    %Preallocates an empty 1x2 double
+    %Preallocates empty 1x2 double
     voSideVector = zeros(1,2);
 
-    %If it's best to pass on the left of neighbor j
+    %If it's best to pass on the left of the neighbor
     if dot(relV, [-relP(2), relP(1)]) > 0
         voSideVector(1) = relP(1) * sqrt(1 - (radSum / norm(relP))^2) - relP(2) * radSum / norm(relP);
         voSideVector(2) = relP(2) * sqrt(1 - (radSum / norm(relP))^2) + relP(1) * radSum / norm(relP);
-    %If it's best to pass on the right of neighbor j
+        
+        normalVector = [-voSideVector(2),voSideVector(1)];
+    %If it's best to pass on the right of the neighbor
     else
         voSideVector(1) = relP(1) * sqrt(1 - (radSum / norm(relP))^2) + relP(2) * radSum / norm(relP);
         voSideVector(2) = relP(2) * sqrt(1 - (radSum / norm(relP))^2) - relP(1) * radSum / norm(relP);
+        
+        normalVector = [voSideVector(2),-voSideVector(1)];
     end
 end
