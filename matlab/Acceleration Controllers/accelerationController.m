@@ -22,27 +22,27 @@ function accelerationController(agent)
         accel = -gradient ./ norm(gradient);
     end
     
-    %Finds the times until agent collides with each neighbor
-    times = timeTilCollision(agent);
-    
     %For each neighbor
-    for i = 1:size(times,1)
+    for i = 1:length(agent.measuredAgents)
+        
+        %Calculates the time until the agents collide
+        time = timeTilCollisionFunc(agent.pose - agent.measuredAgents(i).pose, agent.velocity - agent.measuredAgents(i).velocity, safetyMargin * (agent.getRadius + agent.measuredAgents(i).getRadius));
         
         %If agent will collide with neighbor i
-        if ~isnan(times(i))
+        if ~isnan(time)
             
             %If the time is too close to zero, it becomes a constant.
-            times(i) = max(times(i),.0001);
+            time = max(time,.0001);
             
             %Finds both the closest sides of the velocity obstacles
-            [voSideVector,~] = getVOSideVector(agent.measuredAgents(i).pose - agent.pose, agent.velocity - agent.measuredAgents(i).velocity, agent.getRadius() + agent.measuredAgents(i).getRadius());
+            [voSideVector,~] = getVOSideVector(agent.measuredAgents(i).pose - agent.pose, agent.velocity - agent.measuredAgents(i).velocity, safetyMargin * (agent.getRadius + agent.measuredAgents(i).getRadius));
             
             %Gets the point on the side of the velocity obstacle that's
             %minimizes ovalMetric(transCost, prefVelocities(i,:), minPoint)
             minPoint = lineArgmin(voSideVector, agent.measuredAgents(i).velocity, preferredVelocity, transCost);
             
             %Adds acceleration toward that point that minimizes
-            accel = accel + avoidPriority * (minPoint - agent.velocity) ./ (times(i) * norm(minPoint - agent.velocity));
+            accel = accel + avoidPriority * (minPoint - agent.velocity) ./ (time * norm(minPoint - agent.velocity));
         end
     end
     
