@@ -8,7 +8,7 @@ KS = [];
 KH = [];
 KG = [];
         clf();
-        %subplot(2,3,1);
+        subplot(2,3,1);
     for r = 1:numBots
         plot(ROBOTS(r).position(1),ROBOTS(r).position(2),'ks');
         hold on;
@@ -52,21 +52,21 @@ KG = [];
     hold on;
     axis([-50 50 -50 50])
     
-%     subplot(2,3,2)
-%     histogram(KA)
-%     title("alignment gain")
-%     subplot(2,3,3)
-%     histogram(KC)
-%     title("cohesion gain")
-%     subplot(2,3,4)
-%     histogram(KS)
-%     title("Seperation gain")
-%     subplot(2,3,5)
-%     histogram(KH)
-%     title("Home gain")
-%     subplot(2,3,6)
-%     histogram(KG)
-%     title("Goal gain")
+    subplot(2,3,2)
+    histogram(KA)
+    title("alignment gain")
+    subplot(2,3,3)
+    histogram(KC)
+    title("cohesion gain")
+    subplot(2,3,4)
+    histogram(KS)
+    title("Seperation gain")
+    subplot(2,3,5)
+    histogram(KH)
+    title("Home gain")
+    subplot(2,3,6)
+    histogram(KG)
+    title("Goal gain")
     
     
     pause(.0001);
