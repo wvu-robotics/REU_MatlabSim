@@ -5,12 +5,12 @@ close all
 numberOfAgents = 10;
 timeStep = .05;
 mapSize = 20;
-counter = 0;
+counter = 0;obj.measuredObstacle
 f  = @testController;
 ENV = agentEnv(numberOfAgents,f,mapSize,timeStep); 
 
 %Updating agent properties
-shape = [-2,-1;-2,1;2,1;2,-1];
+shape = circle(.5);
 for i = 1:numberOfAgents
     ENV.agents(i).setShape(shape);
     ENV.setAgentColor(i,[0 1 0]);
@@ -32,7 +32,7 @@ ENV.createStaticObstacle(circle(.5),[0,0],0,1);
 
 %Optional Features
 ENV.collisionsOn(true);
-ENV.pathVisibility(true);
+ENV.pathVisibility(false);
 ENV.realTime = false;
 ENV.agentIdVisibility(true);
 
@@ -41,7 +41,7 @@ while(true)
     ENV.tick; 
     counter = counter + timeStep;
     fprintf("Time: %.3f \n",counter)
-    %Change goal locations
+  %Change goal locations
     for i = 1:numberOfAgents
         theta = 2*pi/numberOfAgents * (i-1) + (pi/8)*counter;
         goalLocations(i,:) = [cos(theta+3.9*pi/4),sin(theta+3.9*pi/4)]*mapSize*(1);
