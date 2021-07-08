@@ -17,7 +17,7 @@ classdef Agent < handle
        idealSpeed = 1;
        heading = 0;
        broadCollisionSpace;
-
+       needsUpdate = false;
     end
     
     properties (Access = private)  
@@ -86,6 +86,7 @@ classdef Agent < handle
                                        X(1),Y(2);
                                        X(2),Y(2);
                                        X(2),Y(1)];
+            obj.needsUpdate = true;
         end 
         
         function property = getProperty(obj,propName)
@@ -99,6 +100,7 @@ classdef Agent < handle
         
         function id = getShapeID(obj)
              id = obj.shapeID;
+             
         end
         
         function setProperty(obj,propName,input)

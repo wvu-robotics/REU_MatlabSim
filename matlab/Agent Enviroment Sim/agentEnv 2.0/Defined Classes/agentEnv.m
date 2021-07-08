@@ -28,6 +28,7 @@ classdef agentEnv < handle
         hasCollsions = true;
         debugPatch = patch;
         angleArray = 0:(2*pi/128):2*pi;
+        needsUpdate = false;
      end
     
     methods
@@ -55,13 +56,18 @@ classdef agentEnv < handle
             for i = 1:(numberOfAgents + 2)
                 obj.debugPatch(i) = patch('FaceColor', 'none', 'visible', false);
             end 
+            
+            
             if length(controller) == 1
+                if isa(controller,'cell')
+                    controller = cell2mat(controller);
+                end
                 for i = 1:numberOfAgents
                     obj.agents(i).setController(controller);
                 end 
             else
                 for i = 1:numberOfAgents
-                    obj.agents(i). setController(controller(i));
+                    obj.agents(i).setController(cell2mat(controller(i)));
                 end
             end
         end
@@ -109,6 +115,7 @@ classdef agentEnv < handle
         function numAgents = getNumberOfAgents(obj)
             numAgents = obj.numberOfAgents;
         end 
+        
 %functionaility
         function physics(obj, id)
 
@@ -454,8 +461,30 @@ classdef agentEnv < handle
             obj.updateConfigurationSpace;
         end
         
+        function checkIfUpdateIsNeeded(obj)
+            if obj.needsUpdate == true
+                obj.updateEnv;
+                obj.needsUpdate = false;
+                for i = 1:obj.numberOfAgents
+                   obj.agents(i).needsUpdate = false; 
+                end
+            else
+                for i = 1:obj.numberOfAgents
+                    if obj.agents(i).needsUpdate == true
+                        obj.updateEnv;
+                        obj.needsUpdate = false;
+                        for j = 1:obj.numberOfAgents
+                            obj.agents(j).needsUpdate = false; 
+                        end
+                        break
+                    end
+                end
+            end
+        end
+        
         function tick(obj)
-           tStart = cputime;
+            obj.checkIfUpdateIsNeeded;
+            tStart = cputime;
             for i = randperm(obj.numberOfAgents)
                 obj.agents(i).callMeasurement(obj);
                 obj.agents(i).callController; 
