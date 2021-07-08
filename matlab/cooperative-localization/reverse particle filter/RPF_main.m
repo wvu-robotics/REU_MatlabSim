@@ -7,18 +7,18 @@ addpath 'C:\Users\Trevs\Desktop\github\REU_MatlabSim\matlab\boids-model-master'
 numBots = 20;       % number of robots in the world
 spawn_len = 5;     % side length of spawning range, centered around (0,0)
 time = 10000;          % total time steps to run simulation for
-noise = .1;         % variaince of the gaussian noise to apply to laser sensors
+noise = .75;         % variaince of the gaussian noise to apply to laser sensors
 range = 5;         % radius of local detection range of the robots
 e_max = 2;          % maximum mean localization error
 cov_max = 2;       % maximum covariance norm
-show_detection_rng = 1;  %toggles on and off the detection range circles
-v_max = 2;
+show_detection_rng = 0;  %toggles on and off the detection range circles
+v_max = 5;
 
 %% initialize swarm-------------------------------------------------------
 ROBOTS = create_swarm(numBots,spawn_len,range); %create an array of Boids models for the robots
 
 rho_max = numBots / (pi*range^2);
-Crhro = range*v_max*time/(100*100)
+Crhro = numBots*range*v_max*time/(100*100)
 
 %give the robots home and goal location
 for r = 1:numBots
@@ -56,7 +56,7 @@ for t = 1:time
     end
     %display the current state of the swarm
      disp_swarm(ROBOTS,range,show_detection_rng);
-     pause(.1)
+     pause(.01)
      
      %update the position of the robots and their boids rules
      for r = 1:numBots
@@ -68,7 +68,7 @@ for t = 1:time
             ROBOTS(r).covariance = ROBOTS(r).covariance + [noise,.01;.01,noise];
         end
         if ROBOTS(r).found_goal == 1
-            ROBOTS(r).goal = [100*rand(1,1)-50, 100*rand(1,1)-50];
+            ROBOTS(r).goal = [ROBOTS(r).goal(1),-ROBOTS(r).goal(2)];%[100*rand(1,1)-50, 100*rand(1,1)-50];
             ROBOTS(r).Kg = 1;
             ROBOTS(r).found_goal = 0;
         end

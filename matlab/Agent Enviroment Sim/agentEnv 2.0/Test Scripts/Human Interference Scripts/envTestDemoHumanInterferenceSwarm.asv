@@ -2,20 +2,17 @@ clc
 clear
 close all
 %   World Building
-numberOfAgents = 10;
+numberOfAgents = 7;
 agentRadius = .5;
 timeStep = .05;
 mapSize = 10;
 counter = 0;
-shape = .4*[-2,-1;-2,1;2,1;2,-1];
+shape = .25*[-2,-1;-2,1;2,1;2,-1];
 
 
 f = @testController;
 
 ENV = agentEnv(numberOfAgents,f,mapSize,timeStep); 
-
-
-
 
 %Updating agent properties
 for i = 1:numberOfAgents
@@ -24,34 +21,35 @@ for i = 1:numberOfAgents
     ENV.updateCollisionList('A',i)
 end
 
-initPositions = zeros(numberOfAgents, 2);
-goalLocations = zeros(numberOfAgents, 2);
-for i = 1:numberOfAgents
-    theta = 2*pi/numberOfAgents * (i-1);
-    initPositions(i,:) = [cos(theta),sin(theta)]*mapSize*(.9+(rand()-0.5)*.1);
-    goalLocations(i,:) = [cos(theta+3.9*pi/4),sin(theta+3.9*pi/4)]*mapSize*(.9+(rand()-0.5)*.1);
-end
-
 %Setting Initial Positions
+initPositions = [-8,-8;-8,-7;-8,-6;-8,-5;-8,-4;-8,-3;-8,-2];
+goalLocations = 5.*ones(numberOfAgents,2);
 ENV.setAgentPositions(initPositions);
 ENV.setGoalPositions(goalLocations);
+ENV.setAgentVelocities(zeros(numberOfAgents,2));
 
 %Creating Static Obstacles
+w=1;
+l=mapSize;
 shapeObs = [-1,-1;-1,1;1,1;1,-1];
-ENV.createStaticObstacle(circle(.5),[0,0],0,1);
+ENV.createStaticObstacle(rectangle(1),[0,-l/2],0,1);
+ENV.createStaticObstacle(rectangle(1),[l/2,0],pi/2,2);
+ENV.createStaticObstacle(rectangle(1),[0,l/2],pi,3);
+ENV.createStaticObstacle(rectangle(1),[-l/2,0],-pi/2,4);
 ENV.updateEnv; %required after each agent is finally initialized
 
 %Optional Features
 ENV.collisionsOn(true);
-ENV.pathVisibility(true);
+ENV.pathVisibility(false);
 ENV.realTime = false;
-ENV.agentIdVisibility(false);
+
 while(true)
-    %Simulates one timestep
-    ENV.tick; 
+    ENV.tick;
     counter = counter + timeStep;
     fprintf("Time: %.3f \n",counter)
-    
+    if counter > 16.25
+        bruh =1; 
+    end 
     %change goal locations
     for i = 1:numberOfAgents
         theta = 2*pi/numberOfAgents * (i-1) + (pi/8)*counter;
@@ -59,5 +57,7 @@ while(true)
     end
     ENV.setGoalPositions(goalLocations);
 end
+
+
 
 
