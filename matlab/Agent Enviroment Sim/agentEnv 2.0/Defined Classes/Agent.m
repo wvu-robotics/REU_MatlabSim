@@ -12,7 +12,7 @@ classdef Agent < handle
        goalPose = [0 0];
        color = [0 0 0];
        measuredAgents = Agent.empty;
-       measuringRange = 3;
+       measuringRange = 1000;
        maxSpeed = .5;
        idealSpeed = 1;
        heading = 0;
