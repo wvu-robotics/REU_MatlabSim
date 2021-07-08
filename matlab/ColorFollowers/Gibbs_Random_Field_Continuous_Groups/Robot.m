@@ -102,7 +102,10 @@ classdef Robot < handle
                                obj.goalX = randi(worldObj.max_x-1);
                                obj.goalY = randi([round(worldObj.max_y*4/5),worldObj.max_y-1]);
                            end
-                   
+                case 'multiDepot'
+                    depot = randi(worldObj.numDepots);
+                    obj.goalX = worldObj.depotLocs(depot,1);
+                    obj.goalY = worldObj.depotLocs(depot,2);
             end
         end
 
@@ -148,15 +151,15 @@ classdef Robot < handle
         %This function find the indexes of all the neighbors of the central
         %agent and puts them in neighborList
         function getNeighbors(obj, worldObj)
-            obj.neighborList = [];
+            obj.neighborList = Robot.empty;
             
             for i = 1:length(worldObj.robot_list)
                relativeX = worldObj.robot_list(i).x - obj.x;
                relativeY = worldObj.robot_list(i).y - obj.y;
-               distance = norm([relativeX,relativeY]);
-               if distance < obj.sensingRange && worldObj.robot_list(i) ~= obj
+               distanceSqr = relativeX^2+relativeY^2;
+               if distanceSqr < obj.sensingRange^2 && worldObj.robot_list(i) ~= obj
                   %obj.neighborList = [obj.neighborList, worldObj.robot_list(i).id];
-                  obj.neighborList = [obj.neighborList, worldObj.robot_list(i)];
+                  obj.neighborList(end + 1) = worldObj.robot_list(i);
                end
             end
         end
@@ -218,6 +221,7 @@ classdef Robot < handle
             
             VxSum = 0;
             VySum = 0;
+            KENeighbor = 0;
             group_mass = 0;
             for i = 1:length(neighborObjList)
                 angularGoalDistToNeighbor = abs(neighborObjList(i).color - obj.color);
@@ -225,14 +229,18 @@ classdef Robot < handle
                     angularGoalDistToNeighbor = 2*pi - angularGoalDistToNeighbor;
                 end
                 
-                if  angularGoalDistToNeighbor < pi/3
-                    VxSum = VxSum + (neighborObjList(i).Vx - obj.Vx);
-                    VySum = VySum + (neighborObjList(i).Vy - obj.Vy);
-                    group_mass = group_mass + neighborObjList(i).mass;
-                end
+                
+%                     VxSum = VxSum + (neighborObjList(i).Vx - obj.Vx);
+%                     VySum = VySum + (neighborObjList(i).Vy - obj.Vy);
+%                     group_mass = group_mass + neighborObjList(i).mass;
+                    
+                    KENeighbor = KENeighbor + 0.5 * neighborObjList(i).mass ...
+                        * (pi - angularGoalDistToNeighbor) * ((neighborObjList(i).Vx - obj.Vx)^2 ...
+                        + (neighborObjList(i).Vy - obj.Vy)^2);
+                
             end
             
-            KENeighbor = 0.5 * group_mass * (VxSum^2 + VySum^2);
+%             KENeighbor = 0.5 * group_mass * (VxSum^2 + VySum^2);
             KESelf = 0.5 * obj.mass * (obj.VMax - norm(propVel))^2;
         end
         
@@ -287,7 +295,7 @@ classdef Robot < handle
             goalPotential = GoalPotential(obj, mcmcChain(1,:));
             potentialChain = KENeighbor + KESelf + CBPotential + OAPotential + goalPotential;
             
-            for i = 1:10
+            for i = 1:50
                
                 propVx = normrnd(obj.Vx, obj.sigma);
                 propVy = normrnd(obj.Vy, obj.sigma);

@@ -17,6 +17,7 @@ classdef Agent < handle
     end
     
     properties (Access = private)  
+        shape;
         id;
         radius;
         controller;
@@ -63,7 +64,7 @@ classdef Agent < handle
             obj.controller = controller;
         end 
         
-        function timeStep= getTimeStep(obj)
+        function timeStep = getTimeStep(obj)
             timeStep = obj.timeStep;
         end
         

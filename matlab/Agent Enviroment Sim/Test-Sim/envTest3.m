@@ -9,7 +9,7 @@ mapSize = 10;
 counter = 0;
 
 
-f = @testController;
+f = @testController2;
 
 ENV = agentEnv(numberOfAgents,agentRadius,mapSize,timeStep); 
 
@@ -20,12 +20,15 @@ goalLocations = 5.*ones(numberOfAgents,2);
 ENV.setAgentPositions(initPositions);
 ENV.setGoalPositions(goalLocations);
 ENV.setAgentVelocities(zeros(numberOfAgents,2));
+shape = [-2,-1;-2,1;2,1;2,-1];
+%ENV.createStaticObstacle(shape,[5,5],0);
+
 for i = 1:numberOfAgents
+    ENV.agents(i).createProperty('wallet', 2);
     ENV.agents(i).setController(f);
     ENV.setAgentColor(i,'red')
-
 end 
-ENV.pathVisibility(false);
+ENV.pathVisibility(true);
 ENV.realTime = false;
 while(true)
     ENV.tick;

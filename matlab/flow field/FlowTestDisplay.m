@@ -1,5 +1,3 @@
-
-
 [X,Y] = meshgrid(-10:.1:10 , -10:.1:10 );
 
 
@@ -44,7 +42,3 @@ hold off
 
 figure()
 plot3(X,Y,PSI)
-
-
-
-

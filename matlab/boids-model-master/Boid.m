@@ -33,6 +33,8 @@ classdef Boid
         found_goal
         is_beacon
         time_as_beacon
+        invaders
+        Isinvader
         
         sigmaVelocity
         sigmaYawRate
@@ -57,7 +59,7 @@ classdef Boid
             obj.position = [position_x, position_y];
             obj.t_position = obj.position;
             obj.r = 0;
-            obj.max_speed = 2;
+            obj.max_speed = 5;
             obj.max_force = 0.1;
             
             obj.Ks = Ks;
@@ -78,6 +80,11 @@ classdef Boid
             obj.color_particles = zeros(1,3);
             obj.time_as_beacon = 0;
             obj.is_beacon = 0;
+            
+            obj.invaders = [1;2;3;4];
+%             obj.invaders = [1;3;2;4];
+            obj.Isinvader = 0;
+            
         end
         
         

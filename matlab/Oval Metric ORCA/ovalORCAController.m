@@ -76,7 +76,7 @@ function ovalORCAController(agent)
     %velocity toward the best velocity
     accel = bestVel - agent.velocity;
     if norm(accel) > 0
-        accel = accel ./ norm(accel);
+        accel = agent.maxSpeed * accel ./ norm(accel);
     end
-    agent.velocityControl = agent.velocity + accel * agent.timeStep;
+    agent.velocityControl = agent.velocity + accel * agent.getTimeStep();
 end
