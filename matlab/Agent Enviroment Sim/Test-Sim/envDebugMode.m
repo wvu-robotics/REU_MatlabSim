@@ -3,7 +3,7 @@ clc
 close all
 
 %   World Building
-numberOfAgents = 6;
+numberOfAgents = 5;
 agentRadius = 1;
 timeStep = .05;
 mapSize = 10;
@@ -22,6 +22,7 @@ for i = 1:numberOfAgents
     ENV.agents(i).setController(@accelerationController);
 end
 ENV.pathVisibility(true);
+ENV.realTime = false;
 
 for counter = 1:1000
     ENV.tick;
