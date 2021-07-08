@@ -25,10 +25,10 @@ function robot = boids_update(robot,e_max,rho_max)
     if robot.max_speed > 5
         robot.max_speed = 5;
     end
-    robot.Ka = rho/rho_max + mean_error/e_max;
+    robot.Ka = 0;%rho/rho_max + mean_error/e_max;
     robot.Kc = (norm(covar) + mean_error^2)/A; %norm([norm(robot.covariance), mean_error^2]);
-    robot.Ks = A/(norm(covar) + mean_error^2);
-    robot.Kh = mean_error^2 * norm(covar)/(A*norm(robot.home-robot.mean_position)^2);
+    robot.Ks = 0;%A/(norm(covar) + mean_error^2);
+    robot.Kh = (mean_error^2 + norm(covar))/(norm(robot.home-robot.mean_position)^2);
     robot.Kg = robot.detection_range/(norm(robot.goal-robot.mean_position)*norm(covar));
     
 end

@@ -24,7 +24,7 @@ classdef Agent < handle
         shapeID = 0;
       	id;
         shape = circle(.5);
-        radius = .5;
+        radius = 1;
         controller;
         timeStep; 
         extraProperties = cell.empty;

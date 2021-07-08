@@ -2,12 +2,9 @@ classdef Boid
     
     properties
         ID
-        
-        position  %my dead reckoning
+        position
         velocity
         acceleration
-        covariance
-        
         r
         max_force
         max_speed
@@ -23,25 +20,21 @@ classdef Boid
         color_particles
         neighbors
         detection_range
-        
-        mean_position  %estimated from covariance intersection
+        mean_position
         mean_covar
-        
-        
+        covariance
         home
         goal
         found_goal
         is_beacon
         time_as_beacon
-        invaders
-        Isinvader
         
         sigmaVelocity
         sigmaYawRate
         biasVelocity
         biasYawRate
         
-        t_position  %truth 
+        t_position
         t_velocity
         t_path        
         
@@ -57,9 +50,8 @@ classdef Boid
             obj.t_velocity = obj.velocity;
             
             obj.position = [position_x, position_y];
-            obj.t_position = obj.position;
             obj.r = 0;
-            obj.max_speed = 5;
+            obj.max_speed = 2;
             obj.max_force = 0.1;
             
             obj.Ks = Ks;
@@ -69,9 +61,8 @@ classdef Boid
             obj.Kg = 0;
             obj.found_goal = 1;
             
-            
+            %obj.path = zeros(time,4);
             obj.path = [position_x, position_y, obj.velocity(1), obj.velocity(2),0];
-            obj.t_path =  obj.path;
             obj.laser = zeros(1,numBoids);
             obj.particles = cell(2,1);
             obj.particles{1} = zeros(3,numBoids);
@@ -80,11 +71,6 @@ classdef Boid
             obj.color_particles = zeros(1,3);
             obj.time_as_beacon = 0;
             obj.is_beacon = 0;
-            
-            obj.invaders = [1;2;3;4];
-%             obj.invaders = [1;3;2;4];
-            obj.Isinvader = 0;
-            
         end
         
         

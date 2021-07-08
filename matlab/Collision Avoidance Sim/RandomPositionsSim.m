@@ -3,9 +3,8 @@ clear
 clc
 close all
 
-%Defines the constants for ...
-%   World Building
-numberOfAgents = 15;
+%Defines the constants for World Building
+numberOfAgents = 5;
 agentRadius = 1;
 mapSize = 10;
 timeStep = .05;
@@ -16,6 +15,8 @@ safetyMargin = 1.2;
 pathLength = 5;
 pathCounters = ones(numberOfAgents,1);
 goalPath = (mapSize-2*agentRadius)*(2*rand(numberOfAgents,2,pathLength)-1);
+
+%Initializes the initial positions around the boarder of the world
 initPositions = zeros(numberOfAgents,2);
 
 possCo = (agentRadius-mapSize):(2*safetyMargin*agentRadius):(mapSize-(2*safetyMargin+1)*agentRadius);
@@ -44,27 +45,28 @@ end
 
 travelTimes = zeros(numberOfAgents,pathLength);
 
-%Creates velocities, paths, time step counter, and collision counter
-agentVelocities = zeros(numberOfAgents,2);
+ENV = agentEnv(numberOfAgents, @accelerationController, mapSize, timeStep);
 
-ENV = agentEnv(numberOfAgents, agentRadius, mapSize, timeStep);
+for i = 1:numberOfAgents
+    ENV.agents(i).setShape(circle(agentRadius));
+    ENV.setAgentColor(i,[0,0,1]);
+    ENV.updateCollisionList('A',i);
+end
 
 ENV.setAgentPositions(initPositions);
 ENV.setGoalPositions(goalLocations);
 ENV.setAgentVelocities(zeros(numberOfAgents,2));
+ENV.realTime = false;
 
-for i = 1:numberOfAgents
-    ENV.agents(i).setController(@accelerationController);
-end
+ENV.updateEnv; %required after each agent is finally initialized
 
-while true
+while min(pathCounters) <= pathLength
     ENV.tick();
-    counter
-    
+
     %Increments the times that it took to get to the goals
     for i = 1:numberOfAgents
-        if pathCounters(i) < pathLength || norm(ENV.agents(i).pose - goalLocations(i,:)) > .2
-            travelTimes(i,pathCounters(i)) = travelTimes(i,pathCounters(i)) + 1;
+        if pathCounters(i) <= pathLength
+            travelTimes(i,pathCounters(i)) = travelTimes(i,pathCounters(i)) + 1
         end
     end
     
@@ -75,6 +77,10 @@ while true
                 pathCounters(i) = pathCounters(i) + 1;
                 goalLocations(i,:) = goalPath(i,:,pathCounters(i));
                 ENV.setGoalPositions(goalLocations);
+            end
+        elseif pathCounters(i) == pathLength
+            if norm(ENV.agents(i).pose - goalLocations(i,:)) < agentRadius
+                pathCounters(i) = pathCounters(i) + 1;
             end
         end
     end
