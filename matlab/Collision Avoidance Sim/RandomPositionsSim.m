@@ -4,7 +4,7 @@ clc
 close all
 
 %Defines the constants for World Building
-numberOfAgents = 5;
+numberOfAgents = 9;
 agentRadius = 1;
 mapSize = 10;
 timeStep = .05;
