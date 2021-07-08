@@ -5,7 +5,7 @@ close all
 numberOfAgents = 10;
 timeStep = .05;
 mapSize = 20;
-counter = 0;obj.measuredObstacle
+counter = 0;
 f  = @testController;
 ENV = agentEnv(numberOfAgents,f,mapSize,timeStep); 
 
