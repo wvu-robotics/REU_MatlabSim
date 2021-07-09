@@ -214,7 +214,7 @@ classdef agentEnv < handle
                     agentsType = obj.obstacles;
                 end
                     obstacleID = str2num(potentialCollisonID(2:end));
-                    if obstacleID ~= id
+                    if ~(obstacleID == id  & potentialCollisonID(1) == 'A') 
                         relativeHeading = obj.agents(id).heading-agentsType(obstacleID).heading;
                     
                         configurationSpaceIndex = obj.convertToDiscAngle(relativeHeading);
