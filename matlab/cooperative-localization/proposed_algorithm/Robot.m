@@ -65,7 +65,7 @@ classdef Robot
         
         % decentralized EKF parameters -----------------------------------
         P
-
+        X
         % assimilation colors ----------------------------------------------
         color_particles
         
@@ -118,6 +118,13 @@ classdef Robot
             obj.state_particles{2} = zeros(2,2,numBoids);
             
             % decentralized EKF parameters
+            obj.X = cell (1,numBoids);
+            for i = 1:numbBoids % For each robot
+                x = 10 * rand(1,1); % Set a random x value
+                y = 10 * rand(1,1); % Set a random y value
+                theta = 2 * pi * rand(1,1); % Set a random theta value
+                X{i} = [x;y;theta]; % Combined state matrix
+            end
             obj.P = cell(numBoids, numBoids);
             for i = 1:numBoids % For each robot
                 P{i,i} = eye(3); % Covariance matrix
@@ -444,6 +451,7 @@ classdef Robot
         end
         
         function obj = decentralized_ekf(obj)
+            
         end
         
         function obj = home_update(obj,home_range)
