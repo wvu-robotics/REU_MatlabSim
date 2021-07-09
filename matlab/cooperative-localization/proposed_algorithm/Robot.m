@@ -2,56 +2,63 @@ classdef Robot
     
     properties
         %% class properties
-        ID
-        home
-        goal
-        found_goal
-        estimator % 0 = dead_reckoning, 
-                  % 1 = covariance intersection, 
-                  % 2 = decentralized EKF
-                  % 3 = centralized EKF
+        ID              % [int] id of the robot
+        home            % [X, Y] home location of the robot
+        goal            % [X, Y] goal location for the robot
+        found_goal      % 0 = not found my current goal
+                        % 1 = found my current goal
+        estimator       % 0 = dead_reckoning,
+                        % 1 = covariance intersection,
+                        % 2 = decentralized EKF
+                        % 3 = centralized EKF
         
         % positioning------------------------------------------------
-        position_d  %my dead reckoning
-        velocity_d
-        covariance_d
-        path_d
-        
-        position_e  %estimated localization
-        velocity_e
-        covariance_e
-        path_e
-        
-        position_t  %truth
-        velocity_t
-        path_t
+        %dead reckoning
+        position_d      % [X, Y, Yaw] 
+        velocity_d      % [Vx, Vy]
+        covariance_d    % [3x3 X, Y, Yaw] covariance matrix
+        path_d          % [X, Y, Yaw;   path taken by robot
+                        %  .., ..,..];
+         
+        %estimated localization
+        position_e      % [X, Y, Yaw]
+        velocity_e      % [Vx, Vy]
+        covariance_e    % [3x3 X, Y, Yaw] covariance matrix
+        path_e          % [X, Y, Yaw;   path taken by robot
+                        %  .., ..,..];
+                        
+        %truth
+        position_t      % [X, Y, Yaw]
+        velocity_t      % [Vx, Vy]
+        path_t          % [X, Y, Yaw;   path taken by robot
+                        %  .., ..,..];
         
         % sensors / measurment ----------------------------------------
         
-        vel_m
-        yaw_rate_m
-        laser
-        bearing
-        neighbors
+        vel_m           % velocity magnitude from wheel encoder
+        yaw_rate_m      % yaw rate from wheel encoder
+        laser           % [dist, dist, ...] lidar distances to every robot
+        bearing         % [phi, phi, ...] global angle to every robot
+        neighbors       % [robot, robot, ...] array of local robots
         
-        detection_range
-        sigmaVelocity
-        biasVelocity
-        sigmaYawRate
-        biasYawRate
-        sigmaRange
-        sigmaHeading
+        detection_range % [double] detection range of the robot
+        sigmaVelocity   % [double] wheel velocity variance
+        biasVelocity    % [double] wheel velocity bias
+        sigmaYawRate    % [double] wheel yaw rate variance
+        biasYawRate     % [double] wheel yaw rate bias
+        sigmaRange      % [double] lidar distance variance
+        sigmaHeading    % [double] lidar angle variance
         
-        %Boids parameters ----------------------------------------------------------------
+        %Boids parameters -------------------------------------------------
         
-        acceleration
-        max_force
-        max_speed
-        Ks
-        Ka
-        Kc
-        Kh
-        Kg
+        acceleration    % [Ax, Ay] tell robot how to change its velocity
+        max_force       % [double] limits maximum acceleration
+        max_speed       % [double] velocity limit on the robot
+        Ks              % [double] seperation gain
+        Ka              % [double] alignment gain
+        Kc              % [double] cohesion gain
+        Kh              % [double] home gain
+        Kg              % [double] goal gain
         
         % covariance intersection ----------------------------------------
         state_particles
@@ -80,12 +87,12 @@ classdef Robot
             obj.velocity_e = obj.velocity_d;
             
             obj.position_d = [position_x, position_y, angle];
-            obj.position_t = obj.position;
-            obj.position_e = obj.position;
+            obj.position_t = obj.position_d;
+            obj.position_e = obj.position_d;
             
             obj.path_d = [position_x, position_y, angle];
-            obj.path_t =  obj.path;
-            obj.path_e = obj.path(1:2);
+            obj.path_t =  obj.path_d;
+            obj.path_e = obj.path_d(1:2);
             
             % initalize boids parameters-------------------------------------------
             obj.max_speed = 5;
@@ -123,11 +130,9 @@ classdef Robot
             
         end
         
-        %% Boids functions
+        %% Boids functions-------------------------------------------------
         
         function obj = boids_update(obj,e_max,rho_max)
-            %UNTITLED9 Summary of this function goes here
-            %   Detailed explanation goes here
             
             % measure local density
             A = pi*obj.detection_range^2;
@@ -266,7 +271,7 @@ classdef Robot
             end
         end
         
-        %% measurments
+        %% measurments-----------------------------------------------------
         
         function obj = lidar_measurement(obj,ROBOTS)
             
@@ -299,8 +304,7 @@ classdef Robot
         end
         
         function obj = get_locations(obj, ROBOTS)
-            %UNTITLED7 Summary of this function goes here
-            %   Detailed explanation goes here
+            
             neigh = [];
             numBots = length(ROBOTS);
             particles = obj.state_particles;
@@ -336,7 +340,7 @@ classdef Robot
             
         end
         
-        %% kinematic update
+        %% kinematic update------------------------------------------------
         
         function obj = update(obj)
             
@@ -348,7 +352,6 @@ classdef Robot
             elseif obj.is_beacon == 1 % stop becoming a beacon
                 obj.is_beacon = 0;
             else                     % i am not a beacon
-                
                 
                 % update truth velocity and position
                 obj.velocity_t = obj.velocity_t + obj.acceleration;
@@ -362,6 +365,9 @@ classdef Robot
                 % update estimate of location
                 obj = obj.estimate_location();
                 
+                % check if we can see home
+                obj = home_update(obj.detection_range);
+                
                 %record paths
                 obj.path_t = [obj.path_t; obj.position_t];
                 obj.path_d = [obj.path_d; obj.position_d];
@@ -371,27 +377,27 @@ classdef Robot
                 obj.acceleration = [0 0];
                 
                 % check if we reached a goal or not
-                if norm(obj.mean_position(1:2) - obj.goal) < obj.detection_range
+                if norm(obj.position_e(1:2) - obj.goal) < obj.detection_range
                     obj.found_goal = 1;
                 end
                 
             end
         end
         
-        %% localization functions ----------------------------------------
+        %% localization functions------------------------------------------
         
         function obj = estimate_location(obj)
-              switch (obj.estimator)
-                  case 0 % just use dead_reckoning
-                      obj.position_e = obj.position_d;
-                      obj.velocity_e = obj.velocity_d;
-                      obj.covariance_e = obj.covariance_d;
-                  case 1 % covariance intersection
-                      obj = obj.covariance_intersection();
-                  case 2 % decentralized ekf
-                      
-                  case 3 % centralized ekf
-              end
+            switch (obj.estimator)
+                case 0 % just use dead_reckoning
+                    obj.position_e = obj.position_d;
+                    obj.velocity_e = obj.velocity_d;
+                    obj.covariance_e = obj.covariance_d;
+                case 1 % covariance intersection
+                    obj = obj.covariance_intersection();
+                case 2 % decentralized ekf
+                    
+                case 3 % centralized ekf
+            end
         end
         
         
@@ -401,13 +407,12 @@ classdef Robot
             obj.velocity_d = obj.vel_m*[cos(new_theta), sin(new_theta)];
             obj.position_d = [obj.position_d(1:2) + obj.velocity_d, new_theta];
             
-            F_d = [1,0,           0,             1,0;  % X
-                0,1,           0,             0,1;  % Y
-                0,0,           1,             0,0;  % Yaw
-                0,0, obj.vel_m*sin(new_theta),0,0;  % Vx
-                0,0,-obj.vel_m*cos(new_theta),0,0]; % Vy
+            F_d = [1,0,-obj.vel_m*sin(new_theta);  % X
+                   0,1, obj.vel_m*cos(new_theta);  % Y
+                   0,0,           1             ]; % Yaw
+                 
             
-            Q_d = []; % TODO FILL IN Q MATRIX
+            Q_d = diag(obj.sigmaVelocity, obj.sigmaVelocity, obj.sigmaYawRate/100);
             
             obj.covariance_d = F_d*obj.covariance_d*F_d' + Q_d;
         end
@@ -430,8 +435,6 @@ classdef Robot
         end
         
         function obj = home_update(obj,home_range)
-            %UNTITLED Summary of this function goes here
-            %   Detailed explanation goes here
             
             home_dist = norm(obj.position_t(1:2) - obj.home);
             if home_dist < home_range
@@ -464,8 +467,9 @@ classdef Robot
             
         end
         
-        %% beacon functions
+        %% beacon functions------------------------------------------------
         
+        % NEEED TO FIX!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         function ROBOTS = beacon_update(ROBOTS,ID, neighbors, cov_max)
             
             found_beacon = 0;
@@ -513,8 +517,8 @@ classdef Robot
             
             
         end
-
-        %% color particles functions
+        
+        %% color particles functions---------------------------------------
         function [obj, other] = trade_color(obj, other)
             %calculate probability weights
             W = other.color_particles./ sum(other.color_particles);
@@ -527,6 +531,88 @@ classdef Robot
                 other.color_particles(color) = other.color_particles(color)-1; %remove particle from other agent
             end
         end
+        
+        %% Display functions-----------------------------------------------
+        function disp_swarm(ROBOTS,range,show_detection_rng)
+            
+            numBots = length(ROBOTS);
+            KA = [];
+            KC = [];
+            KS = [];
+            KH = [];
+            KG = [];
+            clf();
+            %subplot(2,3,1);
+            for r = 1:numBots
+                % plot truth data-----------------------------------------
+                quiver(ROBOTS(r).t_position(1),ROBOTS(r).t_position(2),ROBOTS(r).t_velocity(1), ROBOTS(r).t_velocity(2),'k');
+                hold on;
+                plot(ROBOTS(r).t_position(1), ROBOTS(r).t_position(2), 'ks');
+                hold on;
+                if show_detection_rng
+                    viscircles([ROBOTS(r).position(1),ROBOTS(r).position(2)],range);
+                    hold on;
+                end
+                %plot estimated position and color-------------------------------------------
+                error_ellipse(ROBOTS(r).mean_covar, [ROBOTS(r).mean_position(1), ROBOTS(r).mean_position(2)])
+                hold on;
+                if sum(ROBOTS(r).color_particles) > 0
+                    COLOR= ROBOTS(r).color_particles./sum(ROBOTS(r).color_particles);
+                else
+                    COLOR = [0,0,0];
+                end
+                
+                if ROBOTS(r).is_beacon == 1
+                    plot(ROBOTS(r).mean_position(1), ROBOTS(r).mean_position(2), '^', 'color', COLOR);
+                    hold on;
+                else
+                    plot(ROBOTS(r).mean_position(1), ROBOTS(r).mean_position(2), '*', 'color', COLOR);
+                    hold on;
+                end
+                % plot dead reckoning position---------------------------------------------------------
+                plot(ROBOTS(r).position(1), ROBOTS(r).position(2), 'bo');
+                hold on;
+                quiver(ROBOTS(r).position(1), ROBOTS(r).position(2),ROBOTS(r).velocity(1), ROBOTS(r).velocity(2), 'b');
+                hold on;
+                
+                %plot goal position---------------------------------------------
+                plot(ROBOTS(r).goal(1), ROBOTS(r).goal(2), 'rx')
+                
+                KA = [KA,ROBOTS(r).Ka];
+                KC = [KC,ROBOTS(r).Kc];
+                KS = [KS,ROBOTS(r).Ks];
+                KH = [KH,ROBOTS(r).Kh];
+                KG = [KG,ROBOTS(r).Kg];
+            end
+            %plot home------------------------------------------------------
+            plot(ROBOTS(1).home(1),ROBOTS(1).home(2), 'bd','markersize',12)
+            hold on;
+            viscircles([ROBOTS(1).home(1),ROBOTS(1).home(2)],range);
+            hold on;
+            title("Square = truth, * = estimate, o = dead reckoning");
+            axis([-50 50 -50 50])
+            
+            %plot gain distributions
+            %     subplot(2,3,2)
+            %     histogram(KA)
+            %     title("alignment gain")
+            %     subplot(2,3,3)
+            %     histogram(KC)
+            %     title("cohesion gain")
+            %     subplot(2,3,4)
+            %     histogram(KS)
+            %     title("Seperation gain")
+            %     subplot(2,3,5)
+            %     histogram(KH)
+            %     title("Home gain")
+            %     subplot(2,3,6)
+            %     histogram(KG)
+            %     title("Goal gain")
+            
+            
+            pause(.0001);
+        end
+        
         
     end
 end
