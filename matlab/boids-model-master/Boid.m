@@ -26,6 +26,7 @@ classdef Boid
         
         mean_position  %estimated from covariance intersection
         mean_covar
+        mean_path 
         
         
         home
@@ -40,6 +41,8 @@ classdef Boid
         sigmaYawRate
         biasVelocity
         biasYawRate
+        sigmaRange
+        sigmaHeading
         
         t_position  %truth 
         t_velocity
@@ -56,7 +59,7 @@ classdef Boid
             obj.velocity = [cos(angle), sin(angle)];
             obj.t_velocity = obj.velocity;
             
-            obj.position = [position_x, position_y];
+            obj.position = [position_x, position_y, angle];
             obj.t_position = obj.position;
             obj.r = 0;
             obj.max_speed = 5;
@@ -70,8 +73,9 @@ classdef Boid
             obj.found_goal = 1;
             
             
-            obj.path = [position_x, position_y, obj.velocity(1), obj.velocity(2),0];
+            obj.path = [position_x, position_y, angle];
             obj.t_path =  obj.path;
+            obj.mean_path = obj.path(1:2);
             obj.laser = zeros(1,numBoids);
             obj.particles = cell(2,1);
             obj.particles{1} = zeros(3,numBoids);
@@ -82,7 +86,7 @@ classdef Boid
             obj.is_beacon = 0;
             
             obj.invaders = [1;2;3;4];
-%             obj.invaders = [1;3;2;4];
+
             obj.Isinvader = 0;
             
         end
@@ -94,7 +98,8 @@ classdef Boid
                 obj.Kg = 0;
             end
             goal_force = obj.seek(obj.goal);
-            obj.velocity = sep_force+coh_force+ali_force+obj.Kh*home_force+ obj.Kg*goal_force;
+            %obj.velocity
+            obj.acceleration = sep_force+coh_force+ali_force+obj.Kh*home_force+ obj.Kg*goal_force;
         end
         
         
@@ -128,32 +133,66 @@ classdef Boid
             end
         end
         
-        function obj = update(obj, noise)
-            vel_old = obj.velocity;
-            obj.velocity = obj.velocity + obj.acceleration;
-            obj.velocity = obj.velocity./norm(obj.velocity).*obj.max_speed;
-            if obj.is_beacon == 1 && rand > obj.time_as_beacon/100
-               obj.velocity = [0,0]; 
-            elseif obj.is_beacon == 1
+        function obj = update(obj)
+
+            %determine if we are a beacon-------------------------------------------
+            if obj.is_beacon == 1 && rand > obj.time_as_beacon/100 % remain a beacon
+                obj.velocity = [0,0];
+                obj.t_velocity = [0,0];
+            elseif obj.is_beacon == 1 % stop becoming a beacon
                 obj.is_beacon = 0;
+            else                     % i am not a beacon
+                old_pose = obj.t_position;
+                
+                % update truth velocity and position
+                obj.t_velocity = obj.t_velocity + obj.acceleration;
+                obj.t_velocity = obj.t_velocity./norm(obj.t_velocity).*obj.max_speed;
+                ttheta = atan2(obj.t_velocity(2),obj.t_velocity(1));
+                obj.t_position = [obj.t_position(1:2) + obj.t_velocity, ttheta];
+                
+                % update dead reckoning
+                new_vel = norm(obj.t_velocity)+ normrnd(0,obj.sigmaVelocity,1,1) + obj.biasVelocity;
+                omega = obj.t_position(3)-old_pose(3) + normrnd(0,obj.sigmaYawRate,1,1) + obj.biasYawRate;
+                new_theta = omega + obj.position(3);
+                obj.velocity = new_vel*[cos(new_theta), sin(new_theta)];
+                obj.position = [obj.position(1:2) + obj.velocity, new_theta];
+                
+                noise1 = abs((obj.sigmaVelocity + obj.biasVelocity));%*max(cos(new_theta+obj.sigmaYawRate + obj.biasYawRate),cos(new_theta-obj.sigmaYawRate + obj.biasYawRate)));
+                noise2 = abs((obj.sigmaVelocity + obj.biasVelocity));%*max(sin(new_theta+obj.sigmaYawRate + obj.biasYawRate),sin(new_theta-obj.sigmaYawRate + obj.biasYawRate)));
+                obj.covariance = obj.covariance + [noise1,.01;.01,noise2];
+                
+                % update estimate of location
+                % measure error in variance and dead reckoning mean error
+                if sum(obj.particles{1}(3,:)) > 1
+                    states = obj.particles{1}(1:2,obj.particles{1}(3,:) >.5);
+                    covars = obj.particles{2}(:,:,obj.particles{1}(3,:) > .5);
+                    
+                    [mean_pose,covar] = fusecovint(states,covars);
+                    obj.mean_position = mean_pose';
+                    obj.mean_covar = covar;
+                else
+                    obj.mean_position = obj.position;
+                    obj.mean_covar = obj.covariance;
+                end
             end
-            obj.position = obj.position + obj.velocity;
+            
+            %record paths
+            obj.t_path = [obj.t_path; obj.t_position];
+            obj.path = [obj.path; obj.position];
+            obj.mean_path = [obj.mean_path; obj.mean_position(1:2)];
+            
+            %set acceleration to zero
             obj.acceleration = [0 0];
             
-            
-            obj.path = [obj.path;[obj.position + obj.velocity, obj.velocity./norm(obj.velocity).*obj.max_speed, omega]];
-            obj.particles{1}(1,:) = obj.particles{1}(1,:) + obj.velocity(1);
-            obj.particles{1}(2,:) = obj.particles{1}(2,:) + obj.velocity(2);
-            
-            if norm(obj.mean_position - obj.goal) < obj.detection_range
-                %obj.goal = obj.home;
+            % check if we reached a goal or not
+            if norm(obj.mean_position(1:2) - obj.goal) < obj.detection_range
                 obj.found_goal = 1;
             end
             
         end
         
         function [steer] = seek(obj, target)
-            desired = target - obj.position;
+            desired = target - obj.position(1:2);
             %desired = desired/norm(desired);
             desired = desired*obj.max_speed;
             
@@ -167,14 +206,14 @@ classdef Boid
             count = 0;
             positions = zeros(2,length(boids));
             for i=1:1:length(boids)
-                positions(:,i) = boids(i).position;
+                positions(:,i) = boids(i).position(1:2);
             end
-            d = pdist([obj.position; positions']);
+            d = pdist([obj.position(1:2); positions']);
             d = d(1:length(boids));
             
             for i=1:1:length(boids)
                 if d(i) > 0 && d(i) <  desired_separation
-                    difference = obj.position - boids(i).position;
+                    difference = obj.position(1:2) - boids(i).position(1:2);
                     difference = difference./norm(difference);
                     difference = difference./d(i);
                     steer = steer + difference;
@@ -201,14 +240,14 @@ classdef Boid
             
             positions = zeros(2,length(boids));
             for i=1:1:length(boids)
-                positions(:,i) = boids(i).position;
+                positions(:,i) = boids(i).position(1:2);
             end
-            d = pdist([obj.position; positions']);
+            d = pdist([obj.position(1:2); positions']);
             d = d(1:length(boids));
             
             for i=1:1:length(boids)
                 if d(i)>0 && d(i) < neighbor_dist
-                    sum=sum+boids(i).position;
+                    sum=sum+boids(i).position(1:2);
                     count=count+1;
                 end
             end
@@ -229,14 +268,14 @@ classdef Boid
             
             positions = zeros(2,length(boids));
             for i=1:1:length(boids)
-                positions(:,i) = boids(i).position;
+                positions(:,i) = boids(i).position(1:2);
             end
-            d = pdist([obj.position; positions']);
+            d = pdist([obj.position(1:2); positions']);
             d = d(1:length(boids));
             
             for i=1:1:length(boids)
                 if d(i)>0 && d(i) < neighbor_dist
-                    sum=sum+boids(i).position;
+                    sum=sum+boids(i).position(1:2);
                     count=count+1;
                 end
             end
