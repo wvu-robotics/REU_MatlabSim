@@ -170,7 +170,7 @@ classdef agentEnv < handle
                     
                     obj.updateCollisionList('A',id);   
                     potentialCollsionIndex = obj.findPotentialCollisions(id, 'A');  
-                    if obj.detectCollision(id,potentialCollsionIndex) % & any(newRelativePose)
+                    if obj.detectCollision(id,potentialCollsionIndex) & any(newRelativePose)
                         if round(newRelativePose,5) == round(desiredPose,5)
                             converged = true;
                         else

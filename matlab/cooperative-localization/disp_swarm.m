@@ -1,6 +1,5 @@
 function disp_swarm(ROBOTS,range,show_detection_rng)
-%UNTITLED8 Summary of this function goes here
-%   Detailed explanation goes here
+
 numBots = length(ROBOTS);
 KA = [];
 KC = [];
