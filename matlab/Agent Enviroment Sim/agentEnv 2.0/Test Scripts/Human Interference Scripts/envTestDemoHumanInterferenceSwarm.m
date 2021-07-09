@@ -2,12 +2,12 @@ clc
 clear
 close all
 %   World Building
-numberOfAgents = 6;
+numberOfAgents = 5;
 agentRadius = .5;
 timeStep = .05;
-mapSize = 25;
+mapSize = 30;
 counter = 0;
-shape = circle (.75);
+shape = circle (1);
 % shape=.25*[-2,-1;-2,1;2,1;2,-1];
 safetyMargin = 5;
 
@@ -27,7 +27,7 @@ end
     ENV.agents(1).setProperty('isEnemy', true);
 %Setting Initial Positions
 initPositions = [-8,-8;-8,-6;-8,-4;-8,-2;-8,0;-8,2;-8,4];
-% initPositions = zeros(numberOfAgents,2);
+%  initPositions = zeros(numberOfAgents,2);
 % initpositions(1,:) = [0,0];
 % possCo = (agentRadius-mapSize):(2*agentRadius*safetyMargin):(mapSize-2*agentRadius);
 % for i = 3:min(length(possCo),numberOfAgents)
