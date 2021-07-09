@@ -415,8 +415,7 @@ classdef Robot
                 case 3 % centralized ekf
             end
         end
-        
-        
+          
         function obj = dead_reckoning(obj)
             % update dead reckoning
             new_theta = obj.position_d(3) + obj.yaw_rate_m;
@@ -450,7 +449,97 @@ classdef Robot
             end
         end
         
+        % decentralized ekf functions----------------------------------
+        
+        function obj = pick_neighbor(obj)
+            i = obj.ID; % Define robot i
+            range = obj.detection_range; % range of detection
+            Xi = obj.X{i}; % State Matrix for robot i
+            
+            for j = 1:number_of_robots % For each robot
+                Xj = obj.X{j}; % State Matrix for robot j
+                if i == j % If robot i = robot j
+                    D(j) = 0; % Possible neighbor ID = 0
+                else
+                    D(j) = sqrt(((Xj(1)-Xi(1))^2)+((Xj(2)-Xi(2))^2)); % Rho measurement
+                end
+                if D(j) > range % If robot j out of range of robot i
+                    D(j) = 0; %Possible neighbor ID = 0
+                else
+                    % Do nothing
+                end
+            end
+
+            PN = find(D); % Find possible neighbor ID for each robot
+            if isempty(PN) == 1 % No neighbor around
+                N = 0; % Set N = 0
+            else
+                N = PN;
+%                 pos = randi(length(PN)); % Pick a random neighbor
+%                 N = PN(pos); % Set N
+            end           
+            obj.neighbor = N;
+        end
+        
         function obj = decentralized_ekf(obj)
+            i = obj.ID; % Define robot i
+            j = 0; % Pick a ranom neighbor
+            Xi = obj.X{i}; % State robot i
+            Xj = obj.X{j}; % State robot j
+            Pi = obj.P(i,:); % Covariance and correlated values for robot i 
+            Pj = obj.P(j,:); % Covariance and correlated values for robot j           
+            Yr = [obj.laser(j);obj.bearing(j)]; % Measurement for robot i to robot j
+
+            Xc = [Xi ; Xj]; % Combined State matrix
+            Pi_i = Pi{1,i}; % Set the covariance matrix for robot i
+            Pj_i = Pj{1,j}; % Set the covariance matrix for robot j
+            Ci_i = Pi{1,j}; % Correlated value from robot i to robot j
+            Cj_i = Pj{1,i}; % Correlated value from robot j to robot i
+            Pij = Ci_i * Cj_i'; % Correlated values between robot i and robot j
+            Pc = [Pi_i Pij ; Pij' Pj_i]; % Combined covariance matrix
+            I = eye(6); % Identity Matrix
+            R = 0.01 * eye(2); % Estimation noise covariance
+
+            h = zeros(2,1);
+            h(1,1) = sqrt(((Xj(1)-Xi(1))^2)+((Xj(2)-Xi(2))^2)); % Expected rho measurement
+            h(2,1) = atan2(Xj(2)-Xi(2),Xj(1)-Xi(1)); % Expected phi measurement
+            % Linearize
+            H(1,:) = [ -(Xj(1)-Xi(1))/(sqrt(((Xj(1)-Xi(1))^2)+((Xj(2)-Xi(2))^2))) , -(Xj(2)-Xi(2))/(sqrt(((Xj(1)-Xi(1))^2)+((Xj(2)-Xi(2))^2))) , 0 , (Xj(1)-Xi(1))/(sqrt(((Xj(1)-Xi(1))^2)+((Xj(2)-Xi(2))^2))) , (Xj(2)-Xi(2))/(sqrt(((Xj(1)-Xi(1))^2)+((Xj(2)-Xi(2))^2))) , 0]; % Jacobbian for rho input
+            H(2,:) = [ (Xj(2)-Xi(2))/(((Xj(1)-Xi(1))^2)+((Xj(2)-Xi(2))^2)) , -(Xj(1)-Xi(1))/(((Xj(1)-Xi(1))^2)+((Xj(2)-Xi(2))^2)) , 0 , -(Xj(2)-Xi(2))/(((Xj(1)-Xi(1))^2)+((Xj(2)-Xi(2))^2)) , (Xj(1)-Xi(1))/(((Xj(1)-Xi(1))^2)+((Xj(2)-Xi(2))^2)) , 0]; % Jacobbian for phi input
+            
+            S = H * Pc * H' + R; % Innovation Covariance Formula
+            K = Pc * H' * inv(S); % Kalman Gain Formula
+            RESIDUAL = Yr - h; % Residual Formula
+            
+            Xp = Xc + K * RESIDUAL; % A posteriori estimation for the combined state matrix
+            Xip = Xp(1:3); % A posteriori estimation for the state matrix of robot i
+            Xjp = Xp(4:6); % A posteriori estimation for the state matrix of robot j
+            
+            Pp = (I - K * H) * Pc; % A posteriori estimation for the combined covariance matrix
+            Pip = cell(1,number_of_robots); % Initialize
+            Pip{1,i} = Pp(1:3,1:3); % Covariance a for robot i
+            Pip{1,j} = Pp(1:3,4:6); % Correlated value from robot i to robot j
+            for k = 1:number_of_robots % For each robot
+                if k == i
+                    % Do nothing
+                elseif k == j
+                    % Do nothing
+                else
+                    Pip{1,k} = Pip{1,i} * inv(Pi{1,i}) * Pi{1,k}; % Correlated values from robot i to the rest of the robots
+                end
+            end
+            Pjp = cell(1,2); % Initialize
+            Pjp{1,1} = Pp(4:6,1:3); % Correlated values for robot j to robot i
+            Pjp{1,2} = Pp(4:6,4:6); % Covariance for robot j
+            
+
+            obj.X{i} = Xip; % Update location robot i
+            obj.X{j} = Xjp; % Update location robot j ?????
+            for r = 1:number_of_robots % For each robot
+                obj.P{i,r} = Pip{1,r}; % Update estimated covariance and correlated values for robot i
+            end
+            obj.P{j,i} = Pjp{1,1}; % Update correlated value from robot j to robot i
+            obj.P{j,j} = Pjp{1,2}; % Update estimated covariance for robot j
             
         end
         
