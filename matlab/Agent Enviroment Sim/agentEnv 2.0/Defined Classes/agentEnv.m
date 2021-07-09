@@ -28,6 +28,7 @@ classdef agentEnv < handle
         hasCollsions = true;
         debugPatch = patch;
         angleArray = 0:(2*pi/128):2*pi;
+        needsUpdate = false;
      end
     
     methods
@@ -55,13 +56,18 @@ classdef agentEnv < handle
             for i = 1:(numberOfAgents + 2)
                 obj.debugPatch(i) = patch('FaceColor', 'none', 'visible', false);
             end 
+            
+            
             if length(controller) == 1
+                if isa(controller,'cell')
+                    controller = cell2mat(controller);
+                end
                 for i = 1:numberOfAgents
                     obj.agents(i).setController(controller);
                 end 
             else
                 for i = 1:numberOfAgents
-                    obj.agents(i). setController(controller(i));
+                    obj.agents(i).setController(cell2mat(controller(i)));
                 end
             end
         end
@@ -109,11 +115,11 @@ classdef agentEnv < handle
         function numAgents = getNumberOfAgents(obj)
             numAgents = obj.numberOfAgents;
         end 
+        
 %functionaility
         function physics(obj, id)
 
-            obj.agents(id).heading = obj.angleArray(obj.convertToDiscAngle(obj.agents(id).heading));
-            
+                obj.agents(id).heading = obj.angleArray(obj.convertToDiscAngle(obj.agents(id).heading));
                 obj.agents(id).pose = obj.findAgentControllerKinematics(id);
                 hasCollided = false;
                 if obj.hasCollsions
@@ -131,9 +137,9 @@ classdef agentEnv < handle
         end
         
         function agentCollider(obj,id)
+            obj.updateCollisionList('A',id);   
             potentialCollsionIndex = obj.findPotentialCollisions(id, 'A');     
             hasCollided = obj.detectCollision(id,potentialCollsionIndex);
-        
             if hasCollided
                 collisionResolved = false;
                 converged = false;
@@ -145,24 +151,28 @@ classdef agentEnv < handle
                 desiredPoseUnitVec = obj.agents(id).pose - obj.agents(id).path(end,:);
                 desiredPoseUnitVec = desiredPoseUnitVec./norm(desiredPoseUnitVec);
                 newRelativePose = [];
+                
                 while ~collisionResolved
-                    obj.updateCollisionList('A',id);                    
+        
                     if ~isempty(newRelativePose)
                         if any(newRelativePose(abs(newRelativePose) < .001)) || converged
                             desiredPose = 0;
                             initialPose = 0;
                             initialHeading = 0;
-                            newHeading = 0;
+                            desiredHeading = 0;
                         end
                     end
-                    newRelativePose = abs(desiredPose - initialPose)/2;
-                    newHeading = (desiredHeading - initialHeading)/2;
+                    
+                    newRelativePose = abs(desiredPose - initialPose)/2 + initialPose;
+                    newHeading = (desiredHeading - initialHeading)/2 + initialHeading;
 
+                    
                     obj.agents(id).heading = obj.angleArray(obj.convertToDiscAngle(newHeading + obj.agents(id).previousHeading(end)));
                     obj.agents(id).pose = newRelativePose.*desiredPoseUnitVec + obj.agents(id).path(end,:);
-
-                   
-                    if obj.detectCollision(id,potentialCollsionIndex) & any(newRelativePose)
+                    
+                    obj.updateCollisionList('A',id);   
+                    potentialCollsionIndex = obj.findPotentialCollisions(id, 'A');  
+                    if obj.detectCollision(id,potentialCollsionIndex) % & any(newRelativePose)
                         if round(newRelativePose,5) == round(desiredPose,5)
                             converged = true;
                         else
@@ -206,23 +216,25 @@ classdef agentEnv < handle
                     agentsType = obj.obstacles;
                 end
                     obstacleID = str2num(potentialCollisonID(2:end));
+                    if obstacleID ~= id
+                        relativeHeading = obj.agents(id).heading-agentsType(obstacleID).heading;
                     
-                    relativeHeading = obj.agents(id).heading-agentsType(obstacleID).heading;
+                        configurationSpaceIndex = obj.convertToDiscAngle(relativeHeading);
                     
-                    configurationSpaceIndex = obj.convertToDiscAngle(relativeHeading);
+                        obj.agents(id).heading = obj.angleArray(obj.convertToDiscAngle(obj.angleArray(configurationSpaceIndex)+ agentsType(obstacleID).heading));
+                        configurationSpacePolygon = obj.configurationSpace(configurationSpaceIndex,obj.agents(id).getShapeID, agentsType(obstacleID).getShapeID).Vertices;
+                        newShape = obj.transformShape(configurationSpacePolygon,agentsType(obstacleID).heading);
+                        newShape(1,:) = newShape(1,:) + agentsType(obstacleID).pose(1);
+                        newShape(2,:) = newShape(2,:) + agentsType(obstacleID).pose(2);
                     
-                    obj.agents(id).heading = obj.angleArray(obj.convertToDiscAngle(obj.angleArray(configurationSpaceIndex)+ agentsType(obstacleID).heading));
-                    configurationSpacePolygon = obj.configurationSpace(configurationSpaceIndex,obj.agents(id).getShapeID, agentsType(obstacleID).getShapeID).Vertices;
-                    newShape = obj.transformShape(configurationSpacePolygon,agentsType(obstacleID).heading);
-                    newShape(1,:) = newShape(1,:) + agentsType(obstacleID).pose(1);
-                    newShape(2,:) = newShape(2,:) + agentsType(obstacleID).pose(2);
-                    
-                    [collision, isOnSurface]= inpolygon( obj.agents(id).pose(1) ,obj.agents(id).pose(2) , ...
+                        [collision]= inpolygon( obj.agents(id).pose(1) ,obj.agents(id).pose(2) , ...
                                                         newShape(1,:), ...
                                                         newShape(2,:));
-                    if collision && ~isOnSurface                    
-                             hasCollided = true;  
-                    end                 
+                        if collision             
+                             hasCollided = true;
+                             break
+                        end   
+                    end
              end 
         end
         
@@ -238,6 +250,7 @@ classdef agentEnv < handle
         
         function createStaticObstacle(obj,shape, pose, heading, id)
             obj.obstacles(id) =  staticObstacle(shape, pose, heading, id);
+            shape = obj.transformShape(shape,heading)';
             obj.obstaclePatch(id) = patch('XData', shape(:,1) + pose(1)*ones(length(shape(:,1)),1), ...
                                           'YData', shape(:,2) + pose(2)*ones(length(shape(:,1)),1), ...
                                           'FaceColor',[.5 .5 .5],... 
@@ -454,14 +467,35 @@ classdef agentEnv < handle
             obj.updateConfigurationSpace;
         end
         
+        function checkIfUpdateIsNeeded(obj)
+            if obj.needsUpdate == true
+                obj.updateEnv;
+                obj.needsUpdate = false;
+                for i = 1:obj.numberOfAgents
+                   obj.agents(i).needsUpdate = false; 
+                end
+            else
+                for i = 1:obj.numberOfAgents
+                    if obj.agents(i).needsUpdate == true
+                        obj.updateEnv;
+                        obj.needsUpdate = false;
+                        for j = 1:obj.numberOfAgents
+                            obj.agents(j).needsUpdate = false; 
+                        end
+                        break
+                    end
+                end
+            end
+        end
+        
         function tick(obj)
-           tStart = cputime;
+            obj.checkIfUpdateIsNeeded;
+            tStart = cputime;
             for i = randperm(obj.numberOfAgents)
                 obj.agents(i).callMeasurement(obj);
                 obj.agents(i).callController; 
                 obj.updateCollisionList('A',i);    
-                obj.physics(i);
-                
+                obj.physics(i);   
             end
             obj.updateGraph; %Can be put inside for loop but slower
             tEnd = cputime - tStart;

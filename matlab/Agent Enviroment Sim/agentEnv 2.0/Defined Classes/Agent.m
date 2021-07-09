@@ -12,12 +12,13 @@ classdef Agent < handle
        goalPose = [0 0];
        color = [0 0 0];
        measuredAgents = Agent.empty;
-       measuringRange = 3;
+       measuredObstacle = staticObstacle.empty;
+       measuringRange = 10;
        maxSpeed = .5;
        idealSpeed = 1;
        heading = 0;
        broadCollisionSpace;
-
+       needsUpdate = false;
     end
     
     properties (Access = private)  
@@ -34,14 +35,29 @@ classdef Agent < handle
     methods
         function callMeasurement(obj, envObj) 
             disp = 0;
-            envAgents = envObj.getNumberOfAgents; 
             obj.measuredAgents = Agent.empty;
-            for i = 1:(envAgents-1)
-                if obj.id + i >  envAgents
-                    disp = envAgents;
+            obj.measuredObstacle = staticObstacle.empty;
+            for type = [0,1]
+                if type == 0
+                    numObs= envObj.getNumberOfAgents;
+                else
+                    numObs = length(envObj.obstacles);
                 end
-                if norm(envObj.agents(obj.id+i - disp).pose - obj.pose) < obj.measuringRange
-                     obj.measuredAgents(end + 1) = envObj.agents(obj.id+i - disp);  
+                if any(numObs)
+                    for i = 1:(numObs +type - 1)
+                        if type == 0
+                            if obj.id + i >  numObs
+                                disp = numObs;
+                            end
+                            if norm(envObj.agents(obj.id+i - disp).pose - obj.pose) < obj.measuringRange
+                                obj.measuredAgents(end + 1) = envObj.agents(obj.id+i - disp);  
+                            end
+                        else
+                            if norm(envObj.obstacles(i).pose - obj.pose) < obj.measuringRange
+                                obj.measuredObstacle(end + 1) = envObj.obstacles(i);  
+                            end
+                        end
+                    end 
                 end
             end
         end
@@ -86,6 +102,7 @@ classdef Agent < handle
                                        X(1),Y(2);
                                        X(2),Y(2);
                                        X(2),Y(1)];
+            obj.needsUpdate = true;
         end 
         
         function property = getProperty(obj,propName)
@@ -99,6 +116,7 @@ classdef Agent < handle
         
         function id = getShapeID(obj)
              id = obj.shapeID;
+             
         end
         
         function setProperty(obj,propName,input)
