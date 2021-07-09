@@ -13,7 +13,7 @@ classdef Agent < handle
        color = [0 0 0];
        measuredAgents = Agent.empty;
        measuredObstacle = staticObstacle.empty;
-       measuringRange = 10;
+       measuringRange = 1000;
        maxSpeed = .5;
        idealSpeed = 1;
        heading = 0;

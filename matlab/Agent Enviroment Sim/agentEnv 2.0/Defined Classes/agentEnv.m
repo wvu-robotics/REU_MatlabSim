@@ -153,16 +153,14 @@ classdef agentEnv < handle
                 newRelativePose = [];
                 
                 while ~collisionResolved
-        
+ 
                     if ~isempty(newRelativePose)
-                        if any(newRelativePose(abs(newRelativePose) < .001)) || converged
-                            desiredPose = 0;
-                            initialPose = 0;
-                            initialHeading = 0;
-                            desiredHeading = 0;
+                        if abs(desiredPose - initialPose) < .001 
+                            desiredPose = initialPose;
+                            desiredHeading = initialHeading;
                         end
                     end
-                    
+
                     newRelativePose = abs(desiredPose - initialPose)/2 + initialPose;
                     newHeading = (desiredHeading - initialHeading)/2 + initialHeading;
 
