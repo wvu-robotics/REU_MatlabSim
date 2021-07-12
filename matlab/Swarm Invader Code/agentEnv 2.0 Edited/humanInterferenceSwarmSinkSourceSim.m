@@ -1,13 +1,16 @@
 clc
 clear
 close all
+jj=0;
 %   World Building
-numberOfAgents = 100;
-agentRadius = .1;
+numberOfAgents = 11;
+agentRadius = .5;
 timeStep = .5;
-mapSize = 100;
+mapSize = 25;
 counter = 0;
- shape = circle (.2);
+shape = circle (.2);
+Home = [-10,5];
+run('defined_variables.m');
 %  *[-2,-1;-2,1;2,1;2,-1];
 
 
@@ -59,7 +62,7 @@ while(true)
     ENV.tick;
     counter = counter + timeStep;
     fprintf("Time: %.3f \n",counter)
-
+    run('evolvingvariables.m');
     %change goal locations
 %     for i = 1:numberOfAgents
 %         theta = 2*pi/numberOfAgents * (i-1) + (pi/8)*counter;

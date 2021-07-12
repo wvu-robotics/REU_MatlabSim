@@ -2,23 +2,21 @@ clc
 clear
 close all
 %   World Building
-numberOfAgents = 100;
-agentRadius = .1;
-timeStep = .5;
-mapSize = 100;
+numberOfAgents = 50;
+agentRadius = .5;
+timeStep = .05;
+mapSize = 60;
 counter = 0;
- shape = circle (.2);
-%  *[-2,-1;-2,1;2,1;2,-1];
+shape = circle (.25);
+% shape=.25*[-2,-1;-2,1;2,1;2,-1];
+safetyMargin = 5;
 
 
-f(1)={@testControllerEnemySinkSource};
-% f(1)={@testControllerEnemySinkSource2};
+f(1)={@testControllerEnemy1};
 for i =2:numberOfAgents
    f(i) = {@testController5}; 
 end    
 ENV = agentEnv(numberOfAgents,f,mapSize,timeStep); 
-
-
 
 %Updating agent properties
 for i = 1:numberOfAgents
@@ -27,17 +25,27 @@ for i = 1:numberOfAgents
     ENV.agents(i).createProperty('isEnemy',false)
 end
     ENV.agents(1).setProperty('isEnemy', true);
-    
 %Setting Initial Positions
-initPositions = zeros(numberOfAgents, 2);
-goalLocations = zeros(numberOfAgents, 2);
-initPositions(1,:) = [-8,-8];
-for i = 2:numberOfAgents
-    theta = 2*pi/numberOfAgents * (i-1);
-    initPositions(i,:) = [cos(theta),sin(theta)]*mapSize*(.5);
+%initPositions = [-8,-8;-8,-6;-8,-4;-8,-2;-8,0;-8,2;-8,4];
+initPositions = zeros(numberOfAgents,2);
+initpositions(1,:) = [0,0];
+possCo = (agentRadius-mapSize):(2*agentRadius*safetyMargin):(mapSize-2*agentRadius);
+for i = 3:min(length(possCo),numberOfAgents)
+    initPositions(i,:) = [agentRadius-mapSize,possCo(i)];
 end
+for i = (length(possCo)+1):min(2*length(possCo),numberOfAgents)
+    initPositions(i,:) = [possCo(i-length(possCo)),mapSize-agentRadius];
+end
+for i = (2*length(possCo)+1):min(3*length(possCo),numberOfAgents)
+    initPositions(i,:) = [mapSize-agentRadius,-possCo(i-2*length(possCo))];
+end
+for i = (3*length(possCo)+1):min(4*length(possCo),numberOfAgents)
+    initPositions(i,:) = [-possCo(i-3*length(possCo)),agentRadius-mapSize];
+end
+goalLocations = -3.*ones(numberOfAgents,2);
 ENV.setAgentPositions(initPositions);
 ENV.setGoalPositions(goalLocations);
+ENV.setAgentVelocities(zeros(numberOfAgents,2));
 
 %Creating Static Obstacles
 w=1;
