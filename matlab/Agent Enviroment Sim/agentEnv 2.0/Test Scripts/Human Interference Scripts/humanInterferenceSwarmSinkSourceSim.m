@@ -2,16 +2,17 @@ clc
 clear
 close all
 %   World Building
-numberOfAgents = 15;
+numberOfAgents = 100;
 agentRadius = .1;
-timeStep = .05;
-mapSize = 20;
+timeStep = .5;
+mapSize = 100;
 counter = 0;
  shape = circle (.2);
 %  *[-2,-1;-2,1;2,1;2,-1];
 
 
 f(1)={@testControllerEnemySinkSource};
+% f(1)={@testControllerEnemySinkSource2};
 for i =2:numberOfAgents
    f(i) = {@testController5}; 
 end    

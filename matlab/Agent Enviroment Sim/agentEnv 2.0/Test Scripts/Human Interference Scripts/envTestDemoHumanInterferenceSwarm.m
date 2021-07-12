@@ -2,12 +2,12 @@ clc
 clear
 close all
 %   World Building
-numberOfAgents = 6;
+numberOfAgents = 50;
 agentRadius = .5;
 timeStep = .05;
-mapSize = 25;
+mapSize = 60;
 counter = 0;
-shape = circle (.75);
+shape = circle (.25);
 % shape=.25*[-2,-1;-2,1;2,1;2,-1];
 safetyMargin = 5;
 
@@ -26,22 +26,22 @@ for i = 1:numberOfAgents
 end
     ENV.agents(1).setProperty('isEnemy', true);
 %Setting Initial Positions
-initPositions = [-8,-8;-8,-6;-8,-4;-8,-2;-8,0;-8,2;-8,4];
-% initPositions = zeros(numberOfAgents,2);
-% initpositions(1,:) = [0,0];
-% possCo = (agentRadius-mapSize):(2*agentRadius*safetyMargin):(mapSize-2*agentRadius);
-% for i = 3:min(length(possCo),numberOfAgents)
-%     initPositions(i,:) = [agentRadius-mapSize,possCo(i)];
-% end
-% for i = (length(possCo)+1):min(2*length(possCo),numberOfAgents)
-%     initPositions(i,:) = [possCo(i-length(possCo)),mapSize-agentRadius];
-% end
-% for i = (2*length(possCo)+1):min(3*length(possCo),numberOfAgents)
-%     initPositions(i,:) = [mapSize-agentRadius,-possCo(i-2*length(possCo))];
-% end
-% for i = (3*length(possCo)+1):min(4*length(possCo),numberOfAgents)
-%     initPositions(i,:) = [-possCo(i-3*length(possCo)),agentRadius-mapSize];
-% end
+%initPositions = [-8,-8;-8,-6;-8,-4;-8,-2;-8,0;-8,2;-8,4];
+initPositions = zeros(numberOfAgents,2);
+initpositions(1,:) = [0,0];
+possCo = (agentRadius-mapSize):(2*agentRadius*safetyMargin):(mapSize-2*agentRadius);
+for i = 3:min(length(possCo),numberOfAgents)
+    initPositions(i,:) = [agentRadius-mapSize,possCo(i)];
+end
+for i = (length(possCo)+1):min(2*length(possCo),numberOfAgents)
+    initPositions(i,:) = [possCo(i-length(possCo)),mapSize-agentRadius];
+end
+for i = (2*length(possCo)+1):min(3*length(possCo),numberOfAgents)
+    initPositions(i,:) = [mapSize-agentRadius,-possCo(i-2*length(possCo))];
+end
+for i = (3*length(possCo)+1):min(4*length(possCo),numberOfAgents)
+    initPositions(i,:) = [-possCo(i-3*length(possCo)),agentRadius-mapSize];
+end
 goalLocations = -3.*ones(numberOfAgents,2);
 ENV.setAgentPositions(initPositions);
 ENV.setGoalPositions(goalLocations);
