@@ -39,7 +39,7 @@ classdef Robot
         yaw_rate_m      % yaw rate from wheel encoder
         laser           % [dist, dist, ...] lidar distances to every robot
         bearing         % [phi, phi, ...] global angle to every robot
-        neighbors       % [robot, robot, ...] array of local robots
+        neighbors       % [robot.ID, robot.ID, ...] array of local robot's IDs
         
         detection_range % [double] detection range of the robot
         sigmaVelocity   % [double] wheel velocity variance
@@ -60,12 +60,18 @@ classdef Robot
         Kh              % [double] home gain
         Kg              % [double] goal gain
         
-        % covariance intersection ----------------------------------------
-        state_particles
-        
-        % decentralized EKF parameters -----------------------------------
-        P
-        X
+        % filtering variables --------------------------------------------
+        X               % cell{ [X1; Y1; Yaw1], [X2,Y2,Yaw2], ...} 
+                        % stores the estimated states of all the robots 
+                        
+        P               % cell{ [3x3 1.1], [3x3 1.2], [3x3] 1.3, ... ;
+                        %       [3x3 2.1], [3x3 2.2], [3x3] 2.3, ... ;
+                        %       [3x3 3.1], [3x3 3.2], [3x3] 3.3, ...;
+                        %        ...     ,   ...    ,    ...   , ... }
+                        % stores the [X, Y, Yaw] covariance matrix for each
+                        % robot and the cross covariances in the off
+                        % diagonals
+                        
         % assimilation colors ----------------------------------------------
         color_particles
         
@@ -112,27 +118,22 @@ classdef Robot
             obj.vel_m = norm(obj.velocity_t);
             obj.yaw_rate_m = 0;
             
-            % covariance intersection initalization
-            obj.state_particles = cell(2,1);
-            obj.state_particles{1} = zeros(3,numBoids);
-            obj.state_particles{2} = zeros(2,2,numBoids);
-            
+      
             % decentralized EKF parameters
             obj.X = cell (1,numBoids);
-            for i = 1:numbBoids % For each robot
-                x = 10 * rand(1,1); % Set a random x value
-                y = 10 * rand(1,1); % Set a random y value
-                theta = 2 * pi * rand(1,1); % Set a random theta value
+            for i = 1:numBoids % For each robot
+                x = position_x;
+                y = position_y;
+                theta = angle;
                 X{i} = [x;y;theta]; % Combined state matrix
             end
             obj.P = cell(numBoids, numBoids);
             for i = 1:numBoids % For each robot
-                P{i,i} = eye(3); % Covariance matrix
                 for j = 1:numBoids % For each robot
                     if i == j
-                        % Do Nothing
+                        obj.P{i,j} = eye(3); % Covariance matrix
                     else
-                        P{i,j} = zeros(3); % Correlated matrix
+                        obj.P{i,j} = zeros(3); % Correlated matrix
                     end
                 end
             end
@@ -295,6 +296,7 @@ classdef Robot
             angles = [];
             numBots = length(ROBOTS);
             r = obj.ID;
+            neigh = [];
             
             for L = 1:numBots % other robot
                 
@@ -307,55 +309,37 @@ classdef Robot
                 phi = phi + normrnd(0,ROBOTS(r).sigmaHeading,1,1); %noise
                 dists = [dists, d];
                 angles = [angles, phi];
+                if d < obj.detection_range
+                    neigh = [neigh, ROBOTS(L).ID];
+                end
             end
             
             obj.laser = dists;
             obj.bearing = angles;
+            obj.neighbors = neigh;
             
         end
         
         function obj = encoder_measurement(obj)
             obj.vel_m = norm(obj.velocity_t)+ normrnd(0,obj.sigmaVelocity,1,1) + obj.biasVelocity;
-            obj.yaw_rate_m = obj.position_t(3)-obj.path_t(end-1,3) + normrnd(0,obj.sigmaYawRate,1,1) + obj.biasYawRate;
-        end
-        
-        function obj = get_locations(obj, ROBOTS)
-            
-            neigh = [];
-            numBots = length(ROBOTS);
-            particles = obj.state_particles;
-            for L = 1:numBots % other robot
-                
-                d = obj.laser(L);
-                phi = obj.bearing(L)+pi;
-                
-                %if the other robot is in detection / communication range
-                %give it our dead-reckoning prediction of where it is
-                %update our particle if we have one there already
-                if L == obj.ID
-                    particles{1}(:,L) = [obj.position_e(1);obj.position_e(2);1];
-                    particles{2}(:,:,L) = obj.covariance;
-                elseif d < obj.detection_range
-                    dx = d*cos(phi); %from r -> L
-                    dy = d*sin(phi); %from r -> L
-                    x0 = ROBOTS(L).position_e(1); %r pose
-                    y0 = ROBOTS(L).position_e(2); %r pose
-                    %give L, r's position of L, and mark that it has that
-                    %particle
-                    particles{1}(:,L) = [x0+dx;y0+dy;1];
-                    particles{2}(:,:,L) = ROBOTS(L).covariance;
-                    neigh = [neigh,ROBOTS(L)];
-                else
-                    particles{1}(:,L) = [0;0;0];
-                    particles{2}(:,:,L) = [0,0;0,0];
-                end
+            [r,~] = size(obj.path_t);
+            if r > 1
+                obj.yaw_rate_m = obj.position_t(3)-obj.path_t(end-1,3) + normrnd(0,obj.sigmaYawRate,1,1) + obj.biasYawRate;
             end
-            
-            obj.state_particles = particles;
-            obj.neighbors = neigh;
-            
         end
         
+        function obj = get_states(obj,ROBOTS)
+            numBots = length(ROBOTS);
+            i = obj.ID;
+                for j = 1:numBots
+                    obj.X{j} = ROBOTS(j).position_e';
+                    obj.P{j,i} = ROBOTS(j).P{i,j};
+                    obj.P{j,j} = ROBOTS(j).P{j,j};
+                    ROBOTS(j).P{j,i} = obj.P{i,j};
+                    ROBOTS(j).P{i,i} = obj.P{i,i};
+                end
+        end
+          
         %% kinematic update------------------------------------------------
         
         function obj = update(obj)
@@ -369,21 +353,23 @@ classdef Robot
                 obj.is_beacon = 0;
             else                     % i am not a beacon
                 
-                % update truth velocity and position
-                obj.velocity_t = obj.velocity_t + obj.acceleration;
-                obj.velocity_t = obj.velocity_t./norm(obj.velocity_t).*obj.max_speed;
-                ttheta = atan2(obj.velocity_t(2),obj.velocity_t(1));
-                obj.position_t = [obj.position_t(1:2) + obj.velocity_t, ttheta];
-                
-                %perform dead_reckoning
+                 %perform dead_reckoning
                 obj = obj.dead_reckoning();
                 
                 % update estimate of location
                 obj = obj.estimate_location();
                 
                 % check if we can see home
-                obj = home_update(obj.detection_range);
+                obj = obj.home_update(obj.detection_range);
                 
+                % update truth velocity and position
+                obj.velocity_t = obj.velocity_t + obj.acceleration;
+                %if norm(obj.velocity_t) > obj.max_speed
+                    obj.velocity_t = obj.velocity_t./norm(obj.velocity_t).*obj.max_speed;
+                %end   
+                ttheta = atan2(obj.velocity_t(2),obj.velocity_t(1));
+                obj.position_t = [obj.position_t(1:2) + obj.velocity_t, ttheta];
+  
                 %record paths
                 obj.path_t = [obj.path_t; obj.position_t];
                 obj.path_d = [obj.path_d; obj.position_d];
@@ -408,6 +394,8 @@ classdef Robot
                     obj.position_e = obj.position_d;
                     obj.velocity_e = obj.velocity_d;
                     obj.covariance_e = obj.covariance_d;
+                    obj.X{obj.ID} = obj.position_d';
+                    obj.P{obj.ID,obj.ID} = obj.covariance_d;
                 case 1 % covariance intersection
                     obj = obj.covariance_intersection();
                 case 2 % decentralized ekf
@@ -428,28 +416,72 @@ classdef Robot
                    0,0,           1             ]; % Yaw
                  
             
-            Q_d = diag(obj.sigmaVelocity, obj.sigmaVelocity, obj.sigmaYawRate/100);
+            Q_d = diag([obj.sigmaVelocity, obj.sigmaVelocity, obj.sigmaYawRate/100]);
             
             obj.covariance_d = F_d*obj.covariance_d*F_d' + Q_d;
+            
+            
         end
-        
+        % covariance intersection------------------------------------------
         function obj = covariance_intersection(obj)
             % measure error in variance and dead reckoning mean error
-            if sum(obj.state_particles{1}(3,:)) > 1
-                states = obj.state_particles{1}(1:2,obj.state_particles{1}(3,:) >.5);
-                covars = obj.state_particles{2}(:,:,obj.state_particles{1}(3,:) > .5);
-                
+            [states,covars] = obj.get_locations(obj.neighbors);
+            
+            if length(obj.neighbors) > 1
+                disp('did covariance intersection with robot')
+                disp(obj.ID)
                 [mean_pose,covar] = fusecovint(states,covars);
-                obj.position_e = mean_pose';
-                obj.covariance_e = covar;
+                obj.position_e = [mean_pose',obj.X{obj.ID}(3)];
+                obj.covariance_e(1:2,1:2) = covar;
                 obj.velocity_e = obj.velocity_d;
+                obj.X{obj.ID} = obj.position_e';
+                obj.P{obj.ID,obj.ID} = obj.covariance_e;
             else
-                obj.position_e = obj.position_d;
-                obj.covariance_e = obj.covariance_d;
-                obj.velocity_e = obj.velocity_d;
+                new_theta = obj.position_e(3) + obj.yaw_rate_m;
+                obj.velocity_e = obj.vel_m*[cos(new_theta), sin(new_theta)];
+                obj.position_e = [obj.position_e(1:2) + obj.velocity_e, new_theta];
+                
+                F_d = [1,0,-obj.vel_m*sin(new_theta);  % X
+                       0,1, obj.vel_m*cos(new_theta);  % Y
+                       0,0,           1             ]; % Yaw
+                Q_d = diag([obj.sigmaVelocity, obj.sigmaVelocity, obj.sigmaYawRate/100]);
+                obj.covariance_e = F_d*obj.covariance_e*F_d' + Q_d;
+                
+                obj.X{obj.ID} = obj.position_e';
+                obj.P{obj.ID,obj.ID} = obj.covariance_e;
             end
         end
         
+        function [states, covars] = get_locations(obj, ROBOTS)
+
+           
+            states = obj.position_e(1:2)';
+            covars = obj.covariance_e(1:2,1:2);
+            for L = ROBOTS % other robot
+                
+                d = obj.laser(L);
+                phi = obj.bearing(L)+pi;
+                
+                %if the other robot is in detection / communication range
+                %give it our dead-reckoning prediction of where it is
+                %update our particle if we have one there already
+                if L ~= obj.ID 
+                    dx = d*cos(phi); %from r -> L
+                    dy = d*sin(phi); %from r -> L
+                    x0 = obj.X{L}(1);%ROBOTS(L).position_e(1); %r pose
+                    y0 = obj.X{L}(2);%ROBOTS(L).position_e(2); %r pose
+                    theta = obj.X{L}(3);%ROBOTS(L).position_e(3);
+                    %give L, r's position of L, and mark that it has that
+                    %particle
+                    states(:,end+1) = [x0+dx;y0+dy];
+                    covars(:,:,end+1) = obj.P{L,L}(1:2,1:2);
+                   
+                end
+            end
+            
+        end
+        
+        % decentralized ekf------------------------------------------------
         function obj = decentralized_ekf(obj)
             
         end
@@ -459,14 +491,12 @@ classdef Robot
             home_dist = norm(obj.position_t(1:2) - obj.home);
             if home_dist < home_range
                 % update location
-                obj.covariance_d = [.01,.001;.001,.01];
-                obj.covar_e = obj.covariance_d;
-                obj.position_d = obj.t_position + normrnd(0,.001,1,3);
+                obj.covariance_d = [.1, .01, .01; 
+                                    .01, .1, .01;
+                                    .01, .01, .1];
+                obj.covariance_e = obj.covariance_d;
+                obj.position_d = obj.position_t + normrnd(0,.001,1,3);
                 obj.position_e = obj.position_d;
-                
-                obj.state_particles{1} = obj.state_particles{1}*0;
-                obj.state_particles{2} = obj.state_particles{2}*0;
-                
                 
                 %get color particles
                 if home_dist < home_range %within 5 squares
@@ -565,16 +595,16 @@ classdef Robot
             %subplot(2,3,1);
             for r = 1:numBots
                 % plot truth data-----------------------------------------
-                quiver(ROBOTS(r).t_position(1),ROBOTS(r).t_position(2),ROBOTS(r).t_velocity(1), ROBOTS(r).t_velocity(2),'k');
+                quiver(ROBOTS(r).path_t(end-1,1),ROBOTS(r).path_t(end-1,2),ROBOTS(r).velocity_t(1), ROBOTS(r).velocity_t(2),'k');
                 hold on;
-                plot(ROBOTS(r).t_position(1), ROBOTS(r).t_position(2), 'ks');
+                plot(ROBOTS(r).path_t(end-1,1), ROBOTS(r).path_t(end-1,2), 'ks');
                 hold on;
                 if show_detection_rng
-                    viscircles([ROBOTS(r).position(1),ROBOTS(r).position(2)],range);
+                    viscircles([ROBOTS(r).path_t(end-1,1),ROBOTS(r).path_t(end-1,2)],range);
                     hold on;
                 end
                 %plot estimated position and color-------------------------------------------
-                error_ellipse(ROBOTS(r).mean_covar, [ROBOTS(r).mean_position(1), ROBOTS(r).mean_position(2)])
+                error_ellipse(ROBOTS(r).covariance_e(1:2,1:2), [ROBOTS(r).position_e(1), ROBOTS(r).position_e(2)],'conf',.95)
                 hold on;
                 if sum(ROBOTS(r).color_particles) > 0
                     COLOR= ROBOTS(r).color_particles./sum(ROBOTS(r).color_particles);
@@ -583,16 +613,16 @@ classdef Robot
                 end
                 
                 if ROBOTS(r).is_beacon == 1
-                    plot(ROBOTS(r).mean_position(1), ROBOTS(r).mean_position(2), '^', 'color', COLOR);
+                    plot(ROBOTS(r).position_e(1), ROBOTS(r).position_e(2), '^', 'color', COLOR);
                     hold on;
                 else
-                    plot(ROBOTS(r).mean_position(1), ROBOTS(r).mean_position(2), '*', 'color', COLOR);
+                    plot(ROBOTS(r).position_e(1), ROBOTS(r).position_e(2), '*', 'color', COLOR);
                     hold on;
                 end
                 % plot dead reckoning position---------------------------------------------------------
-                plot(ROBOTS(r).position(1), ROBOTS(r).position(2), 'bo');
+                plot(ROBOTS(r).position_d(1), ROBOTS(r).position_d(2), 'bo');
                 hold on;
-                quiver(ROBOTS(r).position(1), ROBOTS(r).position(2),ROBOTS(r).velocity(1), ROBOTS(r).velocity(2), 'b');
+                quiver(ROBOTS(r).position_d(1), ROBOTS(r).position_d(2),ROBOTS(r).velocity_d(1), ROBOTS(r).velocity_d(2), 'b');
                 hold on;
                 
                 %plot goal position---------------------------------------------
