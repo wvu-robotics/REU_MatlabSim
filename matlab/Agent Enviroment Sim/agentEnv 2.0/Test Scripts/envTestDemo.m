@@ -3,7 +3,7 @@ clear
 close all
 %   World Building
 numberOfAgents = 10;
-timeStep = .05;
+timeStep = .01;
 mapSize = 20;
 counter = 0;
 f  = @testController;

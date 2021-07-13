@@ -2,18 +2,16 @@ clc
 clear
 close all
 %   World Building
-numberOfAgents = 100;
+numberOfAgents = 15;
 agentRadius = .1;
 timeStep = .05;
-mapSize = 100;
+mapSize = 20;
 counter = 0;
  shape = circle (.2);
-%  *[-2,-1;-2,1;2,1;2,-1];
 
 
-f(1)={@testControllerEnemySinkSource};
-% f(1)={@testControllerEnemySinkSource2};
-for i =2:numberOfAgents
+f(1)= {@testControllerEnemySinkSource2};
+for i = 2:numberOfAgents
    f(i) = {@testController5}; 
 end    
 ENV = agentEnv(numberOfAgents,f,mapSize,timeStep); 
@@ -59,13 +57,9 @@ while(true)
     ENV.tick;
     counter = counter + timeStep;
     fprintf("Time: %.3f \n",counter)
-
-    %change goal locations
-%     for i = 1:numberOfAgents
-%         theta = 2*pi/numberOfAgents * (i-1) + (pi/8)*counter;
-%         goalLocations(i,:) = [cos(theta+3.9*pi/4),sin(theta+3.9*pi/4)]*mapSize*(1);
-%     end
-%     ENV.setGoalPositions(goalLocations);
+    if counter > 100
+        break
+    end 
 end
 
 
