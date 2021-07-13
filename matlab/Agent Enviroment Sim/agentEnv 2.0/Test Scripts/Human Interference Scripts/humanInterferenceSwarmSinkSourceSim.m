@@ -2,17 +2,16 @@ clc
 clear
 close all
 %   World Building
-numberOfAgents = 100;
+numberOfAgents = 50;
 agentRadius = .1;
 timeStep = .05;
-mapSize = 100;
-counter = 0;
+mapSize = 25;
  shape = circle (.2);
 %  *[-2,-1;-2,1;2,1;2,-1];
 
 
-f(1)={@testControllerEnemySinkSource};
-% f(1)={@testControllerEnemySinkSource2};
+% f(1)={@testControllerEnemySinkSource};
+f(1)={@testControllerEnemySinkSource2};
 for i =2:numberOfAgents
    f(i) = {@testController5}; 
 end    
@@ -50,11 +49,11 @@ ENV.createStaticObstacle(rectangle,[-l/2,0],pi/2,4);
 
 
 %Optional Features
-ENV.collisionsOn(true);
+ENV.collisionsOn(false);
 ENV.pathVisibility(false);
 ENV.realTime = false;
 ENV.agentIdVisibility(false);
-
+counter = 0;
 while(true)
     ENV.tick;
     counter = counter + timeStep;
