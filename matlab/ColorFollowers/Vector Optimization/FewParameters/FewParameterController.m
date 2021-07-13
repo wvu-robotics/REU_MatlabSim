@@ -61,7 +61,7 @@ centroid = FindCentroid(positions,weights);
 orthoToCentroid = [centroid(2), -centroid(1)];
 
 %Now need to do the math to find the next velocity
-agent.velocityControl = sum([parameters(1),parameters(2); parameters(3),parameters(4)]*[colorRange;weightedDensity].*[centroid;orthoToCentroid])+unitToGoal;
+agent.velocityControl = sum(([parameters(1),parameters(2); parameters(3),parameters(4)]*[colorRange/(2*pi);weightedDensity]+[parameters(6); parameters(7)]).*[centroid;orthoToCentroid])+unitToGoal;
 if norm(agent.velocityControl) > agent.maxSpeed
     agent.velocityControl = agent.velocityControl/norm(agent.velocityControl) * agent.maxSpeed;
 end
