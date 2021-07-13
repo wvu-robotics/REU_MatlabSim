@@ -65,7 +65,7 @@ disp('Performing simulation...');
 simu.i=2;
 while simu.accumulatedTime < simu.simulationTime  
    %% measure the enviorment-----------------------
-   [X,P] = get_states(ROBOTS);
+   [X,P] = ROBOTS(1).get_states(ROBOTS);
    for r = 1:simu.N
         % all other robot positions and covariances
         ROBOTS(r).X = X;

@@ -346,7 +346,7 @@ classdef Robot
             for i = 1:numBots
                 X{i} = ROBOTS(i).position_e';
                 for j = 1:numBots
-                     P{i,j} = ROBOTS{i}.P{i,j};
+                     P{i,j} = ROBOTS(i).P{i,j};
 %                     if i ~= j
 %                         obj.X{j} = ROBOTS(j).position_e';
 %                         obj.P{j,i} = ROBOTS(j).P{i,j};
