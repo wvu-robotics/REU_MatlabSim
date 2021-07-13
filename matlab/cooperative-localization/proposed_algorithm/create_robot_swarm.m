@@ -13,9 +13,9 @@ for i=1:numBots
     y = 2*rand*world_len - world_len;
    ROBOTS(i)=Robot(x,y, Ks,Ka, Kc,numBots,i);
    ROBOTS(i).detection_range = detection_rng;
-   ROBOTS(i).covariance_d = [.1, .01, .01; 
-                             .01, .1, .01;
-                             .01, .01, .1];
+   ROBOTS(i).covariance_d = [.1,  0,  0; 
+                             0, .1,  0;
+                             0, 0, .1];
    ROBOTS(i).covariance_e = ROBOTS(i).covariance_d;
    ROBOTS(i).P{i,i} = ROBOTS(i).covariance_e;
    ROBOTS(i).ID = i;

@@ -9,8 +9,8 @@ close all;
 clc;
 
 %% Simulation Parameters
-simu.N=5;    %number of Robotss
-
+simu.N=3;    %number of Robotss
+simu.dt = .1; % time step size
 simu.simulationTime=60*60;   %flight duration (second)
 simu.accumulatedTime=0;  %first timestep
 
@@ -19,9 +19,9 @@ simu.sigmaVelocity=0.02;  %standard deviation of velocity errors (m/s)
 simu.sigmaYawRate=0.01*pi/180;    %standard deviation of yaw rate errors (rad/s)
 simu.sigmaRange=.001;   %standard deviation of ranging measurement error (m)
 simu.sigmaHeading = 1*pi/180; %standard deviation of heading measurment error (rad)
-
 simu.biasVelocity=0.1*simu.sigmaVelocity; %standard deviation of velocity turn on bias (m/s)
 simu.biasYawRate=0.1*simu.sigmaYawRate; %standard deviation of yaw rate turn on bias (rad/s)
+
 simu.initdistance = 5;   %distance between each pair of neighbot UAVs' initial positions
 
  %% initialize swarm
@@ -43,13 +43,14 @@ simu.initdistance = 5;   %distance between each pair of neighbot UAVs' initial p
     ROBOTS(idx).biasYawRate = normrnd(0,simu.biasYawRate);
     ROBOTS(idx).sigmaRange = simu.sigmaRange;
     ROBOTS(idx).sigmaHeading = simu.sigmaHeading;
+    ROBOTS(idx).dt = simu.dt;
  end
  
  %give the robots home and goal location and esimator
 for r = 1:simu.N
     ROBOTS(r).home = [0,0];
     ROBOTS(r).goal = [10*rand(1,1)+35, 10*rand(1,1)-35];
-    ROBOTS(r).Kg = 1;
+    ROBOTS(r).Kg = 1000;
     ROBOTS(r).found_goal = 0;
     ROBOTS(r).estimator = 1; % just dead reckoning 
 end
@@ -64,14 +65,22 @@ disp('Performing simulation...');
 simu.i=2;
 while simu.accumulatedTime < simu.simulationTime  
    %% measure the enviorment-----------------------
+   [X,P] = get_states(ROBOTS);
    for r = 1:simu.N
-      
+        % all other robot positions and covariances
+        ROBOTS(r).X = X;
+        ROBOTS(r).P = P;
+       % ROBOTS(r) = ROBOTS(r).get_states(ROBOTS);
+       
         % range and bearing
         ROBOTS(r) = ROBOTS(r).lidar_measurement(ROBOTS);
         % velocity magnitude and yaw rate
         ROBOTS(r) = ROBOTS(r).encoder_measurement(); 
-        % all other robot positions and covariances
-        ROBOTS(r) = ROBOTS(r).get_states(ROBOTS);
+        % get prediction of my location from the other robots
+        [states, covars] = ROBOTS(r).get_locations(ROBOTS);
+        ROBOTS(r).state_particles{1} = states;
+        ROBOTS(r).state_particles{2} = covars;
+        
 
    end
     
@@ -82,7 +91,11 @@ while simu.accumulatedTime < simu.simulationTime
         if simu.accumulatedTime ==0
             ROBOTS(r).vel_m = 0;
             ROBOTS(r).yaw_rate_m = 0;
+            ROBOTS(r).estimator = 0;
+        else
+            ROBOTS(r).estimator = 1;
         end
+        
         ROBOTS(r) = ROBOTS(r).flock(ROBOTS(ROBOTS(r).neighbors));
         
         % enviorment act on robot
@@ -94,10 +107,10 @@ while simu.accumulatedTime < simu.simulationTime
     %display the current state of the swarm
      disp(simu.accumulatedTime);
      disp_swarm(ROBOTS,range,show_detection_rng);
-     pause(.03);
+     pause(.003);
     %Update Simulation Variables
     simu.i = simu.i + 1;
-    simu.accumulatedTime = simu.accumulatedTime + 1;
+    simu.accumulatedTime = simu.accumulatedTime + simu.dt;
 end
  
  
