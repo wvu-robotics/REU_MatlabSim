@@ -25,7 +25,7 @@ classdef agentEnv < handle
         obstaclePatch = patch;
         lineGoalLocations = line;
         goalLocations;
-        isVisible;
+        isVisible = true;
         hasCollsions = true;
         angleArray = 0:(2*pi/128):2*pi;
         needsUpdate = false; 
@@ -134,54 +134,56 @@ classdef agentEnv < handle
         
         function agentCollider(obj,id)
             obj.updateCollisionList('A',id);   
-            potentialCollsionIndex = obj.findPotentialCollisions(id, 'A');     
-            hasCollided = obj.detectCollision(id,potentialCollsionIndex);
-            if hasCollided
-                collisionResolved = false;
-                converged = false;
-                initialHeading = 0;
-                obj.agents(id).heading = obj.agents(id).previousHeading(end);
-                desiredHeading = obj.agents(id).heading - obj.agents(id).previousHeading(end);
-                initialPose = 0;
-                desiredPose = norm(obj.agents(id).pose - obj.agents(id).path(end,:));
-                desiredPoseUnitVec = obj.agents(id).pose - obj.agents(id).path(end,:);
-                desiredPoseUnitVec = desiredPoseUnitVec./norm(desiredPoseUnitVec);
-                newRelativePose = [];
+            potentialCollsionIndex = obj.findPotentialCollisions(id, 'A'); 
+            if ~isempty(potentialCollsionIndex)
+                hasCollided = obj.detectCollision(id,potentialCollsionIndex);
+                if hasCollided
+                    collisionResolved = false;
+                    converged = false;
+                    initialHeading = 0;
+                    obj.agents(id).heading = obj.agents(id).previousHeading(end);
+                    desiredHeading = obj.agents(id).heading - obj.agents(id).previousHeading(end);
+                    initialPose = 0;
+                    desiredPose = norm(obj.agents(id).pose - obj.agents(id).path(end,:));
+                    desiredPoseUnitVec = obj.agents(id).pose - obj.agents(id).path(end,:);
+                    desiredPoseUnitVec = desiredPoseUnitVec./norm(desiredPoseUnitVec);
+                    newRelativePose = [];
                 
-                while ~collisionResolved
+                    while ~collisionResolved
  
-                    if ~isempty(newRelativePose)
-                        if abs(desiredPose - initialPose) < .001 
-                            desiredPose = initialPose;
-                            desiredHeading = initialHeading;
+                        if ~isempty(newRelativePose)
+                            if abs(desiredPose - initialPose) < .001 
+                                desiredPose = initialPose;
+                                desiredHeading = initialHeading;
+                            end
                         end
-                    end
 
-                    newRelativePose = abs(desiredPose - initialPose)/2 + initialPose;
-                    newHeading = (desiredHeading - initialHeading)/2 + initialHeading;
+                        newRelativePose = abs(desiredPose - initialPose)/2 + initialPose;
+                        newHeading = (desiredHeading - initialHeading)/2 + initialHeading;
 
                     
-                    obj.agents(id).heading = obj.angleArray(obj.convertToDiscAngle(newHeading + obj.agents(id).previousHeading(end)));
-                    obj.agents(id).pose = newRelativePose.*desiredPoseUnitVec + obj.agents(id).path(end,:);
+                        obj.agents(id).heading = obj.angleArray(obj.convertToDiscAngle(newHeading + obj.agents(id).previousHeading(end)));
+                        obj.agents(id).pose = newRelativePose.*desiredPoseUnitVec + obj.agents(id).path(end,:);
                     
-                    obj.updateCollisionList('A',id);   
-                    potentialCollsionIndex = obj.findPotentialCollisions(id, 'A');  
-                    if obj.detectCollision(id,potentialCollsionIndex) & any(newRelativePose)
-                        if round(newRelativePose,5) == round(desiredPose,5)
-                            converged = true;
-                        else
-                            desiredPose = newRelativePose;
-                            desiredHeading = newHeading;    
-                        end
+                        obj.updateCollisionList('A',id);   
+                        potentialCollsionIndex = obj.findPotentialCollisions(id, 'A');  
+                        if obj.detectCollision(id,potentialCollsionIndex) & any(newRelativePose)
+                            if round(newRelativePose,5) == round(desiredPose,5)
+                                converged = true;
+                            else
+                                desiredPose = newRelativePose;
+                                desiredHeading = newHeading;    
+                            end
                 
-                    elseif abs(desiredPose - initialPose) <= .05
-                        collisionResolved = true;      
-                    else
-                        if round(newRelativePose,5) == round(initialPose,5)
-                            converged = true;
-                        else
-                        initialPose = newRelativePose;
-                        initialHeading = newHeading;
+                            elseif abs(desiredPose - initialPose) <= .05
+                                collisionResolved = true;      
+                            else
+                            if round(newRelativePose,5) == round(initialPose,5)
+                                converged = true;
+                            else
+                            initialPose = newRelativePose;
+                            initialHeading = newHeading;
+                            end
                         end
                     end
                 end
@@ -368,8 +370,7 @@ classdef agentEnv < handle
             end
         end
         
-        function detectShapes(obj) 
-              
+        function detectShapes(obj)           
             obj.shapeGroups(1,1,1) = 1;
             if ~isempty(obj.obstacles)
                 indexType = [1,2];
@@ -389,7 +390,7 @@ classdef agentEnv < handle
                     obstacleArray(1).setShapeID(groupNumberOffset+1);        
                 end
                  numberOfObstacles = length(obstacleArray);
-                
+                undefinedGroups = [];
                 for i = 2:numberOfObstacles
                         undefinedGroups(i-1) = obstacleArray(i).getID;
                 end
@@ -551,8 +552,37 @@ classdef agentEnv < handle
             else
                 print('ERROR: Invalid path');
             end
-        end 
-                
+        end
+        
+        %ros functionality
+        function tickRos(obj)
+            tStart = cputime;
+            for i = randperm(obj.numberOfAgents)
+                obj.agents(i).callMeasurement(obj);
+                obj.agents(i).callController; 
+                obj.agents(i).pose = obj.findAgentControllerKinematics(i);
+                obj.agents(i).msgPub.Linear.X = obj.agents(i).velocityControl(1);
+                obj.agents(i).msgPub.Linear.Y = obj.agents(i).velocityControl(2);
+                send(obj.agents(i).publisher,obj.agents(i).msgPub);
+                obj.updateAgentPath(i,obj.agents(i).pose);
+            end
+            obj.updateGraph;
+            tEnd = cputime - tStart;
+            if obj.realTime
+                if tEnd > obj.timeStep
+                    pause(.0001);
+                else
+                    pause(obj.timeStep - tEnd);
+                end
+            else
+                pause(.001);
+            end
+            
+        end
     end
 end
+
+
+
+
 

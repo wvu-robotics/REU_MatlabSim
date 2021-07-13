@@ -11,6 +11,6 @@ for i = 1:paramRows*paramCols
 end
 
 timeSteps = 200;
-display = false;i
+display = false;
 fun = @(param)VectorOptimizationRun(param, display, timeSteps);
 results = bayesopt(fun,parameters);
