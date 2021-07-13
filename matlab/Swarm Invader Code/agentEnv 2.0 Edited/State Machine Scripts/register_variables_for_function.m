@@ -18,3 +18,4 @@ enough_battery_invader = evalin('base','enough_battery_invader');
 enough_battery_home_invader = evalin('base','enough_battery_home_invader');
 
 Home = evalin('base','Home');
+numberOfAgents = evalin('base','numberOfAgents');
