@@ -10,11 +10,11 @@ f  = @testController;
 ENV = agentEnv(numberOfAgents,f,mapSize,timeStep); 
 
 %Updating agent properties
-% shape = [-2,-1; -2,1; 2,1; 2,-1];%circle(.7);
-% for i = 1:numberOfAgents
-%     ENV.agents(i).setShape(shape);
-%     ENV.setAgentColor(i,[0 1 0]);
-% end
+shape = [-2,-1; -2,1; 2,1; 2,-1];%circle(.7);
+for i = 1:numberOfAgents
+    ENV.agents(i).setShape(shape);
+    ENV.setAgentColor(i,[0 1 0]);
+end
 initPositions = zeros(numberOfAgents, 2);
 goalLocations = zeros(numberOfAgents, 2);
 for i = 1:numberOfAgents
@@ -28,7 +28,7 @@ ENV.setAgentPositions(initPositions);
 ENV.setGoalPositions(goalLocations);
 
 %Creating Static Obstacles
-%ENV.createStaticObstacle(circle(.5),[0,0],0,1);
+ENV.createStaticObstacle(circle(.5),[0,0],0,1);
 
 %Optional Features
 ENV.collisionsOn(true);
