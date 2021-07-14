@@ -85,7 +85,7 @@ classdef Boid
             obj.time_as_beacon = 0;
             obj.is_beacon = 0;
             
-            obj.invaders = [1;3;2;4];
+            obj.invaders = [1;2;3;4];
 
             obj.Isinvader = 0;
             

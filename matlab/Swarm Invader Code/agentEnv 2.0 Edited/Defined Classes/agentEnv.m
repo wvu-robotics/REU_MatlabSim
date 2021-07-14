@@ -9,6 +9,7 @@ classdef agentEnv < handle
      end
     
      properties (Access = private)
+          
         shapeGroups;
         configurationSpace = polyshape.empty;
         collisionListPoseMin;
@@ -17,18 +18,18 @@ classdef agentEnv < handle
         numberOfAgents;
         mapSize;
         timeStep; 
-        figPS = figure;
+        figPS;
         lineAgent = patch;
         textAgentNumber = text;
         linePath = patch;
-        obstaclePatch = patch
+        obstaclePatch = patch;
         lineGoalLocations = line;
         goalLocations;
-        isVisible;
+        isVisible = true;
         hasCollsions = true;
-        debugPatch = patch;
         angleArray = 0:(2*pi/128):2*pi;
-        needsUpdate = false;
+        needsUpdate = false; 
+        playbackFlag = false;
      end
     
     methods
@@ -37,8 +38,11 @@ classdef agentEnv < handle
             obj.numberOfAgents = numberOfAgents;
             obj.mapSize = mapSize;
             obj.timeStep = timeStep;
-            obj.figPS = figure('Name', 'Position Space');
+            obj.figPS = figure('Name','Position Space');
             axis([-mapSize mapSize -mapSize mapSize]);
+                pause(0.00001);
+                frame_h = get(handle(gcf),'JavaFrame');
+                set(frame_h,'Maximized',1);
             obj.lineGoalLocations = line('Marker', '*', ...
                                    'LineStyle', 'none', ...
                                    'Color', [1 0 0]);
@@ -53,11 +57,6 @@ classdef agentEnv < handle
                 set(obj.textAgentNumber(i), 'String', i)
                 set(obj.lineAgent(i),'edgecolor', 'b')
             end
-            for i = 1:(numberOfAgents + 2)
-                obj.debugPatch(i) = patch('FaceColor', 'none', 'visible', false);
-            end 
-            
-            
             if length(controller) == 1
                 if isa(controller,'cell')
                     controller = cell2mat(controller);
@@ -138,54 +137,56 @@ classdef agentEnv < handle
         
         function agentCollider(obj,id)
             obj.updateCollisionList('A',id);   
-            potentialCollsionIndex = obj.findPotentialCollisions(id, 'A');     
-            hasCollided = obj.detectCollision(id,potentialCollsionIndex);
-            if hasCollided
-                collisionResolved = false;
-                converged = false;
-                initialHeading = 0;
-                obj.agents(id).heading = obj.agents(id).previousHeading(end);
-                desiredHeading = obj.agents(id).heading - obj.agents(id).previousHeading(end);
-                initialPose = 0;
-                desiredPose = norm(obj.agents(id).pose - obj.agents(id).path(end,:));
-                desiredPoseUnitVec = obj.agents(id).pose - obj.agents(id).path(end,:);
-                desiredPoseUnitVec = desiredPoseUnitVec./norm(desiredPoseUnitVec);
-                newRelativePose = [];
+            potentialCollsionIndex = obj.findPotentialCollisions(id, 'A'); 
+            if ~isempty(potentialCollsionIndex)
+                hasCollided = obj.detectCollision(id,potentialCollsionIndex);
+                if hasCollided
+                    collisionResolved = false;
+                    converged = false;
+                    initialHeading = 0;
+                    obj.agents(id).heading = obj.agents(id).previousHeading(end);
+                    desiredHeading = obj.agents(id).heading - obj.agents(id).previousHeading(end);
+                    initialPose = 0;
+                    desiredPose = norm(obj.agents(id).pose - obj.agents(id).path(end,:));
+                    desiredPoseUnitVec = obj.agents(id).pose - obj.agents(id).path(end,:);
+                    desiredPoseUnitVec = desiredPoseUnitVec./norm(desiredPoseUnitVec);
+                    newRelativePose = [];
                 
-                while ~collisionResolved
+                    while ~collisionResolved
  
-                    if ~isempty(newRelativePose)
-                        if abs(desiredPose - initialPose) < .001 
-                            desiredPose = initialPose;
-                            desiredHeading = initialHeading;
+                        if ~isempty(newRelativePose)
+                            if abs(desiredPose - initialPose) < .001 
+                                desiredPose = initialPose;
+                                desiredHeading = initialHeading;
+                            end
                         end
-                    end
 
-                    newRelativePose = abs(desiredPose - initialPose)/2 + initialPose;
-                    newHeading = (desiredHeading - initialHeading)/2 + initialHeading;
+                        newRelativePose = abs(desiredPose - initialPose)/2 + initialPose;
+                        newHeading = (desiredHeading - initialHeading)/2 + initialHeading;
 
                     
-                    obj.agents(id).heading = obj.angleArray(obj.convertToDiscAngle(newHeading + obj.agents(id).previousHeading(end)));
-                    obj.agents(id).pose = newRelativePose.*desiredPoseUnitVec + obj.agents(id).path(end,:);
+                        obj.agents(id).heading = obj.angleArray(obj.convertToDiscAngle(newHeading + obj.agents(id).previousHeading(end)));
+                        obj.agents(id).pose = newRelativePose.*desiredPoseUnitVec + obj.agents(id).path(end,:);
                     
-                    obj.updateCollisionList('A',id);   
-                    potentialCollsionIndex = obj.findPotentialCollisions(id, 'A');  
-                    if obj.detectCollision(id,potentialCollsionIndex) & any(newRelativePose)
-                        if round(newRelativePose,5) == round(desiredPose,5)
-                            converged = true;
-                        else
-                            desiredPose = newRelativePose;
-                            desiredHeading = newHeading;    
-                        end
+                        obj.updateCollisionList('A',id);   
+                        potentialCollsionIndex = obj.findPotentialCollisions(id, 'A');  
+                        if obj.detectCollision(id,potentialCollsionIndex) & any(newRelativePose)
+                            if round(newRelativePose,5) == round(desiredPose,5)
+                                converged = true;
+                            else
+                                desiredPose = newRelativePose;
+                                desiredHeading = newHeading;    
+                            end
                 
-                    elseif abs(desiredPose - initialPose) <= .05
-                        collisionResolved = true;      
-                    else
-                        if round(newRelativePose,5) == round(initialPose,5)
-                            converged = true;
-                        else
-                        initialPose = newRelativePose;
-                        initialHeading = newHeading;
+                            elseif abs(desiredPose - initialPose) <= .05
+                                collisionResolved = true;      
+                            else
+                            if round(newRelativePose,5) == round(initialPose,5)
+                                converged = true;
+                            else
+                            initialPose = newRelativePose;
+                            initialHeading = newHeading;
+                            end
                         end
                     end
                 end
@@ -300,13 +301,14 @@ classdef agentEnv < handle
                 obj.updateAgentColor(i);
                 obj.drawAgent(i);
                 obj.textAgentNumber(i).Position = [obj.agents(i).pose(1)  ...
-                                                   obj.agents(i).pose(2)];     
-                                         
-                 if obj.isVisible
-                    obj.linePath(i).XData = obj.agents(i).path(:,1);
-                    obj.linePath(i).YData = [obj.agents(i).path(1:(end-1),2); NaN];
-                    obj.linePath(i).FaceVertexCData = obj.agents(i).pathColor;
+                                                   obj.agents(i).pose(2)];                                
+                   
+                 if ~obj.playbackFlag && obj.isVisible             
+                        obj.linePath(i).XData = obj.agents(i).path(:,1);
+                        obj.linePath(i).YData = [obj.agents(i).path(1:(end-1),2); NaN];
+                        obj.linePath(i).FaceVertexCData = obj.agents(i).pathColor;
                  end
+                    
             end
         end
         
@@ -318,7 +320,7 @@ classdef agentEnv < handle
             y = newShape(2,:) + obj.agents(id).pose(2);
             set(obj.lineAgent(id),'xdata',x,'ydata',y)
         end
-        
+
         function newShape = transformShape(~,shape, heading)
             newShape =[cos(heading) sin(heading);
                       -sin(heading) cos(heading)]*[shape(:,1)';shape(:,2)'];
@@ -371,8 +373,7 @@ classdef agentEnv < handle
             end
         end
         
-        function detectShapes(obj) 
-              
+        function detectShapes(obj)           
             obj.shapeGroups(1,1,1) = 1;
             if ~isempty(obj.obstacles)
                 indexType = [1,2];
@@ -392,7 +393,7 @@ classdef agentEnv < handle
                     obstacleArray(1).setShapeID(groupNumberOffset+1);        
                 end
                  numberOfObstacles = length(obstacleArray);
-                
+                undefinedGroups = [];
                 for i = 2:numberOfObstacles
                         undefinedGroups(i-1) = obstacleArray(i).getID;
                 end
@@ -508,7 +509,83 @@ classdef agentEnv < handle
             end
             
         end 
-               
+        
+        function playback(obj, path)
+            if exist(path, 'dir')
+                writerObj = VideoWriter(append(path,'playbackResult.avi'));
+                obj.playbackFlag =true;
+                obj.hasCollsions = false;
+
+                sampleFrequency = 1/obj.timeStep;
+                if sampleFrequency > 30
+                    sampleFrequency = 30;
+                end
+                writerObj.FrameRate = sampleFrequency;
+                writerObj.Quality = 75;
+                open(writerObj);
+                counter = 0;
+                counterTimeStep = 0;
+                for i = 1:length(obj.agents(1).path(:,1))
+                
+                    for j = 1:length(obj.agents) 
+                        obj.agents(j).pose = obj.agents(j).path(i,:);
+                        obj.agents(j).heading = obj.agents(j).previousHeading(i);
+                        obj.agents(j).color = obj.agents(j).pathColor(i,:);
+                        if obj.isVisible
+                            obj.linePath(j).XData = obj.agents(j).path(1:i,1);
+                            obj.linePath(j).YData = [obj.agents(j).path(1:(i-1),2); NaN];
+                            obj.linePath(j).FaceVertexCData = obj.agents(j).pathColor(1:i,:);
+                        end
+                    end 
+                
+                    obj.updateGraph;
+            
+                    if sampleFrequency == 30
+                        if counterTimeStep >= (counter/30)
+                            writeVideo(writerObj,getframe(obj.figPS));
+                            counter = counter +1;
+                        end
+                    else
+                        writeVideo(writerObj,getframe(obj.figPS))
+                    end
+                    counterTimeStep = counterTimeStep + obj.timeStep;
+                    pause(.001)
+                end
+                close(writerObj);
+            else
+                print('ERROR: Invalid path');
+            end
+        end
+        
+        %ros functionality
+        function tickRos(obj)
+            tStart = cputime;
+            for i = randperm(obj.numberOfAgents)
+                obj.agents(i).callMeasurement(obj);
+                obj.agents(i).callController; 
+                obj.agents(i).pose = obj.findAgentControllerKinematics(i);
+                obj.agents(i).msgPub.Linear.X = obj.agents(i).velocityControl(1);
+                obj.agents(i).msgPub.Linear.Y = obj.agents(i).velocityControl(2);
+                send(obj.agents(i).publisher,obj.agents(i).msgPub);
+                obj.updateAgentPath(i,obj.agents(i).pose);
+            end
+            obj.updateGraph;
+            tEnd = cputime - tStart;
+            if obj.realTime
+                if tEnd > obj.timeStep
+                    pause(.0001);
+                else
+                    pause(obj.timeStep - tEnd);
+                end
+            else
+                pause(.001);
+            end
+            
+        end
     end
 end
+
+
+
+
 
