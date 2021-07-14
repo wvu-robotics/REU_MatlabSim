@@ -18,24 +18,28 @@
  %[U2,V2,PSI9, PHI2] = sourceFlow(-5,0,-2*pi,X,Y);
  %[U2,V2,PSI10, PHI2] = sourceFlow(5,0,2*pi,X,Y);
  %[U2,V2,PSI11, PHI2] = doubletFlow(0,0,.5,X,Y);
- [U2,V2,PSI11,PHI2] = objectFlow(0,0,0,1,.5,X,Y);
+ [U2,V2,PSI11,PHI2] = objectFlow(-3,6,-3,6,3,X,Y);
+ [Vx2,Vy2,Psi,Phi] = sourceFlow(0,0,-3/100,X,Y);
 
   %[Vxi,Vyi,PSI3,PHI3] = baseWorld(0,0,10,10,2*pi,X,Y);
   %[Vxi,Vyi,PSI4,PHI3] = uniformFlow(9,9,10,10,-.5,X,Y);
   
   %[Vxi,Vyi,Psi, Phi] = vortexFlow(0,0,-5,X,Y);
  
-PSI = PSI11;%Psi;%PSI3+PSI2;
-PHI = PHI2;%Phi;%PHI3+PHI2;
-U = U2;
-V = V2;
+PSI = PSI11+Psi;%Psi;%PSI3+PSI2;
+PHI = PHI2+Phi;%Phi;%PHI3+PHI2;
+U = U2+Vx2;
+V = V2+Vy2;
 
 
 %[Vxi,Vyi,PSI, PHI] = doubletFlow(0,0,5,X,Y);
-figure()
-contour(X,Y,PSI,  -2*pi:.2:2*pi, 'ShowText', 'on');  %0:.2:5
+%figure()
+subplot (1,2,2);
+
+contour(X,Y,PSI, -1:.01:1 , 'ShowText', 'on');  %0:.2:5 -2*pi:.2:2*pi
+
 hold on
-quiver(X,Y,U,V,0);
+%quiver(X,Y,U,V,0);
 hold on;
 %contour(X,Y,PHI, -2*pi:.2:2*pi);
 hold off
