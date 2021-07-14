@@ -10,12 +10,12 @@ KG = [];
         %subplot(2,3,1);
     for r = 1:numBots
         % plot truth data-----------------------------------------
-        quiver(ROBOTS(r).t_position(1),ROBOTS(r).t_position(2),ROBOTS(r).t_velocity(1), ROBOTS(r).t_velocity(2),'k');
+        quiver(ROBOTS(r).position_t(1),ROBOTS(r).position_t(2),ROBOTS(r).velocity_t(1), ROBOTS(r).velocity_t(2),'k');
         hold on;
-        plot(ROBOTS(r).t_position(1), ROBOTS(r).t_position(2), 'ks');
+        plot(ROBOTS(r).position_t(1), ROBOTS(r).position_t(2), 'ks');
         hold on;
         if show_detection_rng
-            viscircles([ROBOTS(r).position(1),ROBOTS(r).position(2)],range);
+            viscircles([ROBOTS(r).position_t(1),ROBOTS(r).position_t(2)],range);
             hold on;
         end
         %plot estimated position and color-------------------------------------------

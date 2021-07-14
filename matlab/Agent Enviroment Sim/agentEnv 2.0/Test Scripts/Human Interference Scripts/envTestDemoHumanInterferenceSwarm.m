@@ -2,10 +2,10 @@ clc
 clear
 close all
 %   World Building
-numberOfAgents = 50;
+numberOfAgents = 20;
 agentRadius = .5;
 timeStep = .05;
-mapSize = 60;
+mapSize = 20;
 counter = 0;
 shape = circle (.25);
 % shape=.25*[-2,-1;-2,1;2,1;2,-1];

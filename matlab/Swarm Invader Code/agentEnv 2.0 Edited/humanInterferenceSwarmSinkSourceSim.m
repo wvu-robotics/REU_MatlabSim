@@ -7,6 +7,15 @@ numberOfAgents = 15;
 agentRadius = .2;
 timeStep = .1;
 mapSize = 15;
+numberOfAgents = 50;
+agentRadius = .1;
+timeStep = .05;
+mapSize = 25;
+shape = circle (.2);
+numberOfAgents = 11;
+agentRadius = .5;
+timeStep = .5;
+mapSize = 25;
 counter = 0;
 shape = circle (.2);
 Home = [mapSize-5,mapSize-5];
@@ -14,8 +23,8 @@ run('defined_variables.m');
 %  *[-2,-1;-2,1;2,1;2,-1];
 
 
-f(1)={@testControllerEnemySinkSource};
-% f(1)={@testControllerEnemySinkSource2};
+% f(1)={@testControllerEnemySinkSource};
+f(1)={@testControllerEnemySinkSource2};
 for i =2:numberOfAgents
    f(i) = {@testController5}; 
 end    
@@ -55,7 +64,7 @@ l=2*mapSize;
 
 
 %Optional Features
-ENV.collisionsOn(true);
+ENV.collisionsOn(false);
 ENV.pathVisibility(false);
 ENV.realTime = false;
 ENV.agentIdVisibility(false);
@@ -64,6 +73,7 @@ ENV.agentIdVisibility(false);
 %     ENV.agents(i).createProperty("Distance_From_Home",distance_from_home);
 %     ENV.agents(i).createProperty("Distance_From_Invader",distance_from_invader);
 % end
+counter = 0;
 while(true)
     ENV.tick;
     counter = counter + timeStep;

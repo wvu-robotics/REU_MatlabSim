@@ -29,16 +29,16 @@ for r = 1:numBots
     ROBOTS(r).Kg = 1;
     ROBOTS(r).found_goal = 0;
 end
- ROBOTS(1).Isinvader=1;
+%  ROBOTS(1).Isinvader=1;
 figure()  %object to display the simulator
 
 % --------------------------------simulate the robots
 for t = 1:time
-    for r = 2:numBots
+    for r = 1:numBots
        % get the lidar data (distance and bearing) to every robot
                 %currently cheezy as we return values for all the robots
                 %even if out of range
-        [dists,angles] = measure_dist_heading(ROBOTS,r,noise);
+       [dists,angles] = measure_dist_heading(ROBOTS,r,noise);
         ROBOTS(r).laser = dists;
         ROBOTS(r).bearing = angles;
         [state_particles,neighbors] = get_locations(ROBOTS,r,range);
