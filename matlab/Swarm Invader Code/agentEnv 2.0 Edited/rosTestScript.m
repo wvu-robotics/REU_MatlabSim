@@ -1,4 +1,3 @@
-
 clc
 clear
 close all
@@ -6,7 +5,7 @@ global CURRENT_KEY_PRESSED
 CURRENT_KEY_PRESSED = '';
 H = figure;
 set(H,'KeyPressFcn',@buttonPress);
-rosinit('10.255.96.126');
+rosinit('10.255.103.55');
 numberOfAgents = 1;
 env = agentEnv(numberOfAgents,@rosController,10,.1);
 env.setAgentPositions(zeros(numberOfAgents, 2));

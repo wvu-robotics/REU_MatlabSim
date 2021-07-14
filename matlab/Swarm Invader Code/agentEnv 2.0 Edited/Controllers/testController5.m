@@ -19,7 +19,7 @@ current_state = 2;
 % Agent1.getProperty("Battery_Life");
 % Agent1.getProperty("Distance_From_Home");
 % Agent1.getProperty("Distance_From_Invader");
-for i = 2:length(Agent1.measuredAgents) % 2 since invader is Agent #1
+for i = 1:length(Agent1.measuredAgents) % 2 since invader is Agent #1
     
     if current_state == 0 || current_state == 1 %revisit this one
         
@@ -35,7 +35,7 @@ for i = 2:length(Agent1.measuredAgents) % 2 since invader is Agent #1
 %             if maginvader > 35 || maggoal < 5 || maginvadergoal < 10
 %                 current_state = 5;
 %             else
-                x = objectFlow1(Agent1.measuredAgents(i).pose, Agent1.pose,1000000)+[0.5,0.5];
+                x = objectFlow1(Agent1.measuredAgents(i).pose, Agent1.pose,1000000);
                 Agent1.velocityControl= 5*(x/norm(x));
 %             end
         end

@@ -2,29 +2,20 @@ clc
 clear
 close all
 %   World Building
-numberOfAgents = 25;
-agentRadius = .2;
-timeStep = .1;
-mapSize = 15;
-numberOfAgents = 50;
-agentRadius = .1;
-timeStep = .05;
-mapSize = 25;
-shape = circle (.2);
-numberOfAgents = 11;
+numberOfAgents = 20;
 agentRadius = .5;
 timeStep = .05;
-mapSize = 25;
+mapSize = 20;
 counter = 0;
-shape = circle (.2);
+shape = circle (.25);
 Home = [0,0];
 run('defined_variables.m');
 %  *[-2,-1;-2,1;2,1;2,-1];
 
 
 % f(1)={@testControllerEnemySinkSource};
-% f(1)={@testControllerEnemySinkSource2};
-f(1) = {@rosController};
+f(1)={@testControllerEnemySinkSource2};
+% f(1) = {@rosController};
 for i =2:numberOfAgents
    f(i) = {@testController5}; 
 end    
@@ -43,7 +34,7 @@ end
 %Setting Initial Positions
 initPositions = zeros(numberOfAgents, 2);
 goalLocations = zeros(numberOfAgents, 2);
-initPositions(1,:) = [-mapSize+1,-mapSize+1];
+initPositions(1,:) = [-mapSize+2,-mapSize+2];
 goalLocations(1,:) = Home;
 for i = 2:numberOfAgents
     theta = 2*pi/numberOfAgents * (i-1);
@@ -54,8 +45,8 @@ ENV.setAgentPositions(initPositions);
 ENV.setGoalPositions(goalLocations);
 
 %Creating Static Obstacles
-w=1;
-l=2*mapSize;
+% w=1;
+% l=2*mapSize;
 % rectangle = [-(l/2+w),0;l/2+w,0;l/2+w,-w;-(l/2+w),-w];
 % ENV.createStaticObstacle(rectangle,[0,-l/2],0,1);
 % ENV.createStaticObstacle(rectangle,[l/2,0],-pi/2,2);
@@ -64,7 +55,7 @@ l=2*mapSize;
 
 
 %Optional Features
-ENV.collisionsOn(false);
+ENV.collisionsOn(true);
 ENV.pathVisibility(false);
 ENV.realTime = false;
 ENV.agentIdVisibility(false);
@@ -73,7 +64,7 @@ ENV.agentIdVisibility(false);
 %     ENV.agents(i).createProperty("Distance_From_Home",distance_from_home);
 %     ENV.agents(i).createProperty("Distance_From_Invader",distance_from_invader);
 % end
-counter = 0;
+
 while(true)
     ENV.tick;
     counter = counter + timeStep;
