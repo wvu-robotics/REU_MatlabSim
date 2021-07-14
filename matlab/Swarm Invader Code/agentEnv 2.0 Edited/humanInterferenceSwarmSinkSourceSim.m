@@ -1,9 +1,8 @@
 clc
 clear
 close all
-jj=0;
 %   World Building
-numberOfAgents = 15;
+numberOfAgents = 25;
 agentRadius = .2;
 timeStep = .1;
 mapSize = 15;
@@ -14,17 +13,18 @@ mapSize = 25;
 shape = circle (.2);
 numberOfAgents = 11;
 agentRadius = .5;
-timeStep = .5;
+timeStep = .05;
 mapSize = 25;
 counter = 0;
 shape = circle (.2);
-Home = [mapSize-5,mapSize-5];
+Home = [0,0];
 run('defined_variables.m');
 %  *[-2,-1;-2,1;2,1;2,-1];
 
 
 % f(1)={@testControllerEnemySinkSource};
-f(1)={@testControllerEnemySinkSource2};
+% f(1)={@testControllerEnemySinkSource2};
+f(1) = {@rosController};
 for i =2:numberOfAgents
    f(i) = {@testController5}; 
 end    
