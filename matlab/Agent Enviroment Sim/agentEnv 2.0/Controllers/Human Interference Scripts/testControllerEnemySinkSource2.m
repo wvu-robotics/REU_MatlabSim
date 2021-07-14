@@ -1,4 +1,6 @@
 function testControllerEnemySinkSource2(Agent1)
+global CURRENT_KEY_PRESSED 
+CURRENT_KEY_PRESSED = '';
     Agent1.color = [1 0 0];%change color
     desired_Vel = [0,0];  %intiailizing default velocity
     k = 200; %strength costant

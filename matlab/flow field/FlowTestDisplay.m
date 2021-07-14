@@ -36,7 +36,7 @@ V = V2+Vy2;
 %figure()
 subplot (1,2,2);
 
-contour(X,Y,PSI, -10:.01:10 , 'ShowText', 'on');  %0:.2:5 -2*pi:.2:2*pi
+contour(X,Y,PSI, -1:.01:1 , 'ShowText', 'on');  %0:.2:5 -2*pi:.2:2*pi
 
 hold on
 %quiver(X,Y,U,V,0);

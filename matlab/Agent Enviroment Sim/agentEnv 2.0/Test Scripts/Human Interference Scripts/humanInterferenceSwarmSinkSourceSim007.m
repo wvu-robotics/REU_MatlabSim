@@ -8,20 +8,25 @@ Z = zeros(length(X(:,1)),length(X(1,:)));
 Z(1,1) =1;
 [~,c] = contour(X,Y,Z, 'ShowText', 'on');%-1:.5:1
 global COUNTOUR_IN
-COUNTOUR_IN = [1,2,3];
+COUNTOUR_IN = [0,0,0];
 
+global CURRENT_KEY_PRESSED 
+CURRENT_KEY_PRESSED = '';
+H = figure;
+set(H,'KeyPressFcn',@buttonPress);
 
 %   World Building
 numberOfAgents = 10;
 agentRadius = .1;
 timeStep = .05;
-mapSize = 25;
+mapSize = 10;
 shape = circle (.2);
 %  *[-2,-1;-2,1;2,1;2,-1];
 
 
 % f(1)={@testControllerEnemySinkSource};
-f(1)={@testControllerEnemySinkSource2};
+% f(1)={@testControllerEnemySinkSource2};
+f(1)={@rosControllerEnemy};
 for i =2:numberOfAgents
    f(i) = {@testController5}; 
 end    
@@ -40,7 +45,7 @@ end
 %Setting Initial Positions
 initPositions = zeros(numberOfAgents, 2);
 goalLocations = zeros(numberOfAgents, 2);
-initPositions(1,:) = [-8,-8];
+initPositions(1,:) = [-4,-4];
 for i = 2:numberOfAgents
     theta = 2*pi/numberOfAgents * (i-1);
     initPositions(i,:) = [cos(theta),sin(theta)]*mapSize*(.5);
@@ -59,7 +64,7 @@ ENV.createStaticObstacle(rectangle,[-l/2,0],pi/2,4);
 
 
 %Optional Features
-ENV.collisionsOn(false);
+ENV.collisionsOn(true);
 ENV.pathVisibility(false);
 ENV.realTime = false;
 ENV.agentIdVisibility(false);
@@ -82,6 +87,10 @@ while(true)
 %     ENV.setGoalPositions(goalLocations);
 end
 
+function buttonPress(src,event)
+  global CURRENT_KEY_PRESSED
+  CURRENT_KEY_PRESSED = event.Key;
+end
 
 
 

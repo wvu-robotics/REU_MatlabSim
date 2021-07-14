@@ -1,4 +1,5 @@
-function rosController(agent)   
+function rosController(agent) 
+agent.color = [1 0 0];
     global CURRENT_KEY_PRESSED 
     switch CURRENT_KEY_PRESSED
         case "uparrow"
