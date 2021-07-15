@@ -1,8 +1,7 @@
 clc
 clear
 close all
-jj=0;
-F = figure;
+% F = figure;
 [X,Y] = meshgrid(-25:.2:25 , -25:.2:25 );
 Z = zeros(length(X(:,1)),length(X(1,:)));
 Z(1,1) =1;
@@ -25,9 +24,9 @@ CURRENT_KEY_PRESSED = '';
 H = figure;
 set(H,'KeyPressFcn',@buttonPress);
 % rosinit('10.253.114.65');
-ENV = agentEnv(1,@rosController,mapSize,timeStep);
-ENV.setAgentPositions(zeros(numberOfAgents, 2));
-ENV.setGoalPositions([5, 5]);
+env = agentEnv(1,@rosControllerEnemy,mapSize,timeStep);
+env.setAgentPositions(zeros(numberOfAgents, 2));
+env.setGoalPositions([5, 5]);
 % env.agents(1).setUpPublisher('/turtle1/cmd_vel/');
 % env.agents(1).setUpSubscriber('/turtle1/cmd_vel/');
  
@@ -60,14 +59,14 @@ end
 ENV.setAgentPositions(initPositions);
 ENV.setGoalPositions(goalLocations);
 
-%Creating Static Obstacles
-w=1;
-l=2*mapSize;
-rectangle = [-(l/2+w),0;l/2+w,0;l/2+w,-w;-(l/2+w),-w];
-ENV.createStaticObstacle(rectangle,[0,-l/2],0,1);
-ENV.createStaticObstacle(rectangle,[l/2,0],-pi/2,2);
-ENV.createStaticObstacle(rectangle,[0,l/2],-pi,3);
-ENV.createStaticObstacle(rectangle,[-l/2,0],pi/2,4);
+% %Creating Static Obstacles
+% w=1;
+% l=2*mapSize;
+% rectangle = [-(l/2+w),0;l/2+w,0;l/2+w,-w;-(l/2+w),-w];
+% ENV.createStaticObstacle(rectangle,[0,-l/2],0,1);
+% ENV.createStaticObstacle(rectangle,[l/2,0],-pi/2,2);
+% ENV.createStaticObstacle(rectangle,[0,l/2],-pi,3);
+% ENV.createStaticObstacle(rectangle,[-l/2,0],pi/2,4);
 
 
 %Optional Features
@@ -82,7 +81,7 @@ while(true)
     
     counter = counter + timeStep;
     fprintf("Time: %.3f \n",counter)
-%      env.tickRos;
+     env.tick;
     if counter > 100
         break
     end
@@ -95,7 +94,6 @@ while(true)
 %     ENV.setGoalPositions(goalLocations);
 end
 
-% rosshutdown;
 
 function buttonPress(src,event)
   global CURRENT_KEY_PRESSED
