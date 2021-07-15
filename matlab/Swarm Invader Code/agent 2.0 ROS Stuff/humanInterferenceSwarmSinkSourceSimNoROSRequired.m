@@ -2,20 +2,29 @@ clc
 clear
 close all
 %   World Building
-numberOfAgents = 20;
-agentRadius = .5;
+numberOfAgents = 21;
+agentRadius = .2;
 timeStep = .05;
 mapSize = 20;
 counter = 0;
-shape = circle (.25);
+shape = circle (.2);
 Home = [0,0];
 run('defined_variables.m');
-%  *[-2,-1;-2,1;2,1;2,-1];
+global CURRENT_KEY_PRESSED 
+CURRENT_KEY_PRESSED = '';
+H = figure;
+set(H,'KeyPressFcn',@buttonPress);
+% rosinit('10.255.103.55');
+env = agentEnv(1,@rosController,mapSize,timeStep);
+env.setAgentPositions(zeros(numberOfAgents, 2));
+env.setGoalPositions([5, 5]);
+% env.agents(1).setUpPublisher('/turtle1/cmd_vel/');
+% env.agents(1).setUpSubscriber('/turtle1/cmd_vel/');
 
 
 % f(1)={@testControllerEnemySinkSource};
-f(1)={@testControllerEnemySinkSource2};
-% f(1) = {@rosController};
+% f(1)={@testControllerEnemySinkSource2};
+f(1) = {@rosController};
 for i =2:numberOfAgents
    f(i) = {@testController5}; 
 end    
@@ -44,21 +53,21 @@ end
 ENV.setAgentPositions(initPositions);
 ENV.setGoalPositions(goalLocations);
 
-%Creating Static Obstacles
-% w=1;
-% l=2*mapSize;
-% rectangle = [-(l/2+w),0;l/2+w,0;l/2+w,-w;-(l/2+w),-w];
-% ENV.createStaticObstacle(rectangle,[0,-l/2],0,1);
-% ENV.createStaticObstacle(rectangle,[l/2,0],-pi/2,2);
-% ENV.createStaticObstacle(rectangle,[0,l/2],-pi,3);
-% ENV.createStaticObstacle(rectangle,[-l/2,0],pi/2,4);
+% Creating Static Obstacles
+w=1;
+l=2*mapSize;
+rectangle = [-(l/2+w),0;l/2+w,0;l/2+w,-w;-(l/2+w),-w];
+ENV.createStaticObstacle(rectangle,[0,-l/2],0,1);
+ENV.createStaticObstacle(rectangle,[l/2,0],-pi/2,2);
+ENV.createStaticObstacle(rectangle,[0,l/2],-pi,3);
+ENV.createStaticObstacle(rectangle,[-l/2,0],pi/2,4);
 
 
 %Optional Features
-ENV.collisionsOn(true);
+ENV.collisionsOn(false);
 ENV.pathVisibility(false);
 ENV.realTime = false;
-ENV.agentIdVisibility(false);
+ENV.agentIdVisibility(true);
 % for i=1:length(ENV.agents)
 %     ENV.agents(i).createProperty("Battery_Life",battery_life);
 %     ENV.agents(i).createProperty("Distance_From_Home",distance_from_home);
@@ -69,6 +78,8 @@ while(true)
     ENV.tick;
     counter = counter + timeStep;
     fprintf("Time: %.3f \n",counter)
+%     env.tickRos;
+    env.tick;
     run('evolvingvariables.m');
     %change goal locations
 %     for i = 1:numberOfAgents
@@ -78,6 +89,10 @@ while(true)
 %     ENV.setGoalPositions(goalLocations);
 end
 
+function buttonPress(src,event)
+  global CURRENT_KEY_PRESSED
+  CURRENT_KEY_PRESSED = event.Key;
+end
 
 
 

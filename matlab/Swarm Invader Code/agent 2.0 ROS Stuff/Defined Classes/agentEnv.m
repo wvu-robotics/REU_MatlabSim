@@ -40,9 +40,6 @@ classdef agentEnv < handle
             obj.timeStep = timeStep;
             obj.figPS = figure('Name','Position Space');
             axis([-mapSize mapSize -mapSize mapSize]);
-                pause(0.00001);
-                frame_h = get(handle(gcf),'JavaFrame');
-                set(frame_h,'Maximized',1);
             obj.lineGoalLocations = line('Marker', '*', ...
                                    'LineStyle', 'none', ...
                                    'Color', [1 0 0]);

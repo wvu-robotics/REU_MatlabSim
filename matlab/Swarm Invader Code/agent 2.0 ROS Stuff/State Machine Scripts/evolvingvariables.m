@@ -1,8 +1,7 @@
 % iteration = iteration +1
 for i = 1:numberOfAgents
 fprintf('Battery Life = %.2f\n',battery_life)
-battery_life = battery_life - .01; %This will control number of iterations
-invader_detected = 1;
+battery_life = battery_life - .001; %This will control number of iterations
 distance_from_home = round(rand(1)*(100-0)+0); %random number between [0,100]
 distance_from_invader = round(rand(1)*(100-0)+0); %random number between [0,100]
 enough_battery_home = distance_from_home / (4*mapSize); % ft / (4 ft / 1%)

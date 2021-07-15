@@ -1,21 +1,39 @@
 clc
 clear
 close all
+jj=0;
+F = figure;
+[X,Y] = meshgrid(-25:.2:25 , -25:.2:25 );
+Z = zeros(length(X(:,1)),length(X(1,:)));
+Z(1,1) =1;
+[~,c] = contour(X,Y,Z, 'ShowText', 'on');%-1:.5:1
+global COUNTOUR_IN
+COUNTOUR_IN = [0,0,0];
+
+
+
+
 %   World Building
-numberOfAgents = 20;
-agentRadius = .5;
+numberOfAgents = 10;
+agentRadius = .1;
 timeStep = .05;
-mapSize = 20;
-counter = 0;
-shape = circle (.25);
-Home = [0,0];
-run('defined_variables.m');
+mapSize = 10;
+shape = circle (.2);
 %  *[-2,-1;-2,1;2,1;2,-1];
-
-
+global CURRENT_KEY_PRESSED 
+CURRENT_KEY_PRESSED = '';
+H = figure;
+set(H,'KeyPressFcn',@buttonPress);
+% rosinit('10.255.103.55');
+env = agentEnv(1,@rosController,mapSize,timeStep);
+env.setAgentPositions(zeros(numberOfAgents, 2));
+env.setGoalPositions([5, 5]);
+% env.agents(1).setUpPublisher('/turtle1/cmd_vel/');
+% env.agents(1).setUpSubscriber('/turtle1/cmd_vel/');
+ 
 % f(1)={@testControllerEnemySinkSource};
-f(1)={@testControllerEnemySinkSource2};
-% f(1) = {@rosController};
+% f(1)={@testControllerEnemySinkSource2};
+f(1)={@rosController2};
 for i =2:numberOfAgents
    f(i) = {@testController5}; 
 end    
@@ -34,12 +52,13 @@ end
 %Setting Initial Positions
 initPositions = zeros(numberOfAgents, 2);
 goalLocations = zeros(numberOfAgents, 2);
+% initPositions(1,:) = [-4,-4];
 initPositions(1,:) = [-mapSize+2,-mapSize+2];
-goalLocations(1,:) = Home;
+% goalLocations(1,:) = Home;
 for i = 2:numberOfAgents
     theta = 2*pi/numberOfAgents * (i-1);
     initPositions(i,:) = [cos(theta),sin(theta)]*mapSize*(.5);
-    goalLocations(i,:) = Home;
+%      goalLocations(i,:) = Home;
 end
 ENV.setAgentPositions(initPositions);
 ENV.setGoalPositions(goalLocations);
@@ -59,17 +78,17 @@ ENV.collisionsOn(true);
 ENV.pathVisibility(false);
 ENV.realTime = false;
 ENV.agentIdVisibility(false);
-% for i=1:length(ENV.agents)
-%     ENV.agents(i).createProperty("Battery_Life",battery_life);
-%     ENV.agents(i).createProperty("Distance_From_Home",distance_from_home);
-%     ENV.agents(i).createProperty("Distance_From_Invader",distance_from_invader);
-% end
-
+counter = 0;
 while(true)
     ENV.tick;
+    set(c,"ZData", COUNTOUR_IN);
     counter = counter + timeStep;
     fprintf("Time: %.3f \n",counter)
-    run('evolvingvariables.m');
+    env.tick;
+    if counter > 100
+        break
+    end
+%     run('evolvingvariables.m');
     %change goal locations
 %     for i = 1:numberOfAgents
 %         theta = 2*pi/numberOfAgents * (i-1) + (pi/8)*counter;
@@ -77,7 +96,12 @@ while(true)
 %     end
 %     ENV.setGoalPositions(goalLocations);
 end
+ rosshutdown;
 
+function buttonPress(src,event)
+  global CURRENT_KEY_PRESSED
+  CURRENT_KEY_PRESSED = event.Key;
+end
 
 
 
