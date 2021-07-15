@@ -1,6 +1,8 @@
 clc
 clear
 close all
+global CURRENT_KEY_PRESSED 
+CURRENT_KEY_PRESSED = '';
 jj=0;
 F = figure;
 [X,Y] = meshgrid(-25:.2:25 , -25:.2:25 );
@@ -10,8 +12,7 @@ Z(1,1) =1;
 global COUNTOUR_IN
 COUNTOUR_IN = [0,0,0];
 
-global CURRENT_KEY_PRESSED 
-CURRENT_KEY_PRESSED = '';
+
 H = figure;
 set(H,'KeyPressFcn',@buttonPress);
 
@@ -64,7 +65,7 @@ ENV.createStaticObstacle(rectangle,[-l/2,0],pi/2,4);
 
 
 %Optional Features
-ENV.collisionsOn(true);
+ENV.collisionsOn(false);
 ENV.pathVisibility(false);
 ENV.realTime = false;
 ENV.agentIdVisibility(false);
