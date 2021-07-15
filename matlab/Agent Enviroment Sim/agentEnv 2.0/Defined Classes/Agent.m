@@ -6,6 +6,7 @@ classdef Agent < handle
        pose = [0 0];
        velocity = [0 0];
        velocityControl = [0 0];
+       angularVelocityControl = 0;
        path; 
        pathColor;
        previousHeading;

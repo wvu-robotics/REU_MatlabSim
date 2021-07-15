@@ -323,6 +323,11 @@ classdef agentEnv < handle
                       -sin(heading) cos(heading)]*[shape(:,1)';shape(:,2)'];
         end
         
+        function newPose = transform2D(~,pose,heading)
+            newPose =[cos(heading) sin(heading);
+                      -sin(heading) cos(heading)]*pose;
+        end 
+           
         function updateCollisionList(obj, type, id)
             objectID = append(type,string(id));
             if ~ismember(objectID,obj.collisionListID) 
@@ -558,12 +563,25 @@ classdef agentEnv < handle
         function tickRos(obj)
             tStart = cputime;
             for i = randperm(obj.numberOfAgents)
-                obj.agents(i).callMeasurement(obj);
-                obj.agents(i).callController; 
+%                 obj.agents(i).msgSub = receive(obj.agents(i).subscriber);
+%                 
+%                 obj.agents(i).pose = [obj.agents(i).msgSub.Transform.Translation.X, ...
+%                                       obj.agents(i).msgSub.Transform.Translation.Y]; 
+%                                   
+%                  obj.agents(i).heading = wrapTo2Pi(2*asin(obj.agents(i).msgSub.Transform.Rotation.Z));
+                obj.agents(i).callMeasurement(obj);          
+                obj.agents(i).callController;
+                contVel = obj.transform2D([obj.agents(i).velocityControl(1);
+                                           obj.agents(i).velocityControl(2)], ...
+                                           obj.agents(i).heading);
+                               
+                obj.agents(i).msgPub.Linear.X = contVel(1);
+                obj.agents(i).msgPub.Linear.Y = contVel(2);
+                obj.agents(i).msgPub.Angular.Z = obj.agents(i).angularVelocityControl;
+                
+                obj.agents(i).heading = obj.agents(i).heading + obj.agents(i).angularVelocityControl*obj.timeStep;
                 obj.agents(i).pose = obj.findAgentControllerKinematics(i);
-                obj.agents(i).msgPub.Linear.X = obj.agents(i).velocityControl(1);
-                obj.agents(i).msgPub.Linear.Y = obj.agents(i).velocityControl(2);
-                send(obj.agents(i).publisher,obj.agents(i).msgPub);
+                 send(obj.agents(i).publisher,obj.agents(i).msgPub);
                 obj.updateAgentPath(i,obj.agents(i).pose);
             end
             obj.updateGraph;

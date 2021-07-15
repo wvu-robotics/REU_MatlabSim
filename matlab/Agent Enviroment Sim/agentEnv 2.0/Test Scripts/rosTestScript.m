@@ -6,15 +6,17 @@ global CURRENT_KEY_PRESSED
 CURRENT_KEY_PRESSED = '';
 H = figure;
 set(H,'KeyPressFcn',@buttonPress);
-rosinit('10.255.96.126');
-numberOfAgents = 1;
-env = agentEnv(numberOfAgents,@rosController,10,.1);
+rosinit('192.168.10.144');
+numberOfAgents = 1;git
+env = agentEnv(numberOfAgents,@rosController,2,.01);
+env.agents(1).setShape(.25*[-1,-1; -1, 1; 1,0]);
 env.setAgentPositions(zeros(numberOfAgents, 2));
 env.setGoalPositions([5, 5]);
-env.agents(1).setUpPublisher('/turtle1/cmd_vel/');
-env.agents(1).setUpSubscriber('/turtle1/cmd_vel/');
+env.agents(1).setUpPublisher('/cmd_vel');
+% env.agents(1).setUpSubscriber('/vicon/OG_Turtle_1/OG_Turtle_1');
 counter = 0;
-ENV.realTime = true;
+env.realTime = true;
+env.pathVisibility(false);
 while true 
    counter = counter + 1;
    env.tickRos;
