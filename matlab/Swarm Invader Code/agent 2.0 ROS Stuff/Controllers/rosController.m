@@ -10,15 +10,15 @@ function rosController(agent)
             agent.velocityControl = 7*[0,-1];
         case "d"
             agent.velocityControl = 7*[1, 0];
-        case "t"
+        case "q"
             agent.velocityControl = 7*[-1, 1];
-        case "y"
+        case "e"
             agent.velocityControl = 7*[1, 1];
-        case "g"
+        case "shift" % works with left or right shift, couldn't specify left
             agent.velocityControl = 7*[-1, -1];
-        case "h"
-            agent.velocityControl = 7*[1, -1];
         case "c"
+            agent.velocityControl = 7*[1, -1];
+        case "j"
             Z = [0 0 1];
             P = [agent.pose - [0,0],0];
             T = cross(P,Z);
