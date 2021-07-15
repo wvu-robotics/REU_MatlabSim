@@ -1,8 +1,6 @@
 clc
 clear
 close all
-global CURRENT_KEY_PRESSED 
-CURRENT_KEY_PRESSED = '';
 jj=0;
 F = figure;
 [X,Y] = meshgrid(-25:.2:25 , -25:.2:25 );
@@ -13,8 +11,7 @@ global COUNTOUR_IN
 COUNTOUR_IN = [0,0,0];
 
 
-H = figure;
-set(H,'KeyPressFcn',@buttonPress);
+
 
 %   World Building
 numberOfAgents = 10;
@@ -23,8 +20,17 @@ timeStep = .05;
 mapSize = 10;
 shape = circle (.2);
 %  *[-2,-1;-2,1;2,1;2,-1];
-
-
+global CURRENT_KEY_PRESSED 
+CURRENT_KEY_PRESSED = '';
+H = figure;
+set(H,'KeyPressFcn',@buttonPress);
+% rosinit('10.253.114.65');
+ENV = agentEnv(1,@rosController,mapSize,timeStep);
+ENV.setAgentPositions(zeros(numberOfAgents, 2));
+ENV.setGoalPositions([5, 5]);
+% env.agents(1).setUpPublisher('/turtle1/cmd_vel/');
+% env.agents(1).setUpSubscriber('/turtle1/cmd_vel/');
+ 
 % f(1)={@testControllerEnemySinkSource};
 % f(1)={@testControllerEnemySinkSource2};
 f(1)={@rosControllerEnemy};
@@ -76,7 +82,8 @@ while(true)
     
     counter = counter + timeStep;
     fprintf("Time: %.3f \n",counter)
-    if counter > 10
+%      env.tickRos;
+    if counter > 100
         break
     end
 %     run('evolvingvariables.m');
@@ -87,6 +94,8 @@ while(true)
 %     end
 %     ENV.setGoalPositions(goalLocations);
 end
+
+% rosshutdown;
 
 function buttonPress(src,event)
   global CURRENT_KEY_PRESSED
