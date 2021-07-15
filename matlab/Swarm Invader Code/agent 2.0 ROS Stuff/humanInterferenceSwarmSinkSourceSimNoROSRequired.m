@@ -88,7 +88,7 @@ while(true)
 %     end
 %     ENV.setGoalPositions(goalLocations);
 end
-rosshutdown;
+
 function buttonPress(src,event)
   global CURRENT_KEY_PRESSED
   CURRENT_KEY_PRESSED = event.Key;
