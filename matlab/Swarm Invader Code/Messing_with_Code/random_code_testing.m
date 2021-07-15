@@ -202,5 +202,4 @@ average_iterations = average_iterations + iteration;
 counter = counter + 1;
 true_average = average_iterations / counter;
 
-% Please inquire if you plan to use this outside of the WVU REU Summer 2021
-% Program. Contact danielvillarrealusa@gmail.com
+% Any questions, please contact danielvillarrealusa@gmail.com

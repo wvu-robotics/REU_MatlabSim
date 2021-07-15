@@ -2,12 +2,12 @@ clc
 clear
 close all
 %   World Building
-numberOfAgents = 20;
-agentRadius = .5;
+numberOfAgents = 21;
+agentRadius = .2;
 timeStep = .05;
 mapSize = 20;
 counter = 0;
-shape = circle (.25);
+shape = circle (.2);
 Home = [0,0];
 run('defined_variables.m');
 global CURRENT_KEY_PRESSED 
@@ -53,21 +53,21 @@ end
 ENV.setAgentPositions(initPositions);
 ENV.setGoalPositions(goalLocations);
 
-%Creating Static Obstacles
-% w=1;
-% l=2*mapSize;
-% rectangle = [-(l/2+w),0;l/2+w,0;l/2+w,-w;-(l/2+w),-w];
-% ENV.createStaticObstacle(rectangle,[0,-l/2],0,1);
-% ENV.createStaticObstacle(rectangle,[l/2,0],-pi/2,2);
-% ENV.createStaticObstacle(rectangle,[0,l/2],-pi,3);
-% ENV.createStaticObstacle(rectangle,[-l/2,0],pi/2,4);
+% Creating Static Obstacles
+w=1;
+l=2*mapSize;
+rectangle = [-(l/2+w),0;l/2+w,0;l/2+w,-w;-(l/2+w),-w];
+ENV.createStaticObstacle(rectangle,[0,-l/2],0,1);
+ENV.createStaticObstacle(rectangle,[l/2,0],-pi/2,2);
+ENV.createStaticObstacle(rectangle,[0,l/2],-pi,3);
+ENV.createStaticObstacle(rectangle,[-l/2,0],pi/2,4);
 
 
 %Optional Features
-ENV.collisionsOn(true);
+ENV.collisionsOn(false);
 ENV.pathVisibility(false);
 ENV.realTime = false;
-ENV.agentIdVisibility(false);
+ENV.agentIdVisibility(true);
 % for i=1:length(ENV.agents)
 %     ENV.agents(i).createProperty("Battery_Life",battery_life);
 %     ENV.agents(i).createProperty("Distance_From_Home",distance_from_home);

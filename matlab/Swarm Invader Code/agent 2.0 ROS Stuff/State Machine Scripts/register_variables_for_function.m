@@ -19,3 +19,4 @@ enough_battery_home_invader = evalin('base','enough_battery_home_invader');
 
 Home = evalin('base','Home');
 numberOfAgents = evalin('base','numberOfAgents');
+agentRadius = evalin('base','agentRadius');
