@@ -14,12 +14,12 @@ global CURRENT_KEY_PRESSED
 CURRENT_KEY_PRESSED = '';
 H = figure;
 set(H,'KeyPressFcn',@buttonPress);
-rosinit('10.255.103.55');
+rosinit('192.168.10.133');
 env = agentEnv(1,@rosController,mapSize,timeStep);
 env.setAgentPositions(zeros(numberOfAgents, 2));
 env.setGoalPositions([5, 5]);
 env.agents(1).setUpPublisher('/turtle1/cmd_vel/');
-env.agents(1).setUpSubscriber('/turtle1/cmd_vel/');
+% env.agents(1).setUpSubscriber('/turtle1/cmd_vel/');
 % counter = 0;
 
 

@@ -6,8 +6,8 @@ global CURRENT_KEY_PRESSED
 CURRENT_KEY_PRESSED = '';
 H = figure;
 set(H,'KeyPressFcn',@buttonPress);
-rosinit('192.168.10.144');
-numberOfAgents = 1;git
+rosinit('192.168.10.133');
+numberOfAgents = 1;
 env = agentEnv(numberOfAgents,@rosController,2,.01);
 env.agents(1).setShape(.25*[-1,-1; -1, 1; 1,0]);
 env.setAgentPositions(zeros(numberOfAgents, 2));
