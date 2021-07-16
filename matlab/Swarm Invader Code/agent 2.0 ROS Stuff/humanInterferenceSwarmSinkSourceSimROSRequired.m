@@ -4,7 +4,7 @@ close all
 %   World Building
 numberOfAgents = 20;
 agentRadius = .5;
-timeStep = .05;
+timeStep = 1;
 mapSize = 20;
 counter = 0;
 shape = circle (.25);
@@ -14,11 +14,11 @@ global CURRENT_KEY_PRESSED
 CURRENT_KEY_PRESSED = '';
 H = figure;
 set(H,'KeyPressFcn',@buttonPress);
-rosinit('192.168.10.133');
+rosinit('192.168.10.141');
 env = agentEnv(1,@rosController,mapSize,timeStep);
 env.setAgentPositions(zeros(numberOfAgents, 2));
 env.setGoalPositions([5, 5]);
-env.agents(1).setUpPublisher('/turtle1/cmd_vel/');
+env.agents(1).setUpPublisher('/cmd_vel/');
 % env.agents(1).setUpSubscriber('/turtle1/cmd_vel/');
 % counter = 0;
 
