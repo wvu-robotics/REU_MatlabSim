@@ -4,7 +4,7 @@ function ROBOTS = create_robot_swarm(numBots,world_len,detection_rng)
 
 
 ROBOTS = Robot.empty();
-Ks = 15;
+Ks = 1;
 Ka = 1;
 Kc = 1;
 

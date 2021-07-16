@@ -9,18 +9,18 @@ close all;
 clc;
 
 %% Simulation Parameters
-simu.N=3;    %number of Robotss
+simu.N=10;    %number of Robots
 simu.dt = .1; % time step size
 simu.simulationTime=60*60;   %flight duration (second)
 simu.accumulatedTime=0;  %first timestep
 
-simu.percentNoiseDifference =0.01; %slightly varies sigma per agent
-simu.sigmaVelocity=0.02;  %standard deviation of velocity errors (m/s)
-simu.sigmaYawRate=0.01*pi/180;    %standard deviation of yaw rate errors (rad/s)
-simu.sigmaRange=.001;   %standard deviation of ranging measurement error (m)
-simu.sigmaHeading = 1*pi/180; %standard deviation of heading measurment error (rad)
-simu.biasVelocity=0.1*simu.sigmaVelocity; %standard deviation of velocity turn on bias (m/s)
-simu.biasYawRate=0.1*simu.sigmaYawRate; %standard deviation of yaw rate turn on bias (rad/s)
+simu.percentNoiseDifference =0;%0.01; %slightly varies sigma per agent
+simu.sigmaVelocity=0;%0.02;  %standard deviation of velocity errors (m/s)
+simu.sigmaYawRate=0;%0.01*pi/180;    %standard deviation of yaw rate errors (rad/s)
+simu.sigmaRange=0;%.001;   %standard deviation of ranging measurement error (m)
+simu.sigmaHeading =0;%1*pi/180; %standard deviation of heading measurment error (rad)
+simu.biasVelocity=0;%0.1*simu.sigmaVelocity; %standard deviation of velocity turn on bias (m/s)
+simu.biasYawRate=0;%0.1*simu.sigmaYawRate; %standard deviation of yaw rate turn on bias (rad/s)
 
 simu.initdistance = 5;   %distance between each pair of neighbot UAVs' initial positions
 
@@ -65,41 +65,37 @@ disp('Performing simulation...');
 simu.i=2;
 while simu.accumulatedTime < simu.simulationTime  
    %% measure the enviorment-----------------------
+   
+   %get every robot's estimated position and estimated covariance
    [X,P] = ROBOTS(1).get_states(ROBOTS);
    for r = 1:simu.N
-        % all other robot positions and covariances
+        % all other robots' estimated position and covariance
         ROBOTS(r).X = X;
         ROBOTS(r).P = P;
-       % ROBOTS(r) = ROBOTS(r).get_states(ROBOTS);
        
-        % range and bearing
+        % range and bearing from  Truth
         ROBOTS(r) = ROBOTS(r).lidar_measurement(ROBOTS);
         % velocity magnitude and yaw rate
         ROBOTS(r) = ROBOTS(r).encoder_measurement(); 
+        
+   end
+   
+   % perception
+   for r = 1:simu.N 
         % get prediction of my location from the other robots
         [states, covars] = ROBOTS(r).get_locations(ROBOTS);
         ROBOTS(r).state_particles{1} = states;
         ROBOTS(r).state_particles{2} = covars;
-        
-
    end
     
     %% take action and update------------------------
     for r = 1:simu.N
-        
-        % robot act on enviorment
-        if simu.accumulatedTime ==0
-            ROBOTS(r).vel_m = 0;
-            ROBOTS(r).yaw_rate_m = 0;
-            ROBOTS(r).estimator = 0;
-        else
-            ROBOTS(r).estimator = 1;
-        end
-        
-        ROBOTS(r) = ROBOTS(r).flock(ROBOTS(ROBOTS(r).neighbors));
-        
+          
         % enviorment act on robot
         ROBOTS(r) = ROBOTS(r).update();
+        
+        % robot's velocity controller
+        ROBOTS(r) = ROBOTS(r).flock(ROBOTS(ROBOTS(r).neighbors));
     end
     
     %% display and increase time-------------------------
