@@ -1,13 +1,16 @@
-%% Time Until Collision
-
-%Description: Given a centralAgent and its neighbors, returns the times
-%until they collide.
-
-%Parameters: agent: A 1x1 Agent handle
-
-%Returns:
+%% timeTilCollision: Time Until Collision
+%
+% Description: Given a centralAgent and its neighbors, returns the times
+% until they collide.
+%
+% Proof of Correctness: Acceleration Controller Formulation and Analysis in
+% Google Drive
+%
+% Parameters: agent: A 1x1 Agent handle
+%
+% Returns:
 %   times: An Nx1 double where the time until agent and the ith
-%       measuredAgent collide is times(i). If they won't collide, then
+%       neighbor collide is times(i). If they won't collide, then
 %       times(i) = NaN. If they are colliding currently, then
 %       times(i) = 0.
 function times = timeTilCollision(agent)

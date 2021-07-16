@@ -1,16 +1,19 @@
-%% Time Until Collision
-
-%Description: Given a the relative position and velocity of two agents,
-%along with the sum of their radii, returns the times until they collide.
-
-%Parameters:
+%% timeTilCollisionFunc: Time Until Collision
+%
+% Description: Given a the relative position and velocity of two agents,
+% along with the sum of their radii, returns the times until they collide.
+%
+% Proof of Correctness: Acceleration Controller Formulation and Analysis in
+% Google Drive
+%
+% Parameters:
 %   relP: A 1x2 double for the relative position
 %       Agent1Pose - Agent2Pose
 %   relV: A 1x2 double for the relative velocity
 %       Agent1Vel - Agent2Vel
 %   radSum: A double for the sum of their radii
-
-%Returns:
+%
+% Returns:
 %   times: A double which is the time until the two agents collide. If they
 %       won't collide, then time = NaN. If they are colliding currently,
 %       then time = 0.

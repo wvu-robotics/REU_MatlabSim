@@ -1,13 +1,12 @@
-%% ORCAController w/ Potent Field
-
-%Description: Applies an acceleration toward the velocity that
-%the original ORCA method perscribes. Then applies a PFM to keep the agents
-%apart.
-
-%Parameter: agent: A 1x1 Agent handle
+%% ORCAController
+%
+% Description: Applies an acceleration toward the velocity that
+% the original ORCA method perscribes.
+%
+% Parameter: agent: A 1x1 Agent handle
 
 function ORCAController(agent)
-    %Constants
+    %Constants for customization
     safetyMargin = 1.2;
     timeHorizon = 10;
     velocityDiscritisation = 0.05;

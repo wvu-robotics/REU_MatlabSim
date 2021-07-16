@@ -1,15 +1,15 @@
-%% Comparison Tester
-
-%Description: Given a goalPath for the team of robots, runs two simulations
-%where different controllers move the robots. One is the original
-%ORCAController, and the other is the accelerationController. It gathers
-%and returns data about the different simulations.
-%The times hold the number of time steps taken between goal positions.
-%The distances hold the distance traveled to get between waypoints.
-%The smoothness holds the amount of turning that an agent has done in rad
-%divided by the time that that agent took.
-
-%Parameters:
+%% comparisonTest: Comparison Tester
+%
+% Description: Given a goalPath for the team of robots, runs two simulations
+% where different controllers move the robots. One is the original
+% ORCAController, and the other is the accelerationController. It gathers
+% and returns data about the different simulations.
+% The times hold the number of time steps taken between goal positions.
+% The distances hold the distance traveled to get between waypoints.
+% The smoothness holds the amount of turning that an agent has done in rad
+% divided by the time that that agent took.
+%
+% Parameters:
 %   goalPath: An Nx2xP double where the ith waypoint that the jth agent has
 %       to get to is goalPath(j,:,i). Agents must reach the ith waypoint
 %       before proceeding to the i+1st waypoint, and must stay put once
@@ -27,8 +27,8 @@
 %   maxSpeed: A positive double for how fast an agent wants to go
 %   measuringRange: A positive double where an agent can only see other
 %       agents that are a maximum distance of measuringRange away
-
-%Returns:
+%
+% Returns:
 %   ORCATimes: An NxP double where the number of time steps that the ith
 %       ORCA controlled agent took to get to from its j-1st waypoint to its
 %       jth waypoint is ORCATimes(i,j). ORCATimes(i,1) is the time the ith
