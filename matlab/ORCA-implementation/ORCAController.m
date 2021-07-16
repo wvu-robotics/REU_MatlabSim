@@ -1,12 +1,14 @@
-%% ORCAController
+%% ORCAController w/ Potent Field
 
-%Description: Sets agent's velocityControl to the velocity that the
-%original ORCA method perscribes
+%Description: Applies an acceleration toward the velocity that
+%the original ORCA method perscribes. Then applies a PFM to keep the agents
+%apart.
 
 %Parameter: agent: A 1x1 Agent handle
 
 function ORCAController(agent)
     %Constants
+    safetyMargin = 1.2;
     timeHorizon = 10;
     velocityDiscritisation = 0.05;
     vOptIsZero = false;
@@ -46,7 +48,7 @@ function ORCAController(agent)
         %If no velocities are acceptable
         if sum(acceptability) == 0
             %Stops
-            agent.velocityControl = [0,0];
+            avoidanceVelocity = [0,0];
             
         %If there are acceptable velocities
         else
@@ -60,12 +62,37 @@ function ORCAController(agent)
             [~, bestVelocityIndex] = min(distFromPrefered);
             
             %Sets the velocityControls output to the best acceptable velocity
-            agent.velocityControl = acceptableVelocities(bestVelocityIndex, :);
+            avoidanceVelocity = acceptableVelocities(bestVelocityIndex, :);
         end
         
     %If there aren't any neighbors
     else
         %Does what it would do when alone
-        agent.velocityControl = preferredVelocity;
+        avoidanceVelocity = preferredVelocity;
     end
+    
+    %Finds acceleration toward the avoidanceVelocity
+    accel = avoidanceVelocity - agent.velocity;
+    if norm(accel) > 0
+        accel = accel ./ norm(accel);
+    end
+    
+    %Finds the potential force to separate agents
+    potent = [0,0];
+    
+    %For each neighbor
+    for i = 1:length(agent.measuredAgents)
+        
+        %Calculates the distance between agents and safe distance.
+        radSum = agent.getRadius() + agent.measuredAgents(i).getRadius();
+        safeDist = radSum * safetyMargin;
+        relP = agent.measuredAgents(i).pose - agent.pose;
+        
+        %If they are too close
+        if radSum < norm(relP) && norm(relP) < safeDist
+            potent = potent + (radSum^-2 * (safetyMargin - 1)^-2 - (norm(relP) - radSum)^-2) * relP ./ norm(relP);
+        end
+    end
+    
+    agent.velocityControl = agent.velocity + (agent.maxSpeed * accel + potent) * agent.getTimeStep();
 end

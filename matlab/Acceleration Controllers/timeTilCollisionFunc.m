@@ -21,8 +21,8 @@ function time = timeTilCollisionFunc(relP, relV, radSum)
     if norm(relV) == 0
 
         %If they are currently colliding
-        if relP < radSum
-            time = .0001;
+        if norm(relP) < radSum
+            time = 0;
         else %If they aren't
             time = NaN;
         end

@@ -15,7 +15,7 @@
 %Returns:
 %   gradientVector: A 1x2 double which points in the direction that
 %       increases the oval metric return value fastest.
-function gradientVector = gradientVector(pv,v,k)
+function gradientVector = gradientVector(pv, v, k)
     orthPV = [-pv(2),pv(1)];
     
     gradientVector(1) = dot(v - pv, k^2*pv(1)*pv - pv(2)*orthPV);
