@@ -3,21 +3,21 @@ agent.color = [1 0 0];
     global CURRENT_KEY_PRESSED 
     switch CURRENT_KEY_PRESSED
         case "uparrow"
-            agent.velocityControl = 7*[0,1];
+            agent.velocityControl = 10*[0,1];
         case "downarrow"
-            agent.velocityControl = 7*[0,-1];
+            agent.velocityControl = 10*[0,-1];
         case "rightarrow"
-            agent.velocityControl = 7*[1, 0];
+            agent.velocityControl = 10*[1, 0];
         case "leftarrow" 
-            agent.velocityControl = 7*[-1, 0];
+            agent.velocityControl = 10*[-1, 0];
          case "t"
-            agent.velocityControl = 7*[-1, 1];
+            agent.velocityControl = 10*[-1, 1];
         case "y"
-            agent.velocityControl = 7*[1, 1];
+            agent.velocityControl = 10*[1, 1];
         case "g"
-            agent.velocityControl = 7*[-1, -1];
+            agent.velocityControl = 10*[-1, -1];
         case "h"
-            agent.velocityControl = 7*[1, -1];
+            agent.velocityControl = 10*[1, -1];
         case "c"
             Z = [0 0 1];
             P = [agent.pose - [0,0],0];
