@@ -1,24 +1,23 @@
-%% Get Velocity Obstacle Side Vector
-
-%Description: Given a centralAgent and its neighbor, finds a vector
-%parallel to the side of the VO that centralAgent should pass on.
-
-%Proof of Correctness: Analytic Shape of Velocity Obstacles in Google Drive
-
-%Parameters:
+%% getVOSideVector: Get Velocity Obstacle Side Vector
+% Description: Given a centralAgent and its neighbor, finds a vector
+% parallel to the side of the VO that centralAgent should pass on.
+%
+% Proof of Correctness: Analytic Shape of Velocity Obstacles in Google Drive
+%
+% Parameters:
 %   relP: A 1x2 double for the relative position
 %       neighborPostion - centralAgentPosition
 %   relV: A 1x2 double for the relative velocity
 %       centralAgentVelocity - neighborVelocity
 %   radSum: A double for the sum of their radii
-
-%Returns:
+%
+% Returns:
 %   voSideVector: A 1x2 double pointing in the direction of the side of the
 %       velocity obstacle.
 %   normalVector: A 1x2 double pointing perpendicularly away from the
 %       closest side of that velocity obstacle.
-
-%Edge Case:
+%
+% Edge Case:
 %   norm(relP) < radSum: In this case, the agents are already intersecting,
 %       which would mathematically mean that the velocity obstacle expands
 %       to the entire 2D plane. Instead of throwing an error when that

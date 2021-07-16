@@ -1,11 +1,11 @@
-%% Acceleration Controller w/ PotentField
-
-%Desription: Sets the agents velocityControl based on the controller in
-%Acceleration Controller Formulation and Analysis in Google Drive. Then
-%applies a PFM to separate the agents.
-
-%Paraemters: agent: A 1x1 Agent handle
+%% accelerationController: Acceleration Controller
+%
+% Description: Sets the agents' velocityControl based on the controller in
+% Acceleration Controller Formulation and Analysis in Google Drive
+%
+% Paraemters: agent: A 1x1 Agent handle
 function accelerationController(agent)
+    %Sets constants for the controller behavior
     transCost = 5;
     safetyMargin = 1.2;
     avoidPriority = 3;
