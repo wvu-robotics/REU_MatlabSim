@@ -11,33 +11,42 @@ run('register_variables_for_function.m');
                         % Searching = 7                 ; w = $2
                         % Gathering = 8                 ; w = $5
                         % Shut-down (battery = 1%) = 9  ; w = -$2
+for i = 1:length(Agent1.measuredAgents)
+if Agent1.measuredAgents(i).getProperty('isEnemy') == true
+    invader_detected = 1;
+    fprintf('Invader Detected\n');
+end
+end
 run('state_machine.m');
-current_state = 2;
 % Agent1.setProperty("Battery_Life",battery_life);
 % Agent1.setProperty("Distance_From_Home",distance_from_home);
 % Agent1.setProperty("Distance_From_Invader",distance_from_invader);
-% Agent1.getProperty("Battery_Life");
-% Agent1.getProperty("Distance_From_Home");
-% Agent1.getProperty("Distance_From_Invader");
+% Agent1.getProperty("Battery_Life")
+% Agent1.getProperty("Distance_From_Home")
+% Agent1.getProperty("Distance_From_Invader")
 for i = 1:length(Agent1.measuredAgents) % 2 since invader is Agent #1
-    
     if current_state == 0 || current_state == 1 %revisit this one
-        
         Agent1.velocityControl= 0;
+        if current_state == 1
+            fprintf('State: On Alert\n')
+        elseif current_state == 0
+            fprintf('State: Idle\n')
+        end
         
     elseif current_state == 2
         
         if Agent1.measuredAgents(i).getProperty('isEnemy') == true
-%             maginvader = norm(Agent1.pose - Agent1.measuredAgents(i).pose);
-%             maggoal = norm(Agent1.pose - Agent1.goalPose); 
-%             maginvadergoal = norm(Agent1.measuredAgents(i).pose - Agent1.goalPose);
-%             
-%             if maginvader > 35 || maggoal < 5 || maginvadergoal < 10
-%                 current_state = 5;
-%             else
+            maginvader = norm(Agent1.pose - Agent1.measuredAgents(i).pose);
+            maggoal = norm(Agent1.pose - Agent1.goalPose); 
+            maginvadergoal = norm(Agent1.measuredAgents(i).pose - Agent1.goalPose);
+            
+            if maginvader > mapSize || maggoal < 5 || maginvadergoal < 10
+                current_state = 5;
+            else
                 x = objectFlow1(Agent1.measuredAgents(i).pose, Agent1.pose,1000000);
                 Agent1.velocityControl= 5*(x/norm(x));
-%             end
+                fprintf('State: In Pursuit\n')
+            end
         end
         
     elseif current_state == 3 % state machine should not be outputting this
@@ -45,10 +54,11 @@ for i = 1:length(Agent1.measuredAgents) % 2 since invader is Agent #1
        
     elseif current_state == 4
         Agent1.velocityControl = Agent1.calcIdealUnitVec * 5;
+        fprintf('State: Returning Home\n')
         
     elseif current_state == 5
         y = norm(Agent1.goalPose - Agent1.pose);
-        if y > 4
+        if y > (mapSize/(mapSize/(15*agentRadius)))
             Agent1.velocityControl = Agent1.calcIdealUnitVec * 5;
         else
             Z = [0 0 1];
@@ -60,22 +70,30 @@ for i = 1:length(Agent1.measuredAgents) % 2 since invader is Agent #1
         end
 
     elseif current_state == 6
-        Agent1.velocityControl= 0;
+        Agent1.velocityControl = Agent1.calcIdealUnitVec * 5;
+        y = norm(Agent1.goalPose - Agent1.pose);
+        if y < 2
+            Agent1.velocityControl= 0;
+            fprintf('State: Charging\n')
+        end
 
     elseif current_state == 7 
-        x = Agent1.pose + randi([-8,10],1,2) - randi([-8,10],1,2) -5;
+        x = randi(mapSize,1,2);
         Agent1.velocityControl= 5*(x/norm(x));
+        fprintf('Status: Searching\n')
         % random walk around small area for searching 
         
     elseif current_state == 8
-%         jj = [5,5];
         Agent1.velocityControl = Agent1.calcIdealUnitVec * 5;
-%         Agent1.velocityControl = 5*(jj/norm(jj));
+        fprintf('State: Gathering\n')
+        
         % set course for current position to back home and subtract battery
         % life from percentage required to go back home. also have it go
         % back to original position
     elseif current_state == 9
         Agent1.velocityControl = Agent1.calcIdealUnitVec * 5;
+        fprintf('State: Shutdown\n')
+        fprintf('Robot died %.2f ft. from home.\n',outstanding_distance)
         % set course headed back home but only let it get as far as its
         % battery will take it. have it "die" when its battery reaches
         % zero.

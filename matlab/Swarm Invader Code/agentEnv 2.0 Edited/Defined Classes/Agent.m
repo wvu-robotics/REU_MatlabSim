@@ -13,12 +13,17 @@ classdef Agent < handle
        color = [0 0 0];
        measuredAgents = Agent.empty;
        measuredObstacle = staticObstacle.empty;
-       measuringRange = 1000;
+       measuringRange = 10000;
        maxSpeed = .5;
        idealSpeed = 1;
        heading = 0;
        broadCollisionSpace;
-       needsUpdate = false;
+       needsUpdate = false;  
+       %ros
+       publisher;
+       subscriber;
+       msgPub;
+       msgSub;
     end
     
     properties (Access = private)  
@@ -131,6 +136,18 @@ classdef Agent < handle
         function id = getID(obj)
             id = obj.id;
         end
-    end
+        
+        %ros
+        function setUpPublisher(obj,topic)
+            obj.publisher = rospublisher(topic);
+            obj.msgPub = rosmessage(obj.publisher);
+        end
+        
+        function setUpSubscriber(obj,topic)
+            obj.subscriber = rossubscriber(topic);
+            obj.msgSub = rosmessage(obj.subscriber);
+        end
+        
+        end
 end
 

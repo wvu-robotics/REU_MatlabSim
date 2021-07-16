@@ -6,7 +6,6 @@ classdef Agent < handle
        pose = [0 0];
        velocity = [0 0];
        velocityControl = [0 0];
-       angularVelocityControl = 0;
        path; 
        pathColor;
        previousHeading;
@@ -14,7 +13,7 @@ classdef Agent < handle
        color = [0 0 0];
        measuredAgents = Agent.empty;
        measuredObstacle = staticObstacle.empty;
-       measuringRange = 1000;
+       measuringRange = 10;
        maxSpeed = .5;
        idealSpeed = 1;
        heading = 0;
@@ -25,6 +24,8 @@ classdef Agent < handle
        subscriber;
        msgPub;
        msgSub;
+       extraProperties = cell.empty;
+       extraPropertyList = string.empty;
     end
     
     properties (Access = private)  
@@ -34,8 +35,7 @@ classdef Agent < handle
         radius = 1;
         controller;
         timeStep; 
-        extraProperties = cell.empty;
-        extraPropertyList = string.empty;
+        
     end
     
     methods

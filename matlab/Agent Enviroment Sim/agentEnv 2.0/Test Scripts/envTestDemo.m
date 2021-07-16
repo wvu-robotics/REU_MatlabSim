@@ -2,7 +2,7 @@ clc
 clear
 close all
 %   World Building
-numberOfAgents = 10;
+numberOfAgents = 20;
 timeStep = .01;
 mapSize = 20;
 counter = 0;
@@ -37,7 +37,7 @@ ENV.realTime = false;
 ENV.agentIdVisibility(true);
 
 while(true)
-    %Simulates one timestep
+    %Simulates one timestep   
     ENV.tick; 
     counter = counter + timeStep;
     fprintf("Time: %.3f \n",counter)
