@@ -67,7 +67,7 @@ classdef World < handle % handle to make objects callable by reference
                        end
                    end
                case 'opposingGroups'
-                   if neededBots <= 10
+                   if neededBots <= 1
                       return;
                    end
                    prevLength = length(obj.robot_list);
@@ -159,7 +159,7 @@ classdef World < handle % handle to make objects callable by reference
                 
                 RGB = obj.robot_list(i).RGB;
                 %RGB = RGB/256;
-                plot(obj.depotLocs(:,1),obj.depotLocs(:,2),'py','MarkerSize', 10,'MarkerFace', [1,1,0]);
+%                plot(obj.depotLocs(:,1),obj.depotLocs(:,2),'py','MarkerSize', 10,'MarkerFace', [1,1,0]);
                 plot(obj.robot_list(i).truex, obj.robot_list(i).truey, '.', 'MarkerEdge', RGB, 'MarkerSize', 25);
                 set(gca,'Color','k');
             end
