@@ -6,9 +6,9 @@ function testControllerEnemySinkSource(Agent1)
         diffPose = diffPose/norm(diffPose);
         desired_Vel = desired_Vel - diffPose;
     end
-    desired_Vel = desired_Vel + Agent1.calcIdealUnitVec*norm(Agent1.pose - Agent1.goalPose);
-  
+    desired_Vel = (desired_Vel/norm(desired_Vel)) + Agent1.calcIdealUnitVec*norm(Agent1.pose - Agent1.goalPose);
     Agent1.velocityControl = 5*(desired_Vel/norm(desired_Vel));
+%     Agent1.velocityControl = 0;
     end
 
     

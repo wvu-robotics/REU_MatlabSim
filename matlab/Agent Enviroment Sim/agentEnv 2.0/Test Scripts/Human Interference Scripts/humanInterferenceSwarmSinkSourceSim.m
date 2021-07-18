@@ -1,18 +1,27 @@
 clc
 clear
 close all
+jj=0;
+F = figure;
+[X,Y] = meshgrid(-25:.2:25 , -25:.2:25 );
+Z = zeros(length(X(:,1)),length(X(1,:)));
+Z(1,1) =1;
+[~,c] = contour(X,Y,Z, 'ShowText', 'on');%-1:.5:1
+global COUNTOUR_IN
+COUNTOUR_IN = [1,2,3];
+
+
 %   World Building
-numberOfAgents = 100;
+numberOfAgents = 10;
 agentRadius = .1;
-timeStep = .5;
-mapSize = 100;
-counter = 0;
- shape = circle (.2);
+timeStep = .05;
+mapSize = 25;
+shape = circle (.2);
 %  *[-2,-1;-2,1;2,1;2,-1];
 
 
-f(1)={@testControllerEnemySinkSource};
-% f(1)={@testControllerEnemySinkSource2};
+% f(1)={@testControllerEnemySinkSource};
+f(1)={@testControllerEnemySinkSource2};
 for i =2:numberOfAgents
    f(i) = {@testController5}; 
 end    
@@ -50,16 +59,21 @@ ENV.createStaticObstacle(rectangle,[-l/2,0],pi/2,4);
 
 
 %Optional Features
-ENV.collisionsOn(true);
+ENV.collisionsOn(false);
 ENV.pathVisibility(false);
 ENV.realTime = false;
 ENV.agentIdVisibility(false);
-
+counter = 0;
 while(true)
     ENV.tick;
+    set(c,"ZData", COUNTOUR_IN);
+    
     counter = counter + timeStep;
     fprintf("Time: %.3f \n",counter)
-
+    if counter > 10
+        break
+    end
+%     run('evolvingvariables.m');
     %change goal locations
 %     for i = 1:numberOfAgents
 %         theta = 2*pi/numberOfAgents * (i-1) + (pi/8)*counter;

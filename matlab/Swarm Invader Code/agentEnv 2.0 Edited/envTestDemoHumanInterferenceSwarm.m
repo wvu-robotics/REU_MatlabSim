@@ -5,11 +5,13 @@ close all
 numberOfAgents = 50;
 agentRadius = .5;
 timeStep = .05;
-mapSize = 60;
+mapSize = 25;
 counter = 0;
 shape = circle (.25);
 % shape=.25*[-2,-1;-2,1;2,1;2,-1];
-safetyMargin = 5;
+safetyMargin = 2;
+Home = [mapSize-5,mapSize-5];
+run('defined_variables.m');
 
 
 f(1)={@testControllerEnemy1};
@@ -58,7 +60,7 @@ ENV.createStaticObstacle(rectangle,[-l/2,0],pi/2,4);
 
 
 %Optional Features
-ENV.collisionsOn(true);
+ENV.collisionsOn(false);
 ENV.pathVisibility(false);
 ENV.realTime = false;
 ENV.agentIdVisibility(false);
@@ -67,6 +69,7 @@ while(true)
     ENV.tick;
     counter = counter + timeStep;
     fprintf("Time: %.3f \n",counter)
+    run('evolvingvariables.m');
 
     %change goal locations
 %     for i = 1:numberOfAgents

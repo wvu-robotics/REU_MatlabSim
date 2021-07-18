@@ -6,6 +6,7 @@ classdef Agent < handle
        pose = [0 0];
        velocity = [0 0];
        velocityControl = [0 0];
+       angularVelocityControl = 0;
        path; 
        pathColor;
        previousHeading;
@@ -18,7 +19,12 @@ classdef Agent < handle
        idealSpeed = 1;
        heading = 0;
        broadCollisionSpace;
-       needsUpdate = false;
+       needsUpdate = false;  
+       %ros
+       publisher;
+       subscriber;
+       msgPub;
+       msgSub;
     end
     
     properties (Access = private)  
@@ -131,6 +137,18 @@ classdef Agent < handle
         function id = getID(obj)
             id = obj.id;
         end
-    end
+        
+        %ros
+        function setUpPublisher(obj,topic)
+            obj.publisher = rospublisher(topic);
+            obj.msgPub = rosmessage(obj.publisher);
+        end
+        
+        function setUpSubscriber(obj,topic)
+            obj.subscriber = rossubscriber(topic);
+            obj.msgSub = rosmessage(obj.subscriber);
+        end
+        
+        end
 end
 

@@ -1,18 +1,18 @@
-%% Acceleration Controller w/ PotentField
-
-%Desription: Sets the agents velocityControl based on the controller in
-%Acceleration Controller Formulation and Analysis in Google Drive. Then
-%applies a PFM to separate the agents.
-
-%Paraemters: agent: A 1x1 Agent handle
+%% accelerationController: Acceleration Controller
+%
+% Description: Sets the agents' velocityControl based on the controller in
+% Acceleration Controller Formulation and Analysis in Google Drive
+%
+% Paraemters: agent: A 1x1 Agent handle
 function accelerationController(agent)
+    %Sets constants for the controller behavior
     transCost = 5;
     safetyMargin = 1.2;
     avoidPriority = 3;
     
     %Sets the preferred velocity to point to the goalPose at the idealSpeed
     preferredVelocity = agent.calcIdealUnitVec() * agent.idealSpeed;
-    
+        
     %Sets acceleration to [0,0] initially
     accel = [0,0];
     
@@ -42,7 +42,10 @@ function accelerationController(agent)
             minPoint = lineArgmin(voSideVector, agent.measuredAgents(i).velocity, preferredVelocity, transCost);
             
             %Adds acceleration toward that point that minimizes
-            accel = accel + avoidPriority * (minPoint - agent.velocity) ./ (time * norm(minPoint - agent.velocity));
+            %ovalMetric(transCost, prefVelocities(i,:), minPoint)
+            if norm(minPoint - agent.velocity) > 0
+                accel = accel + avoidPriority * (minPoint - agent.velocity) ./ (time * norm(minPoint - agent.velocity));
+            end
         end
     end
     
@@ -58,7 +61,7 @@ function accelerationController(agent)
     for i = 1:length(agent.measuredAgents)
         
         %Calculates the distance between agents and safe distance.
-        radSum = agent.getRadius() + agent.measuredAgents.getRadius();
+        radSum = agent.getRadius() + agent.measuredAgents(i).getRadius();
         safeDist = radSum * safetyMargin;
         relP = agent.measuredAgents(i).pose - agent.pose;
         
