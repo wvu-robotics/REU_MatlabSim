@@ -4,7 +4,7 @@ clc
 close all
 
 %Defines the constants for World Building
-numberOfAgents = 9;
+numberOfAgents = 5;
 agentRadius = 1;
 mapSize = 10;
 timeStep = .05;
@@ -36,18 +36,14 @@ end
 goalPath(:,:,pathLength) = -initPositions;
 goalLocations = goalPath(:,:,1);
 
-%Captures statistics and measurements for analysis
-goalDistances = zeros(numberOfAgents,pathLength);
-goalDistances(:,1) = vecnorm(goalPath(:,:,1) - initPositions,2,2);
-for i = 2:pathLength
-    goalDistances(:,i) = vecnorm(goalPath(:,:,i) - goalPath(:,:,i-1),2,2);
-end
-
 travelTimes = zeros(numberOfAgents,pathLength);
 
 ENV = agentEnv(numberOfAgents, @accelerationController, mapSize, timeStep);
 
 for i = 1:numberOfAgents
+    ENV.agents(i).maxSpeed = 2;
+    ENV.agents(i).idealSpeed = .5;
+    ENV.agents(i).measuringRange = 20;
     ENV.agents(i).setShape(circle(agentRadius));
     ENV.setAgentColor(i,[0,0,1]);
     ENV.updateCollisionList('A',i);
@@ -55,7 +51,7 @@ end
 
 ENV.setAgentPositions(initPositions);
 ENV.setGoalPositions(goalLocations);
-ENV.setAgentVelocities(zeros(numberOfAgents,2));
+ENV.pathVisibility(false);
 ENV.realTime = false;
 
 ENV.updateEnv; %required after each agent is finally initialized
@@ -66,22 +62,25 @@ while min(pathCounters) <= pathLength
     %Increments the times that it took to get to the goals
     for i = 1:numberOfAgents
         if pathCounters(i) <= pathLength
-            travelTimes(i,pathCounters(i)) = travelTimes(i,pathCounters(i)) + 1
+            travelTimes(i,pathCounters(i)) = travelTimes(i,pathCounters(i)) + 1;
         end
     end
     
     %Moves goal location to the next goal on the path once they reach it
     for i = 1:numberOfAgents
-        if pathCounters(i) < pathLength
-            if norm(ENV.agents(i).pose - goalLocations(i,:)) < agentRadius
-                pathCounters(i) = pathCounters(i) + 1;
-                goalLocations(i,:) = goalPath(i,:,pathCounters(i));
+        %If agent i has reached its goal.
+        if norm(ENV.agents(i).pose - goalLocations(i,:)) < agentRadius
+            %If the agent hasn't finished its journey
+            if pathCounters(i) < pathLength
+                goalLocations(i,:) = goalPath(i,:,pathCounters(i)+1);
                 ENV.setGoalPositions(goalLocations);
             end
-        elseif pathCounters(i) == pathLength
-            if norm(ENV.agents(i).pose - goalLocations(i,:)) < agentRadius
+            %If the agent has just reached one of its waypoints
+            if pathCounters(i) <= pathLength
                 pathCounters(i) = pathCounters(i) + 1;
             end
         end
     end
 end
+
+ENV.playback('C:\Users\drubel\Documents\MATLAB\REU_MatlabSim\matlab\Collision Avoidance Sim\');

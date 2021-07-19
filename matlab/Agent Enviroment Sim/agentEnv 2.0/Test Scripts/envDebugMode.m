@@ -3,23 +3,27 @@ clc
 close all
 
 %   World Building
-numberOfAgents = 2;
+numberOfAgents = 5;
 agentRadius = 1;
 timeStep = .05;
 mapSize = 10;
+safetyMargin = 1.2;
 
-% Uniform Antipodal Swap %
+% Random Antipodal Swap %
 initPositions = zeros(numberOfAgents, 2);
 goalLocations = zeros(numberOfAgents, 2);
 for i = 1:numberOfAgents
-    theta = 2*pi/numberOfAgents * (i-1);
-    initPositions(i,:) = [cos(theta),sin(theta)]*mapSize*(.9+(rand()-0.5)*.1);
-    goalLocations(i,:) = [cos(theta+3.9*pi/4),sin(theta+3.9*pi/4)]*mapSize*(.9+(rand()-0.5)*.1);
+    theta = rand()*2*pi;
+    initPositions(i,:) = [cos(theta),sin(theta)]*mapSize*(.7+(rand()-0.5)*.2);
+    goalLocations(i,:) = [cos(theta+pi),sin(theta+pi)]*mapSize*(.7+(rand()-0.5)*.2);
 end
 
-ENV = agentEnv(numberOfAgents, @ORCAController, mapSize, timeStep);
+ENV = agentEnv(numberOfAgents, @accelerationController, mapSize, timeStep);
 
 for i = 1:numberOfAgents
+    ENV.agents(i).maxSpeed = 2;
+    ENV.agents(i).idealSpeed = .5;
+    ENV.agents(i).measuringRange = 20;
     ENV.agents(i).setShape(circle(agentRadius));
     ENV.setAgentColor(i,[0,0,1]);
     ENV.updateCollisionList('A',i);

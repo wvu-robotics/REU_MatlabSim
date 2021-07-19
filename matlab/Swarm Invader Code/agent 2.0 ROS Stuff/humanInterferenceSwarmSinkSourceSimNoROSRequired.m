@@ -64,7 +64,7 @@ ENV.createStaticObstacle(rectangle,[-l/2,0],pi/2,4);
 
 
 %Optional Features
-ENV.collisionsOn(false);
+ENV.collisionsOn(true);
 ENV.pathVisibility(false);
 ENV.realTime = false;
 ENV.agentIdVisibility(true);

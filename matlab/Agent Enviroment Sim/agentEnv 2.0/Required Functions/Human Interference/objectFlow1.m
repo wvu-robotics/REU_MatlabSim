@@ -24,7 +24,7 @@ Y = defendposxy(2);
 % Vyi = Vx1*sin(atan2(-vi,-ui) + 2*pi) + Vy1*cos(atan2(-vi,-ui) + 2*pi);
 
 [U2,V2,PSI11,PHI2] = objectFlow(xi,yi,xi,yi,S,X,Y);
-[Vx2,Vy2,Psi,Phi] = sourceFlow(0,0,-S/100,X,Y);
+[Vx2,Vy2,Psi,Phi] = sourceFlow(0,0,-S/45,X,Y);
 Vxi=U2 + Vx2;
 Vyi = V2 + Vy2;
 
@@ -34,7 +34,7 @@ Vyi = V2 + Vy2;
 PHI = PHI2 + Phi;
 PSI = PSI1 + Psi;
 COUNTOUR_IN =  PSI;
-%stream_display(PSI,X,Y);
+% stream_display(PSI,X,Y);
 
 V_direction = [Vxi Vyi];
 end

@@ -10,7 +10,7 @@ parameters = newParameters;
 %% Setting Up Sim
 %   World Building
 numberOfAgents = 20;
-agentRadius = .2;
+agentRadius = .3;
 timeStep = .1;
 mapSize = 10;
 counter = 0;
@@ -31,12 +31,20 @@ ENV = agentEnv(numberOfAgents,agentRadius,mapSize,timeStep);
 
 %Spawn the agents using a custom spawn function
 [initPositions, goalLocations] = FewParamSpawn(numberOfAgents, spawnType, mapSize);
+ENV.realTime = false;
+
+shape = circle(agentRadius);
+for i = 1:numberOfAgents
+    ENV.agents(i).setShape(shape);
+    ENV.setAgentColor(i,[0 1 0]);
+end
 
 %set some variables in the environment
 ENV.setAgentPositions(initPositions);
 ENV.setGoalPositions(goalLocations);
 ENV.setAgentVelocities(zeros(numberOfAgents,2));
 ENV.realTime = false;
+ENV.collisionsOn(true);
 ENV.pathVisibility(false)
 
 %Set some variables for each agent
@@ -51,6 +59,7 @@ end
 
 %% Running Sim
 cost = 0;
+ENV.updateEnv;
 while(true)
    params(1) = parameters(1);
    params(2) = parameters(2);
@@ -64,6 +73,7 @@ while(true)
       ENV.agents(i).setProperty('parameters',params);
    end
     customTick(ENV, timeStep, display, f, mapSize);
+    %ENV.tick();
     counter = counter + 1;
     fprintf("Time: %i \n",counter)
     if counter > timeSteps
@@ -75,6 +85,7 @@ end
 
 %% Required Functions
     function customTick(ENV, timeStep, display, f, mapSize)
+        
             for ii = 1:length(ENV.agents)
                 ENV.agents(ii).callMeasurement(ENV);
                 ENV.agents(ii).callController;
