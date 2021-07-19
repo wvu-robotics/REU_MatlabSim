@@ -308,6 +308,13 @@ classdef Robot
                 phi = atan2(ROBOTS(L).position_t(2)- ROBOTS(r).position_t(2), ROBOTS(L).position_t(1)- ROBOTS(r).position_t(1)); % truth
                 phi = phi + normrnd(0,ROBOTS(r).sigmaHeading,1,1); %noise
                 phi = phi + angdiff(ROBOTS(r).position_e(3), ROBOTS(r).position_t(3)); %bias
+                %phi = mod(phi,2*pi);
+                
+%                 if phi > pi
+%                     phi = phi - 2*pi;
+%                 elseif phi < -pi
+%                     phi = phi + 2*pi;
+%                 end
                 
                 dists = [dists, d];
                 angles = [angles, phi];
@@ -350,7 +357,7 @@ classdef Robot
                     else
                         P{i,j} = ROBOTS(i).P{i,j};
                     end
-                    %
+                    
                 end
             end
         end
@@ -358,9 +365,6 @@ classdef Robot
         function [states, covars] = get_locations(obj, ROBOTS)
             
             numbots = length(ROBOTS);
-            x1 = obj.X{obj.ID}(1);
-            y1 = obj.X{obj.ID}(2);
-            yaw1 = mod(obj.X{obj.ID}(3),2*pi);
             states = obj.X{obj.ID};
             covars = obj.P{obj.ID,obj.ID};
             for L = 1:numbots % other robot
@@ -373,8 +377,19 @@ classdef Robot
                     
                     x1_2 = obj.X{L}(1) + d1_2 * cos(phi1_2);
                     y1_2 = obj.X{L}(2) + d1_2 * sin(phi1_2);
-                    yaw1_2 = obj.X{obj.ID}(3) + phi2_1 - phi1_2 - pi;
-                    yaw1_2 = mod(yaw1_2,2*pi);
+                    yaw1_2 = obj.X{obj.ID}(3) + angdiff(phi2_1,phi1_2+pi);
+                    
+                    if abs(yaw1_2-obj.X{obj.ID}(3)) > .000001
+                       disp("yaw estimation error"); 
+                    end
+                    
+%                     if yaw1_2 > pi
+%                         yaw1_2 = yaw1_2 - 2*pi;
+%                     elseif yaw1_2 < -pi
+%                         yaw1_2 = yaw1_2 + 2*pi;
+%                     end
+                    
+                   % yaw1_2 = mod(yaw1_2,2*pi);
                     R = diag([obj.sigmaRange, obj.sigmaRange,obj.sigmaHeading]);
                     
                     states(:,end+1) = [x1_2;y1_2;yaw1_2];
@@ -532,7 +547,22 @@ classdef Robot
                 disp('did covariance intersection with robot')
                 disp(obj.ID)
                 
-                [mean_pose,covar] = fusecovint(states,covars);
+                %---------------------------FAST CI
+                %[mean_pose,covar] = fusecovint(states,covars);
+                [mean_pose,covar] = fast_CI(states,covars);
+                temp = zeros(3,3);
+                temp(1,1) = covar(1,1);
+                temp(2,2) = covar(2,2);
+                temp(3,3) = covar(3,3);
+                covar = temp;
+                
+                
+                
+                %---------------------------------------------
+                if norm(mean_pose' - obj.path_e(end,:)) > 4
+                   disp("very bad"); 
+                end
+                
                 pause(.00001);
                 obj.position_e = mean_pose';
                 obj.covariance_e = covar;
@@ -566,6 +596,7 @@ classdef Robot
             %-------------------------dead reckoning update---------------
             new_theta = obj.position_e(3) + obj.yaw_rate_m*obj.dt;
             obj.velocity_e = obj.vel_m*[cos(new_theta), sin(new_theta)];
+            %new_theta = mod(new_theta,2*pi);
             obj.position_e = [obj.position_e(1:2) + obj.velocity_e*obj.dt, new_theta];
             
             F_d = [1,0,-obj.vel_m*sin(new_theta)*obj.dt;  % X
@@ -693,6 +724,7 @@ classdef Robot
                 obj.covariance_e = obj.covariance_d;
                 obj.position_d = obj.position_t; % + normrnd(0,.001,1,3);
                 obj.position_e = obj.position_d;
+               % obj.position_e(3) = mod(obj.position_e(3),2*pi);
                 
                 %get color particles
                 if home_dist < home_range %within 5 squares
@@ -792,10 +824,10 @@ classdef Robot
             for r = 1:numBots
                 % plot truth data-----------------------------------------
                 
-                plot(ROBOTS(r).path_t(end-1,1), ROBOTS(r).path_t(end-1,2), 'ks');
+                plot(ROBOTS(r).path_t(end,1), ROBOTS(r).path_t(end,2), 'ks');
                 hold on;
                 if show_detection_rng
-                    viscircles([ROBOTS(r).path_t(end-1,1),ROBOTS(r).path_t(end-1,2)],range);
+                    viscircles([ROBOTS(r).path_t(end,1),ROBOTS(r).path_t(end,2)],range);
                     hold on;
                 end
                 %plot estimated position and color-------------------------------------------
@@ -857,7 +889,6 @@ classdef Robot
             
             pause(.0001);
         end
-        
-        
+               
     end
 end
