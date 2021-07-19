@@ -18,6 +18,7 @@ if Agent1.measuredAgents(i).getProperty('isEnemy') == true
 end
 end
 run('state_machine.m');
+current_state = 2;
 % Agent1.setProperty("Battery_Life",battery_life);
 % Agent1.setProperty("Distance_From_Home",distance_from_home);
 % Agent1.setProperty("Distance_From_Invader",distance_from_invader);
@@ -43,7 +44,7 @@ for i = 1:length(Agent1.measuredAgents) % 2 since invader is Agent #1
             if maginvader > mapSize || maggoal < 5 || maginvadergoal < 10
                 current_state = 5;
             else
-                x = objectFlow1(Agent1.measuredAgents(i).pose, Agent1.pose,1000000);
+                x = objectFlow2(Agent1.measuredAgents(i).pose, Agent1.pose,1000000,Agent1);
                 Agent1.velocityControl= 5*(x/norm(x));
                 fprintf('State: In Pursuit\n')
             end
