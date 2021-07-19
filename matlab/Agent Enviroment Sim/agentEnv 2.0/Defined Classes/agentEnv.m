@@ -555,7 +555,7 @@ classdef agentEnv < handle
                 end
                 close(writerObj);
             else
-                print('ERROR: Invalid path');
+                disp('ERROR: Invalid path');
             end
         end
         
