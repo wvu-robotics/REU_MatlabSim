@@ -2,7 +2,7 @@ clear
 clc
 close all
 
-load('Results/results2.m','-mat');
+load('C:\Users\Stephen Jacobs\Documents\GitHub\REU_MatlabSim\matlab\ColorFollowers\Vector Optimization\FewParameters/Results/results2.m','-mat');
 %load('secondResults.m','-mat');
 %load('thirdResults.m','-mat');
 %load('results/fourthResults.m','-mat');

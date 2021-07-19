@@ -1,19 +1,19 @@
-%script to start simulation
+%script to start simulation  
 clc;
 clear;
 close all;
 
 timeStep = 2;
 worldSize = 200;
-init_num_bots = 50;
+init_num_bots = 20;
 
 %spawnType = 'random';
 % spawnType = 'singleCoordinated';
 % spawnType = 'doubleCoordinated';
-%spawnType = 'opposingGroups';
+spawnType = 'opposingGroups';
 %spawnType = 'depot';
 %spawnType = 'multiDepot';
-spawnType = 'starDepot';
+%spawnType = 'starDepot';
 
 %Set up simluation
 world1 = World(timeStep, worldSize, spawnType, init_num_bots);
@@ -24,7 +24,7 @@ for i = 1:1
     for ii=1:2000 %simulation ticks
         fprintf('Iteration %.0f\n', ii);
         world1.tick();
-        pause(.01);
+        pause(0.01);
         
         
           F(ii) = getframe(gcf);

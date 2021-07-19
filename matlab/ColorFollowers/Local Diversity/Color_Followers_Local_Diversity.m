@@ -23,8 +23,8 @@ clc
 %spawnType = 'OpposingCoordinatedSpawn';
 %==================================================================
 
-numAgents = 1000; %number of agents
-mapSize = 100; %x and y dimension of map
+numAgents = 2000; %number of agents
+mapSize = 300; %x and y dimension of map
 sensingRadius = 8; %Radius of sensing range for each agent (square sensing range)
 maxNeighborToGoalForceRatio = 0.5; %Ratio of the force from the goal point to the force exerted by one agent of the same color
 movePerStepFraction = 8/10;

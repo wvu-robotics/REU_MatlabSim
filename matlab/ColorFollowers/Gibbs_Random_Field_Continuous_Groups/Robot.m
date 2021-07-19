@@ -13,7 +13,7 @@ classdef Robot < handle
         goalX = 1;
         goalY = 1;
         color = 1;
-        VMax = 0.5;
+        VMax = 0.9;
         sigma = 0.4;
         stepSize = 2;
         goalPotentialExp = 1.0;
@@ -43,7 +43,7 @@ classdef Robot < handle
         %------------------------------------------------
         
         neighborList;
-        sensingRange = 10;
+        sensingRange = 20;
         timeStep;
     end
     
@@ -295,7 +295,7 @@ classdef Robot < handle
             goalPotential = GoalPotential(obj, mcmcChain(1,:));
             potentialChain = KENeighbor + KESelf + CBPotential + OAPotential + goalPotential;
             
-            for i = 1:50
+            for i = 1:10
                
                 propVx = normrnd(obj.Vx, obj.sigma);
                 propVy = normrnd(obj.Vy, obj.sigma);
