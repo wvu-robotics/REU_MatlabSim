@@ -29,9 +29,9 @@ simu.initdistance = 5;   %distance between each pair of neighbot UAVs' initial p
  e_max = 2;          % maximum mean localization error
  cov_max = 2;       % maximum covariance norm
  show_detection_rng = 1;  %toggles on and off the detection range circles
- v_max = 5;
- rho_max = simu.N / (pi*range^2);
- Crhro = simu.N*range*v_max*simu.simulationTime/(100*100)
+ v_max = 5;         % maximum velocity
+ rho_max = simu.N / (pi*range^2); % maximum robot density
+ Crhro = simu.N*range*v_max*simu.simulationTime/(100*100)  %dynamic percent area coverage
 
  ROBOTS = create_robot_swarm(simu.N,simu.initdistance,range); %create an array of Boids models for the robots
  
@@ -52,7 +52,7 @@ for r = 1:simu.N
     ROBOTS(r).goal = [10*rand(1,1)+35, 10*rand(1,1)-35];
     ROBOTS(r).Kg = 1000;
     ROBOTS(r).found_goal = 0;
-    ROBOTS(r).estimator = 1; % just dead reckoning 
+    ROBOTS(r).estimator = 1; % change estimator here
 end
 
 figure()  %object to display the simulator

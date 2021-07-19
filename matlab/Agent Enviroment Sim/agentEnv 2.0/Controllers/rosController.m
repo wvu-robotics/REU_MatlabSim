@@ -1,7 +1,7 @@
+
 function rosController(agent) 
 agent.color = [1 0 0];
     global CURRENT_KEY_PRESSED 
-    CURRENT_KEY_PRESSED 
     switch CURRENT_KEY_PRESSED
         case "uparrow"
             agent.velocityControl = .5*[0,1];
