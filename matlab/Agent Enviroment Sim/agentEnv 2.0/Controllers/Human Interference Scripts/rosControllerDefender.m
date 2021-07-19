@@ -1,5 +1,5 @@
-function rosControllerEnemy(agent) 
-agent.color = [0 0 1];
+function rosControllerDefender(agent) 
+agent.color = [0 1 0];
     global CURRENT_KEY_PRESSED 
     switch CURRENT_KEY_PRESSED
         case "uparrow"
@@ -27,7 +27,5 @@ agent.color = [0 0 1];
         case "k"
             x = objectFlow1([1,1], agent.pose,1000000);
             agent.velocityControl= 5*(x/norm(x));
-        case "z"
-            agent.velocityControl=0;
     end
 end

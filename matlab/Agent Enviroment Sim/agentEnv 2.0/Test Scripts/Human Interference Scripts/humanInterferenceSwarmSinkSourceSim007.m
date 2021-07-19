@@ -1,15 +1,15 @@
 clc
 clear
 close all
-%  F = figure;
+F = figure;
 [X,Y] = meshgrid(-25:.2:25 , -25:.2:25 );
 Z = zeros(length(X(:,1)),length(X(1,:)));
 Z(1,1) =1;
 [~,c] = contour(X,Y,Z, 'ShowText', 'off');%-1:.5:1
 global COUNTOUR_IN
 COUNTOUR_IN = [0,0,0];
-%   World Building
-numberOfAgents = 3;
+%  World Building
+numberOfAgents = 5;
 agentRadius = .1;
 timeStep = .1;
 mapSize = 25;
@@ -26,8 +26,11 @@ env.setGoalPositions([5, 5]);
 % % env.agents(1).setUpPublisher('/turtle1/cmd_vel/');
 % % env.agents(1).setUpSubscriber('/turtle1/cmd_vel/');
 % % f(1)={@testControllerEnemySinkSource};
-%  f(1)={@testControllerEnemySinkSource2};
 f(1)={@rosControllerEnemy};
+% f(1)={@testControllerEnemySinkSource2};
+% for i =2:numberOfAgents
+%    f(i) = {@rosControllerDefender}; 
+% end    
 for i =2:numberOfAgents
    f(i) = {@testController5}; 
 end    
