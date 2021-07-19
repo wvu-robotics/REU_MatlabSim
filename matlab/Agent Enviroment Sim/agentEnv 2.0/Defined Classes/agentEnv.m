@@ -563,12 +563,16 @@ classdef agentEnv < handle
         function tickRos(obj)
             tStart = cputime;
             for i = randperm(obj.numberOfAgents)
-%                 obj.agents(i).msgSub = receive(obj.agents(i).subscriber);
-%                 
-%                 obj.agents(i).pose = [obj.agents(i).msgSub.Transform.Translation.X, ...
-%                                       obj.agents(i).msgSub.Transform.Translation.Y]; 
-%                                   
-%                  obj.agents(i).heading = wrapTo2Pi(2*asin(obj.agents(i).msgSub.Transform.Rotation.Z));
+                obj.agents(i).msgSub = receive(obj.agents(i).subscriber);
+                
+                obj.agents(i).pose = [obj.agents(i).msgSub.Transform.Translation.X, ...
+                                      obj.agents(i).msgSub.Transform.Translation.Y]; 
+                eulAngles = quat2eul([obj.agents(i).msgSub.Transform.Rotation.X, ...
+                             obj.agents(i).msgSub.Transform.Rotation.Y, ...
+                             obj.agents(i).msgSub.Transform.Rotation.Z, ...
+                             obj.agents(i).msgSub.Transform.Rotation.W]);
+                         
+                obj.agents(i).heading = eulAngles(3); 
                 obj.agents(i).callMeasurement(obj);          
                 obj.agents(i).callController;
                 contVel = obj.transform2D([obj.agents(i).velocityControl(1);
@@ -581,7 +585,7 @@ classdef agentEnv < handle
                 
                 obj.agents(i).heading = obj.agents(i).heading + obj.agents(i).angularVelocityControl*obj.timeStep;
                 obj.agents(i).pose = obj.findAgentControllerKinematics(i);
-                 send(obj.agents(i).publisher,obj.agents(i).msgPub);
+                  send(obj.agents(i).publisher,obj.agents(i).msgPub);
                 obj.updateAgentPath(i,obj.agents(i).pose);
             end
             obj.updateGraph;

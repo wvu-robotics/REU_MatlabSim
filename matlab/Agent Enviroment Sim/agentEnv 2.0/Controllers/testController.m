@@ -8,4 +8,3 @@ function testController(agent)
    colorVec = [.5*idealUnit+.5,.5];
    agent.color = colorVec;
 end
-
