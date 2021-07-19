@@ -16,7 +16,7 @@ safetyMargin = 1.2;
 
 %Initializes the goal position randomly in the world, and initial positions
 %around the boarder of the world
-pathLength = 2;
+pathLength = 5;
 goalPath = (mapSize-2*agentRadius)*(2*rand(numberOfAgents,2,pathLength)-1);
 
 %Initializes the initial positions around the boarder of the world

@@ -6,17 +6,17 @@
 % and returns data about the different simulations.
 % The times hold the number of time steps taken between goal positions.
 % The distances hold the distance traveled to get between waypoints.
-% The smoothness holds the amount of turning that an agent has done in rad
-% divided by the time that that agent took.
+% The smoothness holds the sum of squares of 
+% (turning angles / distance traveled) for each timestep.
 %
 % Parameters:
 %   goalPath: An Nx2xP double where the ith waypoint that the jth agent has
 %       to get to is goalPath(j,:,i). Agents must reach the ith waypoint
 %       before proceeding to the i+1st waypoint, and must stay put once
 %       they've reached their last waypoint. Ideally,
-%       -10 < goalPath(i,j,k) < 10.
+%       -mapSize < goalPath(i,j,k) < mapSize.
 %   initPositions: An Nx2 double where the ith agent starts at
-%       initPositions(i,:). Ideally, -10 < initPositions(i,j) < 10.
+%       initPositions(i,:). Ideally, -mapSize < initPositions(i,j) < mapSize.
 %   timeStep: A positive double for the amount of time between frames in
 %       the sims
 %   realTime: A boolean that determines whether the sim should or shouldn't
@@ -24,7 +24,7 @@
 %   mapSize: A positive double where the environment size will be -mapSize
 %       to mapSize in the both x and y axes.
 %   maxSpeed: A positive double for how fast an agent can go
-%   maxSpeed: A positive double for how fast an agent wants to go
+%   idealSpeed: A positive double for how fast an agent wants to go
 %   measuringRange: A positive double where an agent can only see other
 %       agents that are a maximum distance of measuringRange away
 %
@@ -92,6 +92,7 @@ function [ORCATimes, ORCADistances, ORCASmoothness, accelTimes, accelDistances, 
     %While some agents haven't made it to their last waypoint
     while min(pathCounters) <= pathLength
         ENV.tick();
+        collider(ENV.agents);
 
         %Increments the number of time steps each agents took to get to
         %their waypoints. If an agent has reached their last waypoint,
@@ -120,13 +121,26 @@ function [ORCATimes, ORCADistances, ORCASmoothness, accelTimes, accelDistances, 
             for i = 1:numberOfAgents
                 %If the agent hasn't finished their journey
                 if pathCounters(i) <= pathLength
-                    p2 = ENV.agents(i).path(end,:);
-                    p1 = ENV.agents(i).path(end-1,:);
-                    p0 = ENV.agents(i).path(end-2,:);
+                    %Finds the last two lines that agent i traveled along
+                    line2 = ENV.agents(i).path(end,:) - ENV.agents(i).path(end-1,:);
+                    line1 = ENV.agents(i).path(end-1,:) - ENV.agents(i).path(end-2,:);
                     
-                    %Adds to the amount agent i has turned
-                    if abs(dot(p2-p1,p1-p0) / (norm(p2-p1) * norm(p1-p0))) <= 1
-                        ORCASmoothness(i,pathCounters(i)) = ORCASmoothness(i,pathCounters(i)) + acos(dot(p2-p1,p1-p0) / (norm(p2-p1) * norm(p1-p0)));
+                    turningCos = dot(line2,line1) / (norm(line2) * norm(line1));
+                    
+                    %If the cosine of the turning angle is in [-1,1], which
+                    %should always be true
+                    if abs(turningCos) <= 1
+                        %Adds to the amount agent i has turned
+                        ORCASmoothness(i,pathCounters(i)) = ORCASmoothness(i,pathCounters(i)) + ( acos(turningCos) / (norm(line2) + norm(line1)) )^2;
+                        
+                    %If the agent somehow turned more than 180°
+                    elseif turningCos < -1
+                        %Adds the maximum amount of turning possible
+                        ORCASmoothness(i,pathCounters(i)) = ORCASmoothness(i,pathCounters(i)) + ( pi / (norm(line2) + norm(line1)) )^2;
+                    
+                    %If the agent somehow turns less than 0°
+                    %elseif 1 < turningCos
+                        %Adds nothing to the smoothness
                     end
                 end
             end
@@ -149,12 +163,7 @@ function [ORCATimes, ORCADistances, ORCASmoothness, accelTimes, accelDistances, 
                 end
             end
         end
-    end
-    
-    %Takes the average of the sum that is stored in ORCASmoothness
-    ORCASmoothness = ORCASmoothness ./ ORCATimes;
-    
-    
+    end    
     
     %Deletes the environment and closes all windows for the next sim 
     clear ENV;
@@ -225,13 +234,26 @@ function [ORCATimes, ORCADistances, ORCASmoothness, accelTimes, accelDistances, 
             for i = 1:numberOfAgents
                 %If the agent hasn't finished their journey
                 if pathCounters(i) <= pathLength
-                    p2 = ENV.agents(i).path(end,:);
-                    p1 = ENV.agents(i).path(end-1,:);
-                    p0 = ENV.agents(i).path(end-2,:);
+                    %Finds the last two lines that agent i traveled along
+                    line2 = ENV.agents(i).path(end,:) - ENV.agents(i).path(end-1,:);
+                    line1 = ENV.agents(i).path(end-1,:) - ENV.agents(i).path(end-2,:);
                     
-                    %Adds to the amount agent i has turned
-                    if abs(dot(p2-p1,p1-p0) / (norm(p2-p1) * norm(p1-p0))) <= 1
-                        accelSmoothness(i,pathCounters(i)) = accelSmoothness(i,pathCounters(i)) + acos(dot(p2-p1,p1-p0) / (norm(p2-p1) * norm(p1-p0)));
+                    turningCos = dot(line2,line1) / (norm(line2) * norm(line1));
+                    
+                    %If the cosine of the turning angle is in [-1,1], which
+                    %should always be true
+                    if abs(turningCos) <= 1
+                        %Adds to the amount agent i has turned
+                        accelSmoothness(i,pathCounters(i)) = accelSmoothness(i,pathCounters(i)) + ( acos(turningCos) / (norm(line2) + norm(line1)) )^2;
+                        
+                    %If the agent somehow turned more than 180°
+                    elseif turningCos < -1
+                        %Adds the maximum amount of turning possible
+                        accelSmoothness(i,pathCounters(i)) = accelSmoothness(i,pathCounters(i)) + ( pi / (norm(line2) + norm(line1)) )^2;
+                    
+                    %If the agent somehow turns less than 0°
+                    %elseif 1 < turningCos
+                        %Adds nothing to the smoothness
                     end
                 end
             end
@@ -255,9 +277,6 @@ function [ORCATimes, ORCADistances, ORCASmoothness, accelTimes, accelDistances, 
             end
         end
     end
-    
-    %Takes the average of the sum that is stored in ORCASmoothness
-    accelSmoothness = accelSmoothness ./ accelTimes;
     
     %Deletes the environment and closes all windows
     clear ENV;

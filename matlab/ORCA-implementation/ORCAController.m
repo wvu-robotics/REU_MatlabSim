@@ -47,7 +47,7 @@ function ORCAController(agent)
         %If no velocities are acceptable
         if sum(acceptability) == 0
             %Stops
-            avoidanceVelocity = [0,0];
+            agent.velocityControl = [0,0];
             
         %If there are acceptable velocities
         else
@@ -61,37 +61,12 @@ function ORCAController(agent)
             [~, bestVelocityIndex] = min(distFromPrefered);
             
             %Sets the velocityControls output to the best acceptable velocity
-            avoidanceVelocity = acceptableVelocities(bestVelocityIndex, :);
+            agent.velocityControl = acceptableVelocities(bestVelocityIndex, :);
         end
         
     %If there aren't any neighbors
     else
         %Does what it would do when alone
-        avoidanceVelocity = preferredVelocity;
+        agent.velocityControl = preferredVelocity;
     end
-    
-    %Finds acceleration toward the avoidanceVelocity
-    accel = avoidanceVelocity - agent.velocity;
-    if norm(accel) > 0
-        accel = accel ./ norm(accel);
-    end
-    
-    %Finds the potential force to separate agents
-    potent = [0,0];
-    
-    %For each neighbor
-    for i = 1:length(agent.measuredAgents)
-        
-        %Calculates the distance between agents and safe distance.
-        radSum = agent.getRadius() + agent.measuredAgents(i).getRadius();
-        safeDist = radSum * safetyMargin;
-        relP = agent.measuredAgents(i).pose - agent.pose;
-        
-        %If they are too close
-        if radSum < norm(relP) && norm(relP) < safeDist
-            potent = potent + (radSum^-2 * (safetyMargin - 1)^-2 - (norm(relP) - radSum)^-2) * relP ./ norm(relP);
-        end
-    end
-    
-    agent.velocityControl = agent.velocity + (agent.maxSpeed * accel + potent) * agent.getTimeStep();
 end
