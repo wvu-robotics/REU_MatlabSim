@@ -1,7 +1,7 @@
 clc
 clear
 close all
-F = figure;
+% F = figure;
 [X,Y] = meshgrid(-25:.2:25 , -25:.2:25 );
 Z = zeros(length(X(:,1)),length(X(1,:)));
 Z(1,1) =1;
