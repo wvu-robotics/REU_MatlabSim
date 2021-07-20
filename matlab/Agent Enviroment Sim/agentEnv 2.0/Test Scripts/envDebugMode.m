@@ -3,7 +3,7 @@ clc
 close all
 
 %   World Building
-numberOfAgents = 2;
+numberOfAgents = 15;
 agentRadius = 1;
 timeStep = .05;
 mapSize = 10;
@@ -18,6 +18,7 @@ for i = 1:numberOfAgents
     goalLocations(i,:) = [cos(theta+3.9*pi/4),sin(theta+3.9*pi/4)]*mapSize*(.9+(rand()-0.5)*.1);
 end
 % ============================================== %
+
 ENV = agentEnv(numberOfAgents, @ORCAController, mapSize, timeStep);
 
 for i = 1:numberOfAgents
@@ -32,11 +33,12 @@ end
 ENV.setAgentPositions(initPositions);
 ENV.setGoalPositions(goalLocations);
 ENV.pathVisibility(true);
-ENV.collisionsOn(true);
+ENV.collisionsOn(false);
 ENV.realTime = false;
 
 ENV.updateEnv; %required after each agent is finally initialized
 
 while true
     ENV.tick;
+    collider(ENV.agents);
 end
