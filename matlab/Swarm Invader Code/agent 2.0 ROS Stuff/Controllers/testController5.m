@@ -59,10 +59,20 @@ for i = 1:length(Agent1.measuredAgents) % 2 since invader is Agent #1
         
     elseif current_state == 5
         %Agent1.velocityControl = 5 * objectFlow2(Home, Agent1.pose,100,Agent1);
-       if Agent1.measuredAgents(i).getProperty('isEnemy') == true 
-           invadepos = Agent1.measuredAgents(i).pose;
+       for n = 1:length(Agent1.measuredAgents)
+        if Agent1.measuredAgents(i).getProperty('isEnemy') == true 
+           invaderpos = Agent1.measuredAgents(i).pose;
+           currentvel = 5*objectFlow2(invaderpos, Agent1.pose, Home, 100, Agent1);
+           currentvelmag = norm(currentvel);
+           if currentvelmag > 5*sqrt(2)
+               Agent1.velocityControl = [5,5];
+           elseif currentvelmag < -5*sqrt(2)
+               Agent1.velocityControl = [-5,-5];
+           else
+               Agent1.velocityControl = currentvel;
+           end
+        end
        end
-       Agent1.velocityControl = 5*objectFlow2([-80,-80], Agent1.pose, Home, 10000, Agent1);
 %         y = norm(Agent1.goalPose - Agent1.pose);
 %         if y >1 %(mapSize/(mapSize/(15*agentRadius)))
 %             Agent1.velocityControl = Agent1.calcIdealUnitVec * 5;

@@ -2,12 +2,12 @@ clc
 clear
 close all
 %   World Building
-numberOfAgents = 11;
-agentRadius = .5;
+numberOfAgents = 20;
+agentRadius = .2;
 timeStep = .05;
-mapSize = 100;
+mapSize = 20;
 counter = 0;
-shape = circle (.5);
+shape = circle (.2);
 Home = [0,0];
 run('defined_variables.m');
 global CURRENT_KEY_PRESSED 
@@ -64,7 +64,7 @@ ENV.createStaticObstacle(rectangle,[-l/2,0],pi/2,4);
 
 
 %Optional Features
-ENV.collisionsOn(false);
+ENV.collisionsOn(true);
 ENV.pathVisibility(false);
 ENV.realTime = false;
 ENV.agentIdVisibility(true);
