@@ -492,13 +492,21 @@ classdef agentEnv < handle
         function tick(obj)
             obj.checkIfUpdateIsNeeded;
             tStart = cputime;
-            for i = randperm(obj.numberOfAgents)
+            
+            %Gets measurements and velocity controls for each agent
+            for i = 1:obj.numberOfAgents
                 obj.agents(i).callMeasurement(obj);
-                obj.agents(i).callController; 
-                obj.updateCollisionList('A',i);    
-                obj.physics(i);   
+                obj.agents(i).callController;
             end
+            
+            %Handles kinematics and collision simulation for all agents
+            for i = randperm(obj.numberOfAgents)
+                obj.updateCollisionList('A',i);
+                obj.physics(i);
+            end
+            
             obj.updateGraph; %Can be put inside for loop but slower
+            
             tEnd = cputime - tStart;
             if obj.realTime
                 if tEnd > obj.timeStep
