@@ -2,7 +2,7 @@ clc
 clear
 close all
 %   World Building
-numberOfAgents = 20;
+numberOfAgents = 3;
 agentRadius = .2;
 timeStep = .05;
 mapSize = 20;

@@ -62,7 +62,7 @@ for i = 1:length(Agent1.measuredAgents) % 2 since invader is Agent #1
        for n = 1:length(Agent1.measuredAgents)
         if Agent1.measuredAgents(i).getProperty('isEnemy') == true 
            invaderpos = Agent1.measuredAgents(i).pose;
-           currentvel = 5*objectFlow2(invaderpos, Agent1.pose, Home, 100, Agent1);
+           currentvel = 5*objectFlow2(invaderpos, Agent1.pose, Home, 1000, Agent1);
            comp1 = currentvel(1);
            comp2 = currentvel(2);
            while comp1 > 5 || comp2 > 5 || comp1 < -5 || comp2 < -5
