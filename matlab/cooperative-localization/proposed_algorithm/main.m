@@ -21,6 +21,7 @@ simu.dt = .5; % time step size
 simu.simulationTime=100;   %flight duration (second)
 simu.accumulatedTime=0;  %first timestep
 
+
 simu.percentNoiseDifference =0.01; %slightly varies sigma per agent
 simu.sigmaVelocity=0.02;  %standard deviation of velocity errors (m/s)
 simu.sigmaYawRate=0.01*pi/180;    %standard deviation of yaw rate errors (rad/s)
@@ -28,6 +29,7 @@ simu.sigmaRange=.001;   %standard deviation of ranging measurement error (m)
 simu.sigmaHeading =1*pi/180; %standard deviation of heading measurment error (rad)
 simu.biasVelocity=0.1*simu.sigmaVelocity; %standard deviation of velocity turn on bias (m/s)
 simu.biasYawRate=0.1*simu.sigmaYawRate; %standard deviation of yaw rate turn on bias (rad/s)
+
 
 simu.initdistance = 5;   %distance between each pair of neighbot UAVs' initial positions
 
@@ -67,6 +69,7 @@ for r = 1:simu.N
     ROBOTS(r).Kg = 1000;
     ROBOTS(r).found_goal = 0;
     ROBOTS(r).estimator = simu.estimator; 
+
 end
 
 figure()  %object to display the simulator

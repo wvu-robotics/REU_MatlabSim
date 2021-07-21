@@ -1,4 +1,4 @@
-%% Collision Handler
+%% colliderFunc: Collision Handler
 
 %Description: Given the current state of the agents, tallies up the
 %collisions, ejects the colliding agents, and sets their converging
@@ -10,7 +10,7 @@
 %   agentVelocities: A numAgentsx2 double where the velocity of the ith
 %       agent is agentVelocities(i,:).
 %   agentRadius: A double describing the size of the agents.
-function [newPositions, newVelocities, numCollisions] = Collider(agentPositions, agentVelocities, agentRadius)
+function [newPositions, newVelocities, numCollisions] = colliderFunc(agentPositions, agentVelocities, agentRadius)
 
     numCollisions = 0;
     
@@ -18,14 +18,14 @@ function [newPositions, newVelocities, numCollisions] = Collider(agentPositions,
     %agent i to agent j is collisionNormalVector(i,j,:).  If they don't
     %collide, then collisionNormalVector(i,j,:) = [0,0].
     collisionNormalVectors = zeros(size(agentPositions,1),size(agentPositions,1),2);
-
+    
     %For each agent
     for i = 1:size(agentPositions,1)
         
         %Isolates the ith agent.
         centralAgentPosition = agentPositions(i,:);
         centralAgentVelocity = agentVelocities(i,:);
-    
+        
         relNeighborPositions = agentPositions - centralAgentPosition;
         relNeighborPositions(i,:) = [];
         

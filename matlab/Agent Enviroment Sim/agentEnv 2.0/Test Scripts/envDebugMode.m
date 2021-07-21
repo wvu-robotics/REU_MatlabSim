@@ -3,22 +3,23 @@ clc
 close all
 
 %   World Building
-numberOfAgents = 5;
+numberOfAgents = 15;
 agentRadius = 1;
 timeStep = .05;
 mapSize = 10;
 safetyMargin = 1.2;
 
-% Random Antipodal Swap %
+% Uniform Antipodal Swap %
 initPositions = zeros(numberOfAgents, 2);
 goalLocations = zeros(numberOfAgents, 2);
 for i = 1:numberOfAgents
-    theta = rand()*2*pi;
-    initPositions(i,:) = [cos(theta),sin(theta)]*mapSize*(.7+(rand()-0.5)*.2);
-    goalLocations(i,:) = [cos(theta+pi),sin(theta+pi)]*mapSize*(.7+(rand()-0.5)*.2);
+    theta = 2*pi/numberOfAgents * (i-1);
+    initPositions(i,:) = [cos(theta),sin(theta)]*mapSize*(.9+(rand()-0.5)*.1);
+    goalLocations(i,:) = [cos(theta+3.9*pi/4),sin(theta+3.9*pi/4)]*mapSize*(.9+(rand()-0.5)*.1);
 end
+% ============================================== %
 
-ENV = agentEnv(numberOfAgents, @accelerationController, mapSize, timeStep);
+ENV = agentEnv(numberOfAgents, @ORCAController, mapSize, timeStep);
 
 for i = 1:numberOfAgents
     ENV.agents(i).maxSpeed = 2;
@@ -32,12 +33,12 @@ end
 ENV.setAgentPositions(initPositions);
 ENV.setGoalPositions(goalLocations);
 ENV.pathVisibility(true);
+ENV.collisionsOn(false);
 ENV.realTime = false;
 
 ENV.updateEnv; %required after each agent is finally initialized
 
-for counter = 1:1000
+while true
     ENV.tick;
-    counter
+    collider(ENV.agents);
 end
-ENV.collisions

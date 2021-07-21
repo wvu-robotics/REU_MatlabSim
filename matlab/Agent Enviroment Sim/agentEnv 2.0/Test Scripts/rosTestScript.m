@@ -13,7 +13,7 @@ env.agents(1).setShape(.25*[-1,-1; -1, 1; 1,0]);
 env.setAgentPositions(zeros(numberOfAgents, 2));
 env.setGoalPositions([5, 5]);
 env.agents(1).setUpPublisher('/cmd_vel');
-% env.agents(1).setUpSubscriber('/vicon/OG_Turtle_1/OG_Turtle_1');
+env.agents(1).setUpSubscriber('/vicon/turtle1/turtle1');
 counter = 0;
 env.realTime = true;
 env.pathVisibility(false);

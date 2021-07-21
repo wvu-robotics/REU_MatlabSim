@@ -18,7 +18,7 @@ if Agent1.measuredAgents(i).getProperty('isEnemy') == true
 end
 end
 run('state_machine.m');
-current_state = 2;
+current_state = 5;
 % Agent1.setProperty("Battery_Life",battery_life);
 % Agent1.setProperty("Distance_From_Home",distance_from_home);
 % Agent1.setProperty("Distance_From_Invader",distance_from_invader);
@@ -58,17 +58,32 @@ for i = 1:length(Agent1.measuredAgents) % 2 since invader is Agent #1
         fprintf('State: Returning Home\n')
         
     elseif current_state == 5
-        y = norm(Agent1.goalPose - Agent1.pose);
-        if y > (mapSize/(mapSize/(15*agentRadius)))
-            Agent1.velocityControl = Agent1.calcIdealUnitVec * 5;
-        else
-            Z = [0 0 1];
-            P = [Agent1.pose - Agent1.goalPose,0];
-            T = cross(P,Z);
-            T = 5*(T/norm(T)); % has 3 components, only need 2 for velocity
-            Agent1.velocityControl = T(1:2); % creates circular movement
-                                             % around home.
+        %Agent1.velocityControl = 5 * objectFlow2(Home, Agent1.pose,100,Agent1);
+       for n = 1:length(Agent1.measuredAgents)
+        if Agent1.measuredAgents(i).getProperty('isEnemy') == true 
+           invaderpos = Agent1.measuredAgents(i).pose;
+           currentvel = 5*objectFlow2(invaderpos, Agent1.pose, Home, 100, Agent1);
+           comp1 = currentvel(1);
+           comp2 = currentvel(2);
+           while comp1 > 5 || comp2 > 5 || comp1 < -5 || comp2 < -5
+               comp1 = comp1/1.1;
+               comp2 = comp2/1.1;
+           end
+           Agent1.velocityControl = [comp1 comp2];
+           
         end
+       end
+%         y = norm(Agent1.goalPose - Agent1.pose);
+%         if y >1 %(mapSize/(mapSize/(15*agentRadius)))
+%             Agent1.velocityControl = Agent1.calcIdealUnitVec * 5;
+%         else
+%             Z = [0 0 1];
+%             P = [Agent1.pose - Agent1.goalPose,0];
+%             T = cross(P,Z);
+%             T = 5*(T/norm(T)); % has 3 components, only need 2 for velocity
+%             Agent1.velocityControl = T(1:2); % creates circular movement
+%                                              % around home.
+%         end
 
     elseif current_state == 6
         Agent1.velocityControl = Agent1.calcIdealUnitVec * 5;
