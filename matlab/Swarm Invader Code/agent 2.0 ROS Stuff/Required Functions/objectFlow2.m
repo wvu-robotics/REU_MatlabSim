@@ -3,7 +3,7 @@ function [V_direction] = objectFlow2(invadeposxy, defendposxy, homeposexy, S, Ag
 %doublet flow
 %   Uses Laplacian Transforms to calculate x and y components from global
 %   corrdinates X,Y, the source location xi,yi, and strength S
-global COUNTOUR_IN;
+% global COUNTOUR_IN;
 
 xi = invadeposxy(1);
 yi = invadeposxy(2);
@@ -33,7 +33,7 @@ for i = 1:length(Agent1.measuredAgents)
     end
 end
 
-[X,Y] = meshgrid(-50:.02:50 , -50:.02:50 );
+% [X,Y] = meshgrid(-50:.02:50 , -50:.02:50 );
 [U2,V2,PSI1,PHI2] = objectFlow(xi,yi,xi-hx,yi-hy,S,X,Y);
 [Vx2,Vy2,Psi,Phi] = sourceFlow(0,0,-S,X,Y); 
 for i = 1:length(Agent1.measuredAgents)
@@ -47,7 +47,7 @@ for i = 1:length(Agent1.measuredAgents)
     end
 end
 
- COUNTOUR_IN =  PSI;
+%  COUNTOUR_IN =  PSI;
 
 V_direction = [Vxi Vyi];
 end

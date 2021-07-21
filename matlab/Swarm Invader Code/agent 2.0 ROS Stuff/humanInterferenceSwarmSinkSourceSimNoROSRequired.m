@@ -39,6 +39,14 @@ for i = 1:numberOfAgents
     ENV.agents(i).createProperty('isEnemy',false)
 end
     ENV.agents(1).setProperty('isEnemy', true);
+for i=1:length(ENV.agents)
+    ENV.agents(i).createProperty('Battery_Life',battery_life);
+    ENV.agents(i).createProperty('Distance_From_Home',distance_from_home);
+    ENV.agents(i).createProperty('Distance_From_Invader',distance_from_invader);
+    ENV.agents(i).createProperty('Enough_Battery_Home',enough_battery_home);
+    ENV.agents(i).createProperty('Enough_Battery_Invader',enough_battery_invader);
+    ENV.agents(i).createProperty('Enough_Battery_Home_Invader',enough_battery_home_invader);
+end
     
 %Setting Initial Positions
 initPositions = zeros(numberOfAgents, 2);
@@ -68,19 +76,12 @@ ENV.collisionsOn(true);
 ENV.pathVisibility(false);
 ENV.realTime = false;
 ENV.agentIdVisibility(true);
-% for i=1:length(ENV.agents)
-%     ENV.agents(i).createProperty("Battery_Life",battery_life);
-%     ENV.agents(i).createProperty("Distance_From_Home",distance_from_home);
-%     ENV.agents(i).createProperty("Distance_From_Invader",distance_from_invader);
-% end
 
 while(true)
     ENV.tick;
     counter = counter + timeStep;
     fprintf("Time: %.3f \n",counter)
-%     env.tickRos;
     env.tick;
-    run('evolvingvariables.m');
     %change goal locations
 %     for i = 1:numberOfAgents
 %         theta = 2*pi/numberOfAgents * (i-1) + (pi/8)*counter;
