@@ -61,13 +61,12 @@ cost = 0;
 while(true)
     customTick(ENV, timeStep, display, mapSize);
     counter = counter + 1;
-    fprintf("Time: %i \n",counter)
+    %fprintf("Time: %i \n",counter)
     if counter > timeSteps
         break
     end
     cost = cost + SingleAvoidCost(ENV.agents);
-    f = figure(2);
-    close(f);
+    %close(figure(2));
 end
 
 %% Required Functions
