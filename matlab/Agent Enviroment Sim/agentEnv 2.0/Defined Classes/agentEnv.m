@@ -179,7 +179,7 @@ classdef agentEnv < handle
                                 collisionResolved = true;      
                             else
                             if round(newRelativePose,5) == round(initialPose,5)
-                                converged = true;
+                                converged = true;2
                             else
                             initialPose = newRelativePose;
                             initialHeading = newHeading;
@@ -221,7 +221,7 @@ classdef agentEnv < handle
                         configurationSpacePolygon = obj.configurationSpace(configurationSpaceIndex,obj.agents(id).getShapeID, agentsType(obstacleID).getShapeID).Vertices;
                         newShape = obj.transformShape(configurationSpacePolygon,agentsType(obstacleID).heading);
                         newShape(1,:) = newShape(1,:) + agentsType(obstacleID).pose(1);
-                        newShape(2,:) = newShape(2,:) + agentsType(obstacleID).pose(2);
+                        newShape(2,:) = newShape(2,:) + agentsType(obstacleID).pose(2);2
                     
                         [collision]= inpolygon( obj.agents(id).pose(1) ,obj.agents(id).pose(2) , ...
                                                         newShape(1,:), ...
@@ -315,7 +315,7 @@ classdef agentEnv < handle
             newShape = obj.transformShape(shape, heading);  
             x = newShape(1,:) + obj.agents(id).pose(1);
             y = newShape(2,:) + obj.agents(id).pose(2);
-            set(obj.lineAgent(id),'xdata',x,'ydata',y)
+            set(obj.lineAgent(id),'xdata',x,'ydata',y);
         end
 
         function newShape = transformShape(~,shape, heading)
@@ -573,7 +573,7 @@ classdef agentEnv < handle
             for i = randperm(obj.numberOfAgents)
                 obj.agents(i).msgSub = receive(obj.agents(i).subscriber);
                 
-                obj.agents(i).pose = [obj.agents(i).msgSub.Transform.Translation.X, ...
+                obj.agents(i).pose = -[obj.agents(i).msgSub.Transform.Translation.X, ...
                                       obj.agents(i).msgSub.Transform.Translation.Y]; 
                 eulAngles = quat2eul([obj.agents(i).msgSub.Transform.Rotation.X, ...
                              obj.agents(i).msgSub.Transform.Rotation.Y, ...
@@ -587,8 +587,8 @@ classdef agentEnv < handle
                                            obj.agents(i).velocityControl(2)], ...
                                            obj.agents(i).heading);
                                
-                obj.agents(i).msgPub.Linear.X = contVel(1);
-                obj.agents(i).msgPub.Linear.Y = contVel(2);
+                obj.agents(i).msgPub.Linear.X = -contVel(1);
+                obj.agents(i).msgPub.Linear.Y = -contVel(2);
                 obj.agents(i).msgPub.Angular.Z = obj.agents(i).angularVelocityControl;
                 
                 obj.agents(i).heading = obj.agents(i).heading + obj.agents(i).angularVelocityControl*obj.timeStep;
