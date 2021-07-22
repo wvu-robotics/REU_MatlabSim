@@ -19,17 +19,17 @@ classdef Agent < handle
        idealSpeed = 1;
        heading = 0;
        broadCollisionSpace;
-       needsUpdate = false;  
+       needsUpdate = false; 
+       id;
        %ros
        publisher;
        subscriber;
        msgPub;
-       msgSub;
+       msgSub;      
     end
     
     properties (Access = private)  
         shapeID = 0;
-      	id;
         shape = circle(.5);
         radius = 1;
         controller;
