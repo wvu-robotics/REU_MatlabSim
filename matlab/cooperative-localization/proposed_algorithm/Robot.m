@@ -105,7 +105,7 @@ classdef Robot
             
             obj.path_d = [position_x, position_y, angle];
             obj.path_t =  obj.path_d;
-            obj.path_e = obj.path_d;%(1:2);
+            obj.path_e = obj.path_d;
             
             % initalize boids parameters-------------------------------------------
             obj.max_speed = 5;
@@ -117,8 +117,8 @@ classdef Robot
             obj.Ks = Ks;
             obj.Ka = Ka;
             obj.Kc = Kc;
-            obj.Kh = 1;
-            obj.Kg = 0;
+            obj.Kh = 3.23435;
+            obj.Kg = 9.923;
             obj.Kv = 1;
             
             % initalize measurments ---------------------------------------
@@ -184,10 +184,10 @@ classdef Robot
              obj.Kg = (e_max/(e_m+1))^2 + (cov_max -cov_e)/cov_max ...
                       +sigmoid(dlarray(dh/dr)).extractdata*dr/dg;
             
-             temp = ((cov_max-cov_e)/cov_max)*((e_max-e_m)/e_max)...
-                    + obj.is_beacon*(tb-t_max)/t_max;
-             obj.Kv = relu(dlarray(temp)).extractdata;
-             obj.Kv
+%              temp = ((cov_max-cov_e)/cov_max)*((e_max-e_m)/e_max)...
+%                     + obj.is_beacon*(tb-t_max)/t_max;
+%              obj.Kv = relu(dlarray(temp)).extractdata;
+             
              
              
             %% old rules
@@ -212,14 +212,19 @@ classdef Robot
 
             home_force = obj.seek(obj.home);
             if obj.found_goal == 1
-                obj.Kg = 0;
+                temp = 0;
+            else
+                temp = obj.Kg;
             end
             goal_force = obj.seek(obj.goal);
-            force = sep_force+coh_force+ali_force+obj.Kh*home_force+ obj.Kg*goal_force;
-            obj.acceleration = obj.max_force * force / norm(force);
+            force = sep_force+coh_force+ali_force+obj.Kh*home_force+ temp*goal_force;
+            if norm(force) ~= 0
+                obj.acceleration = obj.max_force * force / norm(force);
+            else
+                obj.acceleration = [0,0];
+            end
             
         end
-
 
         function obj = flock(obj,boids)
             sep = obj.seperate(boids);
@@ -509,8 +514,8 @@ classdef Robot
             
             if V > obj.max_speed    % bound the velocity
                 V = obj.max_speed;
-            elseif V < -obj.max_speed
-                V = -obj.max_speed;
+            elseif V < obj.min_speed
+                V = obj.min_speed;
             end
             
             % calculate yaw error between acceleration vector and current
@@ -565,9 +570,7 @@ classdef Robot
             
             old_covar = obj.covariance_d;
             obj.covariance_d = F_d*obj.covariance_d*(F_d') + Q_d;
-            if min(eig(obj.covariance_d)) < 0
-                pause(.1);
-            end
+           
             
         end
         
@@ -589,8 +592,8 @@ classdef Robot
                 %---------------------------------------------
 
                 % lidar measurement noise
-                R = diag([obj.sigmaRange, obj.sigmaRange,obj.sigmaHeading]);
-                
+               % R = diag([obj.sigmaRange, obj.sigmaRange,obj.sigmaHeading]);
+                R = diag([0, 0, 0]);
                 % fused estimate of the robot's CURRENT STATE
                 obj.position_e = mean_pose';
                 obj.covariance_e = covar + R;
@@ -729,7 +732,7 @@ classdef Robot
                     % If robot i detects robot j, robot j detects robot i -> (360º detection)
                     % R is the measurement noise covariance
                     % White Gaussian noise N(0,r) with 0 mean and r stdv
-                    R = (0.0001) * eye(2); % Estimation noise covariance
+                    R = obj.sigmaRange * eye(2); % Estimation noise covariance
                     %%% INPUT %%%
                     % Xi is the current state matrix for robot i
                     % Pi_i is the current covariance matrix for robot i
@@ -855,7 +858,7 @@ classdef Robot
         
 
         % NEEDS TO BE FIXED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        function ROBOTS = beacon_update(ROBOTS,ID,neighbors,cov_max)
+        function ROBOTS = beacon_update(obj,ROBOTS,cov_max)
             
             found_beacon = 0;
             beacon = [];
@@ -975,7 +978,7 @@ classdef Robot
             viscircles([ROBOTS(1).home(1),ROBOTS(1).home(2)],range);
             hold on;
             title("Square = truth, * = estimate, o = dead reckoning");
-            axis([-50 50 -50 50])
+            axis([-5 5 -5 5])
             
             %plot gain distributions
 %                 subplot(2,3,2)
