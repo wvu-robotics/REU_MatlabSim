@@ -4,9 +4,10 @@ function ROBOTS = create_robot_swarm(numBots,world_len,detection_rng)
 
 
 ROBOTS = Robot.empty();
-Ks = 1;
-Ka = 1;
-Kc = 1;
+gains = [.61102,9.9236,9.6478,3.2343,9.9235];
+Ka = gains(1);
+Ks = gains(2);
+Kc = gains(3);
 
 for i=1:numBots
     x = 2*rand*world_len - world_len;
@@ -19,6 +20,7 @@ for i=1:numBots
    ROBOTS(i).covariance_e = ROBOTS(i).covariance_d;
    ROBOTS(i).P{i,i} = ROBOTS(i).covariance_e;
    ROBOTS(i).ID = i;
+   ROBOTS(i).max_speed = .5;
 end
 
 end

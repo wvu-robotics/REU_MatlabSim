@@ -2,7 +2,7 @@ function testController5(Agent1)
 Agent1.color = [0 1 0];
 maxvel = 5;
 run('register_variables_for_function.m');
-battery_life = evolving_variables_function(Agent1);
+placeholdervar = evolving_variables_function(Agent1);
 
                         % Idle = 0                      ; w = $1
                         % On Alert = 1                  ; w = $2
@@ -14,30 +14,26 @@ battery_life = evolving_variables_function(Agent1);
                         % Searching = 7                 ; w = $2
                         % Gathering = 8                 ; w = $5
                         % Shut-down (battery = 1%) = 9  ; w = -$2
+placeholdervar1 = state_machine_function(Agent1);
 for i = 1:length(Agent1.measuredAgents)
-if Agent1.measuredAgents(i).getProperty('isEnemy') == true
-    invader_detected = 1;
-    fprintf('Invader Detected\n');
+    if Agent1.measuredAgents(i).getProperty('isEnemy') == true
+        invader_detected = 1;
+        assignin('base','invader_detected',invader_detected);
+        Agent1.setProperty('invader_detected',invader_detected);
+        fprintf('Invader Detected\n');
+    end
 end
-end
-run('state_machine.m');
-
-% Agent1.setProperty("Battery_Life",battery_life);
-% Agent1.setProperty("Distance_From_Home",distance_from_home);
-% Agent1.setProperty("Distance_From_Invader",distance_from_invader);
-% Agent1.getProperty("Battery_Life")
-% Agent1.getProperty("Distance_From_Home")
-% Agent1.getProperty("Distance_From_Invader")
+% run('state_machine.m');
 for i = 1:length(Agent1.measuredAgents) % 2 since invader is Agent #1
-    if current_state == 0 || current_state == 1 %revisit this one
+    if Agent1.getProperty('current_state') == 0 || Agent1.getProperty('current_state') == 1 %revisit this one
         Agent1.velocityControl= [0,0];
-        if current_state == 1
+        if Agent1.getProperty('current_state') == 1
             fprintf('State: On Alert\n')
-        elseif current_state == 0
+        elseif Agent1.getProperty('current_state') == 0
             fprintf('State: Idle\n')
         end
         
-    elseif current_state == 2
+    elseif Agent1.getProperty('current_state') == 2
         
         if Agent1.measuredAgents(i).getProperty('isEnemy') == true
             maginvader = norm(Agent1.pose - Agent1.measuredAgents(i).pose);
@@ -50,7 +46,7 @@ for i = 1:length(Agent1.measuredAgents) % 2 since invader is Agent #1
                 for n = 1:length(Agent1.measuredAgents)
                     if Agent1.measuredAgents(i).getProperty('isEnemy') == true 
                         invaderpos = Agent1.measuredAgents(i).pose;
-                        x = objectFlow1(Agent1.measuredAgents(i).pose, Agent1.pose,1000);
+                        x = objectFlow1(invaderpos, Agent1.pose,1000);
                         currentvel= 5*(x/norm(x));
                         comp1 = currentvel(1);
                         comp2 = currentvel(2);
@@ -64,14 +60,14 @@ for i = 1:length(Agent1.measuredAgents) % 2 since invader is Agent #1
             end
         end
         
-    elseif current_state == 3 % state machine should not be outputting this
+    elseif Agent1.getProperty('current_state') == 3 % state machine should not be outputting this
        fprintf('ERROR\nThe state machine is outputting current_state = 3\n');
        
-    elseif current_state == 4
+    elseif Agent1.getProperty('current_state') == 4
         Agent1.velocityControl = Agent1.calcIdealUnitVec * 5;
         fprintf('State: Returning Home\n')
         
-    elseif current_state == 5
+    elseif Agent1.getProperty('current_state') == 5
         %Agent1.velocityControl = 5 * objectFlow2(Home, Agent1.pose,100,Agent1);
        for n = 1:length(Agent1.measuredAgents)
         if Agent1.measuredAgents(i).getProperty('isEnemy') == true 
@@ -98,7 +94,7 @@ for i = 1:length(Agent1.measuredAgents) % 2 since invader is Agent #1
 %                                              % around home.
 %         end
 
-    elseif current_state == 6
+    elseif Agent1.getProperty('current_state') == 6
         Agent1.velocityControl = Agent1.calcIdealUnitVec * 5;
         y = norm(Agent1.goalPose - Agent1.pose);
         if y < 2
@@ -106,20 +102,20 @@ for i = 1:length(Agent1.measuredAgents) % 2 since invader is Agent #1
             fprintf('State: Charging\n')
         end
 
-    elseif current_state == 7 
+    elseif Agent1.getProperty('current_state') == 7 
         x = randi(mapSize,1,2);
         Agent1.velocityControl= 5*(x/norm(x));
         fprintf('Status: Searching\n')
         % random walk around small area for searching 
         
-    elseif current_state == 8
+    elseif Agent1.getProperty('current_state') == 8
         Agent1.velocityControl = Agent1.calcIdealUnitVec * 5;
         fprintf('State: Gathering\n')
         
         % set course for current position to back home and subtract battery
         % life from percentage required to go back home. also have it go
         % back to original position
-    elseif current_state == 9
+    elseif Agent1.getProperty('current_state') == 9
         Agent1.velocityControl = Agent1.calcIdealUnitVec * 5;
         fprintf('State: Shutdown\n')
         fprintf('Robot died %.2f ft. from home.\n',outstanding_distance)
