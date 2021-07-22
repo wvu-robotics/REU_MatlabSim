@@ -16,6 +16,9 @@
 %   gradVector: A 1x2 double which points in the direction that increases
 %       the oval metric return value fastest.
 %
+% Precondition:
+%   norm(pv) > 0
+%
 % See Also: Modified-ORCA/ovalMetric.m
 function gradVector = gradientVector(pv, v, k)
     orthPV = [-pv(2),pv(1)];

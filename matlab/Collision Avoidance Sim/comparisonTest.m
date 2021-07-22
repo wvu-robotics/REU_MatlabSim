@@ -29,20 +29,24 @@
 %       agents that are a maximum distance of measuringRange away
 %
 % Returns:
-%   ORCATimes: An NxP double where the number of time steps that the ith
-%       ORCA controlled agent took to get to from its j-1st waypoint to its
-%       jth waypoint is ORCATimes(i,j). ORCATimes(i,1) is the time the ith
-%       agent took to get from its initial position to its first waypoint.
+%   ORCATimes: An NxP double where the extra time that the ith ORCA
+%       controlled agent took to get to from its j-1th waypoint to its jth
+%       waypoint is ORCATimes(i,j). Extra time means the time that time
+%       that was added to the straight line time at idealSpeed.
+%       ORCATimes(i,1) is the extra time the ith agent took to get from its
+%       initial position to its first waypoint.
 %   ORCADistances: An NxP double where ORCADistances(i,j) is the distance
 %       the ith agent traveled to get from its j-1th waypoint to its jth
 %       waypoint. ORCADistances(i,1) is the distance the ith agent traveled
 %       to get to its 1st waypoint.
 %   ORCASmoothness: An NxP double where ORCASmoothness(i,j) is the
 %       smoothness of agent i's path on its way to the jth waypoint.
-%   accelTimes: An NxP double where the number of time steps that the ith
-%       ORCA controlled agent took to get to from its j-1st waypoint to its
-%       jth waypoint is ORCATimes(i,j). ORCATimes(i,1) is the time the ith
-%       agent took to get from its initial position to its first waypoint.
+%   accelTimes: An NxP double where the extra time that the ith
+%       Acceleration controlled agent took to get to from its j-1th
+%       waypoint to its jth waypoint is accelTimes(i,j). Extra time means
+%       the time that time that was added to the straight line time at
+%       idealSpeed. accelTimes(i,1) is the extra time the ith agent took to
+%       get from its initial position to its first waypoint.
 %   accelDistances: An NxP double where accelDistances(i,j) is the distance
 %       the ith agent traveled to get from its j-1th waypoint to its jth
 %       waypoint. accelDistances(i,1) is the distance the ith agent
@@ -51,14 +55,36 @@
 %       smoothness of agent i's path on its way to the jth waypoint.
 function [ORCATimes, ORCADistances, ORCASmoothness, accelTimes, accelDistances, accelSmoothness] ...
     = comparisonTest(goalPath, initPositions, agentRadius, timeStep, realTime, mapSize, maxSpeed, idealSpeed, measuringRange)
-    
+
     numberOfAgents = size(initPositions,1);
     pathLength = size(goalPath,3);
+    
+    %An NxP double where goalDistances(i,j) is the distance between the ith
+    %agent's j-1th waypoint and its jth waypoint. goalDistances(i,1) is the
+    %distance from initPositions(i,:) and goalPath(i,:,1)
+    goalDistances = zeros(numberOfAgents,pathLength);
+    
+    for i = 1:numberOfAgents
+        goalDistances(i,1) = norm(goalPath(i,:,1) - initPositions(i,:)) - agentRadius;
+        for j = 2:pathLength
+            goalDistances(i,j) = norm(goalPath(i,:,j) - goalPath(i,:,j-1)) - 2*agentRadius;
+        end
+    end
+    
+    %An NxP double where beeLineTimes(i,j) is the bare minimum time to
+    %travel between the ith agent's j-1th waypoint and its jth waypoint
+    %if the agent moves at idealSpeed. beeLineTimes(i,1) is the minimum
+    %time between initPositions(i,:) and goalPath(i,:,1).
+    beeLineTimes = max(0, goalDistances/idealSpeed);
+    
+    for i = 1:numberOfAgents
+        beeLineTimes(i,:) = max(0,(goalDistances(i,:) - 2*agentRadius) / idealSpeed);
+    end
     
     % == ORCA Simulation ================================================ %
     
     %Preallocates the ORCA statistics
-    ORCATimes = zeros(numberOfAgents,pathLength);
+    ORCATimes = -beeLineTimes;
     ORCADistances = zeros(numberOfAgents,pathLength);
     ORCASmoothness = zeros(numberOfAgents,pathLength);
     
@@ -94,13 +120,13 @@ function [ORCATimes, ORCADistances, ORCASmoothness, accelTimes, accelDistances, 
         ENV.tick();
         collider(ENV.agents);
 
-        %Increments the number of time steps each agents took to get to
-        %their waypoints. If an agent has reached their last waypoint,
-        %their times don't increment.
+        %Adds to the extra time each agents took to get to their waypoints.
+        %If an agent has reached their last waypoint, their times don't
+        %increment.
         for i = 1:numberOfAgents
             %If the agent hasn't finished their journey
             if pathCounters(i) <= pathLength
-                ORCATimes(i,pathCounters(i)) = ORCATimes(i,pathCounters(i)) + 1;
+                ORCATimes(i,pathCounters(i)) = ORCATimes(i,pathCounters(i)) + timeStep;
             end
         end
         
@@ -172,7 +198,7 @@ function [ORCATimes, ORCADistances, ORCASmoothness, accelTimes, accelDistances, 
     % == accel Simulation ================================================ %
     
     %Preallocates the accelTimes and accelDistances
-    accelTimes = zeros(numberOfAgents,pathLength);
+    accelTimes = -beeLineTimes;
     accelDistances = zeros(numberOfAgents,pathLength);
     accelSmoothness = zeros(numberOfAgents,pathLength);
     
@@ -213,7 +239,7 @@ function [ORCATimes, ORCADistances, ORCASmoothness, accelTimes, accelDistances, 
         for i = 1:numberOfAgents
             %If the agent hasn't finished their journey
             if pathCounters(i) <= pathLength
-                accelTimes(i,pathCounters(i)) = accelTimes(i,pathCounters(i)) + 1;
+                accelTimes(i,pathCounters(i)) = accelTimes(i,pathCounters(i)) + timeStep;
             end
         end
         

@@ -4,17 +4,28 @@
 % the original ORCA method perscribes.
 %
 % Parameter: agent: A 1x1 Agent handle
+%
+% Precondition:
+%   agent.measuredAgents(i).getRadius() == agent.getRadius()
 
 function ORCAController(agent)
     %Constants for customization
-    safetyMargin = 1.2;
-    timeHorizon = 10;
+    timeHorizon = 3;
     velocityDiscritisation = 0.05;
-    vOptIsZero = false;
+    vOptIsZero = true;
     responsibility = 0.5;
     
-    %Sets the preferred velocity to point to the goalPose at the idealSpeed
-    preferredVelocity = agent.calcIdealUnitVec() * agent.idealSpeed;
+    %If the agent has not reached their goal
+    if norm(agent.pose - agent.goalPose) >= agent.getRadius()
+        
+        %Sets the preferred velocity to point to the goalPose at the
+        %idealSpeed
+        preferredVelocity = agent.calcIdealUnitVec() * agent.idealSpeed;
+        
+    else %If the agent has reached their goal
+        %Linearly decreases the preferredVelocity speed as they get closer
+        preferredVelocity = agent.calcIdealUnitVec() * max(.01,agent.idealSpeed * norm(agent.pose - agent.goalPose) / agent.getRadius());
+    end
 
     %Finds the discritized set of all possible velocities
     possibleVelocities = (-agent.maxSpeed):velocityDiscritisation:(agent.maxSpeed);
