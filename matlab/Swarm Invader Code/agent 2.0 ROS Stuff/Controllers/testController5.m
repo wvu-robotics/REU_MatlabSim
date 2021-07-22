@@ -1,6 +1,9 @@
 function testController5(Agent1)
 Agent1.color = [0 1 0];
+maxvel = 5;
 run('register_variables_for_function.m');
+battery_life = evolving_variables_function(Agent1);
+
                         % Idle = 0                      ; w = $1
                         % On Alert = 1                  ; w = $2
                         % In Pursuit = 2                ; w = $5
@@ -18,7 +21,7 @@ if Agent1.measuredAgents(i).getProperty('isEnemy') == true
 end
 end
 run('state_machine.m');
-current_state = 5;
+
 % Agent1.setProperty("Battery_Life",battery_life);
 % Agent1.setProperty("Distance_From_Home",distance_from_home);
 % Agent1.setProperty("Distance_From_Invader",distance_from_invader);
@@ -27,7 +30,7 @@ current_state = 5;
 % Agent1.getProperty("Distance_From_Invader")
 for i = 1:length(Agent1.measuredAgents) % 2 since invader is Agent #1
     if current_state == 0 || current_state == 1 %revisit this one
-        Agent1.velocityControl= 0;
+        Agent1.velocityControl= [0,0];
         if current_state == 1
             fprintf('State: On Alert\n')
         elseif current_state == 0
@@ -44,8 +47,19 @@ for i = 1:length(Agent1.measuredAgents) % 2 since invader is Agent #1
             if maginvader > mapSize || maggoal < 5 || maginvadergoal < 10
                 current_state = 5;
             else
-                x = objectFlow2(Agent1.measuredAgents(i).pose, Agent1.pose,1000000,Agent1);
-                Agent1.velocityControl= 5*(x/norm(x));
+                for n = 1:length(Agent1.measuredAgents)
+                    if Agent1.measuredAgents(i).getProperty('isEnemy') == true 
+                        invaderpos = Agent1.measuredAgents(i).pose;
+                        x = objectFlow1(Agent1.measuredAgents(i).pose, Agent1.pose,1000);
+                        currentvel= 5*(x/norm(x));
+                        comp1 = currentvel(1);
+                        comp2 = currentvel(2);
+                        while comp1 > maxvel || comp2 > maxvel || comp1 < -maxvel || comp2 < -maxvel
+                        comp1 = comp1/1.1;
+                        comp2 = comp2/1.1;
+                        end
+                    end
+                end
                 fprintf('State: In Pursuit\n')
             end
         end
@@ -62,15 +76,14 @@ for i = 1:length(Agent1.measuredAgents) % 2 since invader is Agent #1
        for n = 1:length(Agent1.measuredAgents)
         if Agent1.measuredAgents(i).getProperty('isEnemy') == true 
            invaderpos = Agent1.measuredAgents(i).pose;
-           currentvel = 5*objectFlow2(invaderpos, Agent1.pose, Home, 100, Agent1);
+           currentvel = 5*objectFlow2(invaderpos, Agent1.pose, Home, numberOfAgents*(1000/3), Agent1);
            comp1 = currentvel(1);
            comp2 = currentvel(2);
-           while comp1 > 5 || comp2 > 5 || comp1 < -5 || comp2 < -5
+           while comp1 > maxvel || comp2 > maxvel || comp1 < -maxvel || comp2 < -maxvel
                comp1 = comp1/1.1;
                comp2 = comp2/1.1;
            end
-           Agent1.velocityControl = [comp1 comp2];
-           
+           Agent1.velocityControl = [comp1 comp2]; 
         end
        end
 %         y = norm(Agent1.goalPose - Agent1.pose);
