@@ -2,7 +2,7 @@ clc
 clear
 close all
 %   World Building
-numberOfAgents = 20;
+numberOfAgents = 3;
 agentRadius = .2;
 timeStep = .05;
 mapSize = 20;
@@ -24,7 +24,8 @@ env.setGoalPositions([5, 5]);
 
 % f(1)={@testControllerEnemySinkSource};
 % f(1)={@testControllerEnemySinkSource2};
-f(1) = {@rosController};
+% f(1) = {@rosController};
+f(1) = {@EnemyManualController};
 for i =2:numberOfAgents
    f(i) = {@testController5}; 
 end    
@@ -39,7 +40,8 @@ for i = 1:numberOfAgents
     ENV.agents(i).createProperty('isEnemy',false)
 end
     ENV.agents(1).setProperty('isEnemy', true);
-    
+run('ENV_Create_Properties.m');
+
 %Setting Initial Positions
 initPositions = zeros(numberOfAgents, 2);
 goalLocations = zeros(numberOfAgents, 2);
@@ -68,19 +70,12 @@ ENV.collisionsOn(true);
 ENV.pathVisibility(false);
 ENV.realTime = false;
 ENV.agentIdVisibility(true);
-% for i=1:length(ENV.agents)
-%     ENV.agents(i).createProperty("Battery_Life",battery_life);
-%     ENV.agents(i).createProperty("Distance_From_Home",distance_from_home);
-%     ENV.agents(i).createProperty("Distance_From_Invader",distance_from_invader);
-% end
 
 while(true)
     ENV.tick;
     counter = counter + timeStep;
     fprintf("Time: %.3f \n",counter)
-%     env.tickRos;
     env.tick;
-    run('evolvingvariables.m');
     %change goal locations
 %     for i = 1:numberOfAgents
 %         theta = 2*pi/numberOfAgents * (i-1) + (pi/8)*counter;

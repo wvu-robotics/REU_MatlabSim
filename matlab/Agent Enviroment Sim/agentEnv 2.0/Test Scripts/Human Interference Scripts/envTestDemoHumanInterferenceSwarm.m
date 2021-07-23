@@ -12,7 +12,7 @@ shape = circle (.25);
 safetyMargin = 5;
 
 
-f(1)={@testControllerEnemy1};
+f(1)={@testControllerEnemySinkSource2};
 for i =2:numberOfAgents
    f(i) = {@testController5}; 
 end    
