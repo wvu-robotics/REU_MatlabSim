@@ -12,7 +12,7 @@ function ORCAController(agent)
     %Constants for customization
     timeHorizon = 3;
     velocityDiscritisation = 0.05;
-    vOptIsZero = true;
+    vOptIsZero = false;
     responsibility = 0.5;
     
     %If the agent has not reached their goal
