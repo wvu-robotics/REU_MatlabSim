@@ -13,8 +13,7 @@ function rosController(agent)
             agent.velocityControl = 7*[0,-1];
         case "d"
 %             agent.velocityControl = 0.3*[1, 0];
-            agent.velocityControl = 7*[1, 0];
-        case "q"
+a        case "q"
 %             agent.velocityControl = 0.3*[-1, 1];
             agent.velocityControl = 7*[-1, 1];
         case "e"

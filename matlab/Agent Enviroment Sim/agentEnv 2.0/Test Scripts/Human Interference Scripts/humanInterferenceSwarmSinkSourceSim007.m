@@ -9,25 +9,26 @@ Z(1,1) =1;
 global COUNTOUR_IN
 COUNTOUR_IN = [0,0,0];
 %  World Building
-numberOfAgents = 5;
+numberOfAgents = 25;
 agentRadius = .1;
-timeStep = .1;
+timeStep = .05;
 mapSize = 25;
 shape = circle (.5);
+sampleFrequency = 1/timeStep;
 %  *[-2,-1;-2,1;2,1;2,-1];
-global CURRENT_KEY_PRESSED 
-CURRENT_KEY_PRESSED = '';
-H = figure;
-set(H,'KeyPressFcn',@buttonPress);
-% % rosinit('10.253.114.65');
-env = agentEnv(1,@rosControllerEnemy,mapSize,timeStep);
-env.setAgentPositions(zeros(numberOfAgents, 2));
-env.setGoalPositions([5, 5]);
+% global CURRENT_KEY_PRESSED 
+% CURRENT_KEY_PRESSED = '';
+% H = figure;
+% set(H,'KeyPressFcn',@buttonPress);
+% % % rosinit('10.253.114.65');
+% env = agentEnv(1,@rosControllerEnemy,mapSize,timeStep);
+% env.setAgentPositions(zeros(numberOfAgents, 2));
+% env.setGoalPositions([5, 5]);
 % % env.agents(1).setUpPublisher('/turtle1/cmd_vel/');
 % % env.agents(1).setUpSubscriber('/turtle1/cmd_vel/');
 % % f(1)={@testControllerEnemySinkSource};
-f(1)={@rosControllerEnemy};
-% f(1)={@testControllerEnemySinkSource2};
+% f(1)={@rosControllerEnemy};
+ f(1)={@testControllerEnemySinkSource2};
 % for i =2:numberOfAgents
 %    f(i) = {@rosControllerDefender}; 
 % end    
@@ -66,15 +67,20 @@ ENV.pathVisibility(false);
 ENV.realTime = false;
 ENV.agentIdVisibility(false);
 counter = 0;
+writeObj = VideoWriter('C:\Users\dqish\Documents\MATLAB\HumanInterference_Videos\humaninvader_flowfields2.avi');
+writeObj.FrameRate = sampleFrequency;
+writeObj.Quality = 75;
+open(writeObj);
 while(true)
     ENV.tick;
     set(c,"ZData", COUNTOUR_IN);
     counter = counter + timeStep;
     fprintf("Time: %.3f \n",counter)
-     env.tick;
-% %     if counter > 100
-% %         break
-% %     end
+%      env.tick;
+writeVideo(writeObj, getframe(F))
+    if counter > 15
+        break
+    end
 % %     run('evolvingvariables.m');
 %     %change goal locations
 % %     for i = 1:numberOfAgents
@@ -83,6 +89,7 @@ while(true)
 % %     end
 % %     ENV.setGoalPositions(goalLocations);
 end
+close (writeObj)
 function buttonPress(src,event)
   global CURRENT_KEY_PRESSED
   CURRENT_KEY_PRESSED = event.Key;
