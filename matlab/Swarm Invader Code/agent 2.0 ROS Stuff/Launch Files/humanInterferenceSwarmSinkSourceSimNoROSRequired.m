@@ -2,7 +2,7 @@ clc
 clear
 close all
 %   World Building
-numberOfAgents = 3;
+numberOfAgents = 21;
 agentRadius = .2;
 timeStep = .05;
 mapSize = 20;
@@ -88,6 +88,3 @@ function buttonPress(src,event)
   global CURRENT_KEY_PRESSED
   CURRENT_KEY_PRESSED = event.Key;
 end
-
-
-
