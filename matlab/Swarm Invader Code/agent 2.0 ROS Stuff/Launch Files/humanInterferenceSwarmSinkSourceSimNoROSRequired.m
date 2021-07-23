@@ -2,11 +2,7 @@ clc
 clear
 close all
 %   World Building
-<<<<<<< HEAD
-numberOfAgents = 8;
-=======
 numberOfAgents = 21;
->>>>>>> b79527cb51ffdfebdb1d80c14cf1148a2e416cb5
 agentRadius = .2;
 timeStep = .05;
 mapSize = 20;
@@ -27,9 +23,9 @@ env.setGoalPositions([5, 5]);
 
 
 % f(1)={@testControllerEnemySinkSource};
-f(1)={@testControllerEnemySinkSource2};
+% f(1)={@testControllerEnemySinkSource2};
 % f(1) = {@rosController};
-% f(1) = {@EnemyManualController};
+f(1) = {@EnemyManualController};
 for i =2:numberOfAgents
    f(i) = {@testController5}; 
 end    
