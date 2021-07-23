@@ -30,8 +30,8 @@ goalLocations(1,:) = [0,9];
 % ============================================== %
 
 % Stalemate Resolution %
-initPositions = [1.2,0;-1.2,0];
-goalLocations = [-9,0;9,0];
+initPositions = [safetyMargin*agentRadius,0; -safetyMargin*agentRadius,0];
+goalLocations = [agentRadius-mapSize,0; mapSize-agentRadius,0];
 numberOfAgents = 2;
 % ============================================== %
 

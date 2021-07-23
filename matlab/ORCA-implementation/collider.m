@@ -10,7 +10,7 @@
 % Precondition:
 %   All agents are circular.
 %   No agents are centered on top of one another.
-function collider(agents)
+function numCollisions = collider(agents)
 
     numCollisions = 0;
     
@@ -82,7 +82,7 @@ function collider(agents)
                             
                             %Restricts the velocity to [0,0], then breaks,
                             %since the velocity can't be restricted more
-                            centralAgentVelocity = zeros(1,2);
+                            agents(i).velocity = zeros(1,2);
                             break;
                         end
                         

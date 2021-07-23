@@ -59,9 +59,10 @@ function [ORCATimes, ORCADistances, ORCASmoothness, accelTimes, accelDistances, 
     numberOfAgents = size(initPositions,1);
     pathLength = size(goalPath,3);
     
-    %An NxP double where goalDistances(i,j) is the distance between the ith
-    %agent's j-1th waypoint and its jth waypoint. goalDistances(i,1) is the
-    %distance from initPositions(i,:) and goalPath(i,:,1)
+    %An NxP double where goalDistances(i,j) is the minimum distance an
+    %agent has to travel between the ith agent's j-1th waypoint and its jth
+    %waypoint. goalDistances(i,1) is the minimum distance from
+    %initPositions(i,:) and goalPath(i,:,1)
     goalDistances = zeros(numberOfAgents,pathLength);
     
     for i = 1:numberOfAgents
@@ -76,10 +77,6 @@ function [ORCATimes, ORCADistances, ORCASmoothness, accelTimes, accelDistances, 
     %if the agent moves at idealSpeed. beeLineTimes(i,1) is the minimum
     %time between initPositions(i,:) and goalPath(i,:,1).
     beeLineTimes = max(0, goalDistances/idealSpeed);
-    
-    for i = 1:numberOfAgents
-        beeLineTimes(i,:) = max(0,(goalDistances(i,:) - 2*agentRadius) / idealSpeed);
-    end
     
     % == ORCA Simulation ================================================ %
     

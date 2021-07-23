@@ -40,7 +40,7 @@ for i = 1:length(Agent1.measuredAgents) % 2 since invader is Agent #1
             maggoal = norm(Agent1.pose - Agent1.goalPose); 
             maginvadergoal = norm(Agent1.measuredAgents(i).pose - Agent1.goalPose);
             
-            if maginvader > mapSize || maggoal < 5 || maginvadergoal < 10
+            if maginvader > mapSize || maggoal < 5 || maginvadergoal < 5
                 current_state = 5;
             else
                 for n = 1:length(Agent1.measuredAgents)

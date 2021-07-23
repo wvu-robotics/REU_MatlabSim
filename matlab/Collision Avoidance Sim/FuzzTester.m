@@ -4,7 +4,7 @@ clc
 close all
 
 %Defines the constants for the simulation
-numberOfAgents = 10;
+numberOfAgents = 25;
 agentRadius = 1;
 timeStep = .05;
 realTime = false;
@@ -18,7 +18,7 @@ safetyMargin = 1.2;
 pathLength = 1;
 
 %Holds how many different random scenarios will be generated
-numberOfSeeds = 100;
+numberOfSeeds = 1;
 
 %Holds the average extra time ORCA or Accel took in each seed
 avgORCATimes = zeros(numberOfSeeds,1);
@@ -92,12 +92,22 @@ for seed = 1:numberOfSeeds
         = comparisonTest(goalPath, initPositions, agentRadius, timeStep, realTime, mapSize, maxSpeed, idealSpeed, measuringRange);
     
     %Saves the average performance of each controller in this seed
-    avgORCATimes(seed) = mean(ORCATimes,'all')
-    avgAccelTimes(seed) = mean(accelTimes,'all')
+    avgORCATimes(seed) = mean(ORCATimes,'all');
+    avgAccelTimes(seed) = mean(accelTimes,'all');
+    
+    %Displays the current status of the FuzzTester
+    fprintf("\n");
+    disp("avgORCATimes = ");
+    disp(avgORCATimes(1:seed));
+    
+    disp("avgAccelTimes = ");
+    disp(avgAccelTimes(1:seed));
+    
+    disp(sprintf("%d",seed)+ " / " + sprintf("%d",numberOfSeeds) + " Seed(s) Simulated");
 end
 
-%Saves information about the 
-save("Performance Data 10 Agents.mat", ...
+%Saves information about the scenario generation
+save("Performance Data " + sprintf("%d",numberOfAgents) + " Agents.mat", ...
      'numberOfAgents', ...
      'agentRadius', ...
      'mapSize', ...

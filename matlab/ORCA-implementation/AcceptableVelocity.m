@@ -43,7 +43,6 @@ acceptability = ones(size(possibleVelControls,1),1);
 %Choose optimal velocities and find relative positions and velocities
 centralOptVel = centralAgentVelocity;
 neighborsOptVels = neighborsVelocities;
-relativeVel = centralAgentVelocity - neighborsVelocities;
 if vOptIsZero
     centralOptVel = [0,0];
     neighborsOptVels = zeros(size(neighborsOptVels));
@@ -53,12 +52,7 @@ relPositionOfNeighbors = neighborsPositions - centralAgentPosition;
 
 %find normalVectors and uVectors for each velocity obstacle using
 %getNormalVector
-[normalVector, uVector, noAvoidance] = getNormalVector(relativeOptVel, relPositionOfNeighbors, agentRadius, VOAngle, timeHorizon, AngleRefToB, relativeVel);
-
-%Remove the normalVectors and uVectors for neighbors that don't need to be
-%avoided
-normalVector(noAvoidance == 1,:) = [];
-uVector(noAvoidance == 1, :) = [];
+[normalVector, uVector] = getNormalVector(relativeOptVel, relPositionOfNeighbors, agentRadius, VOAngle, timeHorizon, AngleRefToB);
 
 %for each neighbor, update the acceptability of all velocities in the velocity space 
 %based on their velocity obstacle
