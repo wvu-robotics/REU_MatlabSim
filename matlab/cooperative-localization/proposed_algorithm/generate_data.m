@@ -26,10 +26,10 @@
 itterations = 100;
 headless = 1;
 
-for num_agents = [10]
+for num_agents = [5,10,25,50]
     for enviorment = 0
-        for boids_rules = [0,2]
-            for estimator = [1]                
+        for boids_rules = [0,1,2]
+            for estimator = [0,1,2]                
                 %% file name generator
                 switch estimator
                     case 0

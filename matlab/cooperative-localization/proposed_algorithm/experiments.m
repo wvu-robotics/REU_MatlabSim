@@ -178,11 +178,13 @@ end
 avg_covar = total_covar/(simu.N*simu.i)
 avg_mean_error = total_mean_error/(simu.N*simu.i)
 avg_path_deviation = (total_dist_traveled-total_goal_dist)/(simu.N*simu.i)
-avg_goals_reached = total_goals_reached/simu.N 
+avg_goals_reached = total_goals_reached/simu.N
 
-cost = (avg_mean_error + avg_covar + avg_path_deviation)/avg_goals_reached
+%cost = (avg_mean_error + avg_covar + avg_path_deviation)/avg_goals_reached
+%cost = (avg_covar-cov_max)/cov_max + (avg_mean_error-e_max)/e_max + (avg_path_deviation)/total_goal_dist+(6.75-avg_goals_reached)/6.75
+cost = ((avg_covar)/cov_max + (avg_mean_error)/e_max + (avg_path_deviation)/total_goal_dist)/((avg_goals_reached)/6.75);
+
 disp("===================================================================")
- 
  
 end
 
