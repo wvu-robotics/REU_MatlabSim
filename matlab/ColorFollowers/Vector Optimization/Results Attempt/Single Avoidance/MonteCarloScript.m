@@ -2,12 +2,12 @@ clear
 clc
 close all
 
-iterations = 10000;
+iterations = 1000;
 paramRows = 4;
 paramCols = 3;
 display = false;
 costs = zeros(iterations, 1);
-parfor i = 1:iterations
+for i = 1:iterations
 parameters = (rand(paramRows, paramCols) - 0.5) * 2;
 costs(i) = SingleAvoidOptimizeable(parameters, display);
 disp(i);

@@ -6,7 +6,7 @@ clc
 %   World Building
 numberOfAgents = 4;
 numberOfGroups = 4;
-agentRadius = .5;
+agentRadius = 5;
 timeStep = .1;
 mapSize = 10;
 counter = 0;
@@ -53,7 +53,13 @@ while(true)
     if counter > timeSteps
         break
     end
+%         F(counter) = getframe(gcf);
+    
 end
+%     video = VideoWriter('SingleAvoid1', 'MPEG-4');
+%     open(video);
+%     writeVideo(video, F);
+%     close(video)
 
 %% Required Functions
     function customTick(ENV, timeStep, display, mapSize)
