@@ -13,7 +13,7 @@ simu.N=10;           % number of Robots
 range = 5;           % robot detection range
 e_max = 2;           % maximum mean localization error
 cov_max = 5;         % maximum covariance norm
-simu.estimator = 1;  % 0 = dead reckoning
+simu.estimator = 2;  % 0 = dead reckoning
                      % 1 = covariance intersection
                      % 2 = decentralized EKF
                      % 3 = centralized EKF;
@@ -24,7 +24,7 @@ simu.accumulatedTime=0;  %first timestep
 
 simu.percentNoiseDifference =0.01; %slightly varies sigma per agent
 simu.sigmaVelocity=0.02;  %standard deviation of velocity errors (m/s)
-simu.sigmaYawRate=0.01*pi/180;    %standard deviation of yaw rate errors (rad/s)
+simu.sigmaYawRate=0.01;    %standard deviation of yaw rate errors (rad/s)
 simu.sigmaRange=.001;   %standard deviation of ranging measurement error (m)
 simu.sigmaHeading =1*pi/180; %standard deviation of heading measurment error (rad)
 simu.biasVelocity=0.1*simu.sigmaVelocity; %standard deviation of velocity turn on bias (m/s)

@@ -523,7 +523,7 @@ classdef agentEnv < handle
         function playback(obj, path)
             if exist(path, 'dir')
                 writerObj = VideoWriter(append(path,'playbackResult.avi'));
-                obj.playbackFlag =true;
+                obj.playbackFlag = true;
                 obj.hasCollsions = false;
 
                 sampleFrequency = 1/obj.timeStep;

@@ -2,7 +2,7 @@ clear
 clc
 close all
 
-%   World Building
+%World Building
 numberOfAgents = 15;
 agentRadius = 1;
 timeStep = .05;
@@ -39,6 +39,6 @@ ENV.realTime = false;
 ENV.updateEnv; %required after each agent is finally initialized
 
 while true
-    ENV.tick;
+    ENV.tick();
     collider(ENV.agents);
 end
