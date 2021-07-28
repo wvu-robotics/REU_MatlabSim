@@ -1,14 +1,14 @@
 clc
 clear
 close all
-F = figure;
-[X,Y] = meshgrid(-25:1:25 , -25:1:25 );
+F = figure;%The F figure is to plot the first figure of the Quiver flow field plot
+[X,Y] = meshgrid(-50:1:50 , -50:1:50 );%This is to set the F figure to size of the map 
 Z = zeros(length(X(:,1)),length(X(1,:)));
 Z(1,1) =1;
 
-q = quiver(X,Y,Z,Z);
+q = quiver(X,Y,Z,Z);%This shows the quiver arrows of the flow field from each agent and the invader
 hold on
-[~,c] = contour(X,Y,Z,1000, 'ShowText', 'off');%-1:.5:1
+[~,c] = contour(X,Y,Z,100, 'ShowText', 'off');%-1:.5:1 %The 
 
 hold off
 global COUNTOUR_IN
@@ -18,12 +18,12 @@ COUNTOUR_IN = Z;
 VX = Z;
 VY = Z;
 %   World Building
-numberOfAgents = 15;
+numberOfAgents = 20;
 agentRadius = .2;
 timeStep = .05;
-mapSize = 20;
+mapSize = 25;
 counter = 0;
-shape = circle (.2);
+shape = circle (.9);
 Home = [0,0];
 sampleFrequency = 1/timeStep;
 run('defined_variables.m');
@@ -71,20 +71,20 @@ ENV.setAgentPositions(initPositions);
 ENV.setGoalPositions(goalLocations);
 
 % Creating Static Obstacles
-w=1;
-l=2*mapSize;
-rectangle = [-(l/2+w),0;l/2+w,0;l/2+w,-w;-(l/2+w),-w];
-ENV.createStaticObstacle(rectangle,[0,-l/2],0,1);
-ENV.createStaticObstacle(rectangle,[l/2,0],-pi/2,2);
-ENV.createStaticObstacle(rectangle,[0,l/2],-pi,3);
-ENV.createStaticObstacle(rectangle,[-l/2,0],pi/2,4);
+% w=1;
+% l=2*mapSize;
+% rectangle = [-(l/2+w),0;l/2+w,0;l/2+w,-w;-(l/2+w),-w];
+% ENV.createStaticObstacle(rectangle,[0,-l/2],0,1);
+% ENV.createStaticObstacle(rectangle,[l/2,0],-pi/2,2);
+% ENV.createStaticObstacle(rectangle,[0,l/2],-pi,3);
+% ENV.createStaticObstacle(rectangle,[-l/2,0],pi/2,4);
 
 
 %Optional Features
 ENV.collisionsOn(true);
 ENV.pathVisibility(false);
 ENV.realTime = false;
-ENV.agentIdVisibility(true);
+ENV.agentIdVisibility(false);
 % for i=1:length(ENV.agents)
 %     ENV.agents(i).createProperty("Battery_Life",battery_life);
 %     ENV.agents(i).createProperty("Distance_From_Home",distance_from_home);
@@ -96,9 +96,8 @@ writeObj.Quality = 75;
 open(writeObj);
 while(true)
     ENV.tick;
-    set(c,"ZData", COUNTOUR_IN);
+%     set(c,"ZData", COUNTOUR_IN);
     vNorm = sqrt(VX.^2+VY.^2);
-   
 %     h = heatmap(rand(10));
 %     colormap(h,'default')
     set(q,'UData',VX./vNorm,'VData',VY./vNorm) 
@@ -109,7 +108,7 @@ while(true)
 %     env.tickRos;
 %     env.tick;
     writeVideo(writeObj, getframe(F))
-    if counter > 10
+    if counter > 100
         break
     end
     run('evolvingvariables.m');
