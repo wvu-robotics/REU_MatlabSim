@@ -2,7 +2,7 @@ clc
 clear
 close all
 %   World Building
-numberOfAgents = 20;
+numberOfAgents = 10;
 timeStep = .01;
 mapSize = 20;
 counter = 0;
@@ -10,7 +10,7 @@ f  = @testController;
 ENV = agentEnv(numberOfAgents,f,mapSize,timeStep); 
 
 %Updating agent properties
-shape = [-2,-1; -2,1; 2,1; 2,-1];%circle(.7);
+shape = 2*[-2,-1; -2,1; 2,1; 2,-1];%circle(.7);
 for i = 1:numberOfAgents
     ENV.agents(i).setShape(shape);
     ENV.setAgentColor(i,[0 1 0]);
