@@ -221,7 +221,7 @@ classdef agentEnv < handle
                         configurationSpacePolygon = obj.configurationSpace(configurationSpaceIndex,obj.agents(id).getShapeID, agentsType(obstacleID).getShapeID).Vertices;
                         newShape = obj.transformShape(configurationSpacePolygon,agentsType(obstacleID).heading);
                         newShape(1,:) = newShape(1,:) + agentsType(obstacleID).pose(1);
-                        newShape(2,:) = newShape(2,:) + agentsType(obstacleID).pose(2);2
+                        newShape(2,:) = newShape(2,:) + agentsType(obstacleID).pose(2);
                     
                         [collision]= inpolygon( obj.agents(id).pose(1) ,obj.agents(id).pose(2) , ...
                                                         newShape(1,:), ...
