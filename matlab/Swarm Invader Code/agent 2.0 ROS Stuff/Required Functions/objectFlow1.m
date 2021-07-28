@@ -22,3 +22,5 @@ Vyi = Vx1*sin(atan2(-vi,-ui) + 2*pi) + Vy1*cos(atan2(-vi,-ui) + 2*pi);
 
 V_direction = [Vxi Vyi];
 end
+
+% This code was created by Trevor Smith for WVU NSF REU Summer 2021. 

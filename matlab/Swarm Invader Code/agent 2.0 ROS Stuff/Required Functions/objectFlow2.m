@@ -51,3 +51,6 @@ end
 
 V_direction = [Vxi Vyi];
 end
+
+% This code was created by Trevor Smith and altered by Daniel Villarreal
+% for WVU NSF REU Summer 2021.

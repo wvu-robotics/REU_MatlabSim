@@ -1,3 +1,13 @@
+% This function file was made from the state machine script. The only
+% changes are that it now incorporates the separate properties. All
+% comments can be found in the original state machine script. To summarize
+% it: the state machine takes in individual, evolving variables and static
+% variables to allow robots to make decisions. The decisions can be seen by
+% observing the "current state", which is what will enable robots to take
+% up different actions to complete the task they choose to. "set" "get"
+% Property is to allow the robots to set the value of their own individual
+% private properties. the ENV class and Agent class are critical in
+% ensuring this runs smoothly. 
 function [current_state] = state_machine_function(Agent)
 run('register_variables_for_function.m');
 for i = 1:length(Agent.measuredAgents)
@@ -215,3 +225,4 @@ for i = 1:length(Agent.measuredAgents)
 end
 end
 
+% Any questions can be directed to danielvillarrealusa@gmail.com. 

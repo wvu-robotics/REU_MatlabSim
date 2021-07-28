@@ -1,3 +1,9 @@
+% This script is to be used in the main launch file. It is to create
+% prviate properties in the launch file for the ENV class, which interacts
+% with the Agent class. These properties are accessed by function files to
+% run the state machine and other supporting files. The goal is to have
+% each individual agent have and calculate its individual variables
+% depending on its surroundings and current state. 
 for i = 1:numberOfAgents
     if ENV.agents(i).getProperty('isEnemy') == false
         ENV.agents(i).createProperty('battery_life',battery_life);
@@ -13,3 +19,5 @@ for i = 1:numberOfAgents
         ENV.agents(i).createProperty('enough_battery_home_invader',enough_battery_home_invader);
     end
 end
+
+% Any questions can be directed to danielvillarrealusa@gmail.com.
