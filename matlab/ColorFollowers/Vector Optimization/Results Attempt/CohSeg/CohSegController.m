@@ -67,24 +67,38 @@ if otherGroupDen == 0
     otherGroupCentroidUnit = [0,0];
 end
 
+if ~isempty(otherGroupCentroid)
+    distanceToOtherGroupCentroid = norm(otherGroupCentroid);
+else
+   distanceToOtherGroupCentroid = 1000; 
+end
+if isnan(distanceToOtherGroupCentroid)
+    distanceToOtherGroupCentroid = 1000;
+end
+
 %Collect scalars
 numOfSameGroupNeighbors = sameGroupDen;
 numOfOtherGroupNeighbors = otherGroupDen;
 closestNeighborDist;
+distanceToOtherGroupCentroid;
 distanceToCenter;
-scalers = [numOfSameGroupNeighbors; numOfOtherGroupNeighbors; closestNeighborDist; distanceToCenter; 1];
+scalers = [numOfSameGroupNeighbors; numOfOtherGroupNeighbors; 10/closestNeighborDist^2; 10/distanceToOtherGroupCentroid^3; distanceToCenter; 1];
 
 %Collect vectors
 sameGroupCentroidUnit;
+orthoToSameGroupCentroidUnit = [sameGroupCentroidUnit(2), -sameGroupCentroidUnit(1)];
 otherGroupCentroidUnit;
+orthoToOtherGroupCentroidUnit = [otherGroupCentroidUnit(2), -otherGroupCentroidUnit(1)];
 closestNeighborUnit;
 unitToCenter;
-vectors = [sameGroupCentroidUnit; otherGroupCentroidUnit; closestNeighborUnit; unitToCenter];
+vectors = [sameGroupCentroidUnit; orthoToSameGroupCentroidUnit; otherGroupCentroidUnit; orthoToOtherGroupCentroidUnit; closestNeighborUnit; unitToCenter];
 
-parameters = [-0.1,  -0.1,   0,    0,  0.8;
-              0, -.1, -0.1,   0, -0.1;
-              -0.05,   -.05, 0,   0, -0.1;
-              0,   0,    0, .01,  .01]*3;
+parameters = [-0.1,  -0.1,     0,     -0.1,  0,    1.8; %sameGroupCentroidUnit
+              0.1,      0,     0,     0,  0,   -0.3; %orthoToSameGroupCentroidUnit
+              0,      -.1,  -0.1,     -0.1,  0,   +0.3; %otherGroupCentroidUnit
+              -0.1,   +0.1,    0,     0,  0,   +1.2; %orthoToOtherGroupCentroidUnit
+              0,        0,   -0.3,    0,  0,   +0.4; %closestNeighborUnit
+              0,        0,     0,     0,  0.01,    .01]*3; %unitToCenter
               
 
 %Now need to do the math to find the next velocity

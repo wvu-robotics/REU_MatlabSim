@@ -18,7 +18,7 @@ safetyMargin = 1.2;
 pathLength = 1;
 
 %Holds how many different random scenarios will be generated
-numberOfSeeds = 1;
+numberOfSeeds = 10;
 
 %Holds the average extra time ORCA or Accel took in each seed
 avgORCATimes = zeros(numberOfSeeds,1);

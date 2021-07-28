@@ -4,10 +4,10 @@ clc
 
 %% Setting Up Sim
 %   World Building
-numberOfAgents = 30;
+numberOfAgents = 15;
 numberOfGroups = 3;
 agentRadius = .5;
-timeStep = .1;
+timeStep = .05;
 mapSize = 10;
 counter = 0;
 maxSpeed = 5;
@@ -15,7 +15,7 @@ sensingRange = 16;
 connectionRange = 2;
 newParameters = zeros(5,1);
 display = true;
-timeSteps = 500;
+timeSteps = 300;
 
 spawnType = 'random';
 %spawnType = 'opposingGroups';
@@ -54,7 +54,14 @@ while(true)
     if counter > timeSteps
         break
     end
+    F(counter) = getframe(gcf);
+    
 end
+    video = VideoWriter('CohSeg2', 'MPEG-4');
+    open(video);
+    writeVideo(video, F);
+    close(video)
+
 
 %% Required Functions
     function customTick(ENV, timeStep, display, mapSize)
@@ -71,8 +78,8 @@ end
         figure(1);
         cla;
             hold on
-            xlim([-mapSize*3,mapSize*3]);
-            ylim([-mapSize*3,mapSize*3]);
+            xlim([-mapSize*2,mapSize*2]);
+            ylim([-mapSize*2,mapSize*2]);
             for ii = 1:length(ENV.agents)
                 
                 RGB = ENV.agents(ii).color;

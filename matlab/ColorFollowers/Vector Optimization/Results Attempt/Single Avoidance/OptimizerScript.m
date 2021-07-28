@@ -21,7 +21,7 @@ results = bayesopt(fun,parameters, 'MaxObjectiveEvaluations', 100, 'ExplorationR
 %{
 save('Results/results2.m', '-mat');
 
-load('Results/results1.m', '-mat');
+load('results1.m', '-mat');
 display = true;
 parameters = results.XAtMinObjective;
 SingleAvoidOptimizeable(parameters, display)
