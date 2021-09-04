@@ -1,3 +1,8 @@
+%% findForceDirection(environment, unitToGoal, mapSize, sensingRadius, theta, maxNeighborToGoalForceRatio, middleVariance)
+%   This function does the actual control for the Color_Followers_Local_Diversity script
+%   by finding the appropriate centroid and cooresponding velocity control
+%   for each agent.
+
 function forceAngle = findForceDirection(environment, unitToGoal, mapSize, sensingRadius, theta, maxNeighborToGoalForceRatio, middleVariance)
 
 %Set initial force to be the unit in the dirrection of the goal point for

@@ -1,3 +1,10 @@
+%% Color_Followers Script
+%   This script was the first attempt at moving a swarm of agents using
+%   their local sensing changing their color based on where they want to go
+%   the results weren't great because if the agent density is too high the
+%   robots clump up
+
+
 close all
 clear
 clc
@@ -253,6 +260,8 @@ for i = 1:mapSize %x coordinate
                 yTopWall = true;
             end
             found = false;
+            %This is a really bad way to handle their motion, and I fixed
+            %it in later versions
             if (forceAngle <= 22.5/180*pi || forceAngle > 337.5/180*pi)
                 if ~xTopWall
                     if environment(i+1, j, 4) == 0

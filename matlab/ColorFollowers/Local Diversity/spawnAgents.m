@@ -1,3 +1,7 @@
+%% spawnAgents(environment, numToSpawn, mapSize, spawnType)
+%   This spawns agents for the Color_Followers_Local_Diversity script
+%   depending on the specified "spawnType"
+
 function environment = spawnAgents(environment, numToSpawn, mapSize, spawnType)
 
 switch spawnType

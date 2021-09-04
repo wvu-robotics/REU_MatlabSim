@@ -1,3 +1,16 @@
+%% Color_Followers_Local_Diversity Script
+%   This is the main script for the the final version of the color follower
+%   discrete simulation. In this version, the agents are either attracted
+%   or repeled by a centroid of nearby agents that is weighted towards
+%   agents of similar colors. The agents are attracted to the centorid if 
+%   the variance in color of nearby agents is low and they are repelled if
+%   the variance is high. Each agents color is based on the dirrection
+%   towards their goal location. The result of this control method is that
+%   the agents form nice streams with agents that are going in the same
+%   dirrection but when they encounter another group going an a different
+%   dirrection they spread appart, allowing the two groups to pass by one
+%   another without getting stuck
+
 close all
 clear
 clc

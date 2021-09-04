@@ -94,7 +94,7 @@ unitToCenter;
 vectors = [sameGroupCentroidUnit; orthoToSameGroupCentroidUnit; otherGroupCentroidUnit; orthoToOtherGroupCentroidUnit; closestNeighborUnit; unitToCenter];
 
 parameters = [-0.1,  -0.1,     0,     -0.1,  0,    1.8; %sameGroupCentroidUnit
-              0.1,      0,     0,     0,  0,   -0.3; %orthoToSameGroupCentroidUnit
+              0.1,      0,     0,     0,  0,   -0.8; %orthoToSameGroupCentroidUnit
               0,      -.1,  -0.1,     -0.1,  0,   +0.3; %otherGroupCentroidUnit
               -0.1,   +0.1,    0,     0,  0,   +1.2; %orthoToOtherGroupCentroidUnit
               0,        0,   -0.3,    0,  0,   +0.4; %closestNeighborUnit

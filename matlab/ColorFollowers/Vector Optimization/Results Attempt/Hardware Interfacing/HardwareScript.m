@@ -4,30 +4,36 @@ clc
 
 %% Setting Up Sim
 %   World Building
-numberOfAgents = 15;
-numberOfGroups = 3;
-agentRadius = .5;
-timeStep = .05;
-mapSize = 10;
+numberOfAgents = 2;
+numberOfGroups = 2;
+agentRadius = 0.08;
+timeStep = .1;
+mapSize = 2;
 counter = 0;
-maxSpeed = 5;
-sensingRange = 25; %16
-connectionRange = 2;
-newParameters = zeros(5,1);
+maxSpeed = 0.1;
+sensingRange = 0.25;
+connectionRange = 0;
 display = true;
-timeSteps = 300;
+timeSteps = 500000;
 
-spawnType = 'random';
-%spawnType = 'opposingGroups';
+%Setup spawn type
+spawnType = 'antipodal';
+%spawnType = 'random';
 
 %Set f to appropriate controller handle
-f = @CohSegController;
+f = @HardwareController;
 
 %Set up the environment
 ENV = agentEnv(numberOfAgents,agentRadius,mapSize,timeStep); 
 
+%Setting Up Ros Stuff
+ENV.agents(1).setUpPublisher('/turtle5/cmd_vel');
+ENV.agents(2).setUpPublisher('/turtle6/cmd_vel');
+ENV.agents(1).setUpSubscriber('/vicon/turtle5/turtle5');
+ENV.agents(2).setUpSubscriber('/vicon/turtle6/turtle6');
+
 %Spawn the agents using a custom spawn function
-[initPositions, goalLocations] = CohSegSpawn(numberOfAgents, spawnType, mapSize);
+[initPositions, goalLocations] = HardwareSpawn(spawnType, numberOfAgents);
 
 %Set some variables in the environment
 ENV.setAgentPositions(initPositions);
@@ -46,22 +52,19 @@ for i = 1:numberOfAgents
 end 
 
 %% Running Sim
-cost = 0;
 while(true)
-    customTick(ENV, timeStep, display, mapSize);
+    ENV.tickRos();
     counter = counter + 1;
     fprintf("Time: %i \n",counter)
     if counter > timeSteps
         break
     end
-    F(counter) = getframe(gcf);
-    
+%         F(counter) = getframe(gcf);
 end
-    video = VideoWriter('CohSeg2', 'MPEG-4');
-    open(video);
-    writeVideo(video, F);
-    close(video)
-
+%     video = VideoWriter('SingleAvoid1', 'MPEG-4');
+%     open(video);
+%     writeVideo(video, F);
+%     close(video)
 
 %% Required Functions
     function customTick(ENV, timeStep, display, mapSize)
@@ -69,7 +72,6 @@ end
                 ENV.agents(ii).callMeasurement(ENV);
                 ENV.agents(ii).callController;     
                 customPhys(ENV, ii, timeStep);
-                ENV.updateAgentPath(ii,ENV.agents(ii).pose);
             end
             if display
                 customDraw(ENV, mapSize);
@@ -79,18 +81,12 @@ end
         figure(1);
         cla;
             hold on
-            xlim([-mapSize*2,mapSize*2]);
-            ylim([-mapSize*2,mapSize*2]);
+            xlim([-mapSize*3,mapSize*3]);
+            ylim([-mapSize*3,mapSize*3]);
             for ii = 1:length(ENV.agents)
                 
                 RGB = ENV.agents(ii).color;
-                %RGB = RGB/256;
                 plot(ENV.agents(ii).pose(1), ENV.agents(ii).pose(2), '.', 'MarkerEdge', RGB, 'MarkerSize', 25);
-                if length(ENV.agents(ii).path(:,1)) > 25
-                    plot(ENV.agents(ii).path(end-25:end, 1), ENV.agents(ii).path(end-25:end, 2), '.', 'MarkerEdge', RGB);
-                else
-                    plot(ENV.agents(ii).path(:, 1), ENV.agents(ii).path(:, 2), '.', 'MarkerEdge', RGB);
-                end
                 set(gca,'Color','k');
             end
             hold off
