@@ -1,122 +1,39 @@
-%% Agent
-% A representation of terrestrial robot.
-
 classdef Agent < handle
+    %UNTITLED3 Summary of this class goes here
+    %   Detailed explanation goes here
+    
     properties (Access = public)
-        %% Current State
-        
-        %1x2 double: The position of the agent
-        pose = [0 0];
-        
-        %1x3 double: The current color of the agent
-        color = [0 0 0];
-        
-        %double: The current heading of the agent
-        heading = 0;
-        
-        %1x2 double: The global current velocity of agent
-        velocity = [0 0];
-        
-        %% Prior States/Path
-        
-        %Px2 double: path(i,:) was the pose of the agent i time steps after
-        %the start of the simulation.
-        path;
-        
-        %Px3 double: pathColor(i,:) was the color of the agent i time steps
-        %after the start of the simulation.
-        %Precondition: size(pathColor,1) == size(path,1)
-        pathColor;
-        
-        %Px1 double: previousHeading(i,:) was the heading of the agent i
-        %time steps after the start of the simulation.
-        %Precondition: size(previousHeading,1) == size(path,1)
-        previousHeading;
-        
-        %% Commands
-        
-        %1x2 double: The global velocity the agent wants to move at
-        velocityControl = [0 0];
-        
-        %double: The angular velocity the agent wants to turn at
-        angularVelocityControl = 0;
-        
-        %positive double: maxSpeed >= norm(velocityControl)
-        maxSpeed = 2;
-        
-        %positive double: The speed the agent wants to move at
-        idealSpeed = 1;
-        
-        %1x2 double: The position the agent wants to get to
-        goalPose = [0 0];
-        
-        %% Measuring
-        
-        %positive double: The radius in which the agent can detect other
-        %agents and obstacles
-        measuringRange = 1000;
-        
-        %Nx1 Agent: The neighboring agents whose poses are within a
-        %measuringRange radius of this agent
-        measuredAgents = Agent.empty;
-        
-        %Nx1 staticObstable: The obstacles whose poses are within a
-        %measuringRange radius of this agent
-        measuredObstacle = staticObstacle.empty;
-        
-        %% Collision
-        
-        %4x2 double: Holds the corners of a bounding box that encloses the
-        %shape of this agent
-        broadCollisionSpace;
-        
-        %DO NOT MODIFY: logical: Whether or not the agentEnv holding this
-        %agent needs to respond to a changed broadCollisionSpace
-        needsUpdate = false;
-        
-        %% ROS Bridge
-        
-        %ros.Publisher: Publishes global velocity and angular velocity
-        %commands of type geometry_msgs.Twist
-        publisher;
-        
-        %ros.Subscriber: Receives position and heading updates of type
-        %geometry_msgs.TransformStamped
-        subscriber;
-        
-        %geometry_msgs.Twist: The message to be published
-        msgPub;
-        
-        %geometry_msgs.TransformStamped: The message just received
-        msgSub;
+       pose = [0 0];
+       velocity = [0 0];
+       velocityControl = [0 0];
+       angularVelocityControl = 0;
+       path; 
+       pathColor;
+       previousHeading;
+       goalPose = [0 0];
+       color = [0 0 0];
+       measuredAgents = Agent.empty;
+       measuredObstacle = staticObstacle.empty;
+       measuringRange = 100;
+       maxSpeed = .5;
+       idealSpeed = 1;
+       heading = 0;
+       broadCollisionSpace;
+       needsUpdate = false;  
+       %ros
+       publisher;
+       subscriber;
+       msgPub;
+       msgSub;
     end
     
-    properties (Access = private)
-        
-        %unsigned integer: Used by the agentEnv to group this agent with
-        %other similarly shaped agents.
+    properties (Access = private)  
         shapeID = 0;
-        
-        %unsigned integer: Used by the agentEnv to uniquely identify and
-        %agent
       	id;
-        
-        %Vx2 double: A list of the vertices describing the shape of the
-        %agent. The vertices' positions are relative to the agent's pose
-        %and heading.
         shape = circle(.5);
-        
-        %positive double: The radius of a bounding circle around the agent.
-        %Formally, this means radius = max(vecnorm(shape,2,2)).
         radius = 1;
-        
-        %funcHandle(Agent): A function that sets the velocityControl
         controller;
-        
-        %positive double: The timeStep used by the agentEnv
-        timeStep;
-        
-        %
+        timeStep; 
         extraProperties = cell.empty;
         extraPropertyList = string.empty;
     end
@@ -234,3 +151,4 @@ classdef Agent < handle
         
         end
 end
+

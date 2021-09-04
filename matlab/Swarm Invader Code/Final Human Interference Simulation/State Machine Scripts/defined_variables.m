@@ -1,6 +1,3 @@
-% This script is to be run in the launch file. It will create variables in
-% the base workspace, which is necessary when creating the separate
-% proeprties for each individual agent. 
 battery_life = 100;
 current_state = 0; % States are listed below:
                         % Idle = 0                      ; w = $1
@@ -29,5 +26,3 @@ distance_from_invader = 0;
 enough_battery_home = 0;
 enough_battery_invader = 0;
 enough_battery_home_invader = 0;
-
-% Any questions can be directed to danielvillarrealusa@gmail.com.

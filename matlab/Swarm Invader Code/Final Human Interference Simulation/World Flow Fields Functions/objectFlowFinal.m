@@ -17,8 +17,8 @@ Y = defendposxy(2);
 hx = homeposexy(1);
 hy = homeposexy(2);
 Sd = S;
-Sn = S/3;
-Sh = -S/2;
+Sn = S/45;
+Sh = -S/6;
 
 [U2,V2,PSI1,PHI2] = objectFlow(xi,yi,xi-hx,yi-hx,Sd,X,Y);
 [Vx2,Vy2,Psi,Phi] = sourceFlow(hx,hy,Sh,X,Y);
@@ -40,7 +40,7 @@ end
 cmd_vel = [Vxi,Vyi];
 
 if Agent1.getID == 5
-    [X,Y] = meshgrid(-25:1:25 , -25:1:25);
+    [X,Y] = meshgrid(-50:1:50 , -50:1:50);
     [U2,V2,PSI1,PHI2] = objectFlow(xi,yi,xi-hx,yi-hy,Sd,X,Y);
     [Vx2,Vy2,Psi,Phi] = sourceFlow(0,0,Sh,X,Y);
     Vx = U2 + Vx2;
@@ -48,7 +48,7 @@ if Agent1.getID == 5
     PHI = PHI2 + Phi;
     PSI = PSI1 + Psi;
     
-    for n = 1:length(Agent1.measuredAgents) 
+    for n = 1:length(Agent1.measuredAgents)
         measuredxy = Agent1.measuredAgents(n).pose;
         xn = measuredxy(1);
         yn = measuredxy(2);
@@ -65,11 +65,6 @@ if Agent1.getID == 5
     VY = Vy;
 end
 
-V_direction = cmd_vel; % One output to send to robots controller, this
-                       % will allow users to add a direction to a speed,
-                       % creating a velocity. 
+V_direction = cmd_vel;
 
 end
-
-% This code was created by Trevor Smith and altered by Daniel Villarreal
-% for WVU NSF REU Summer 2021

@@ -19,3 +19,4 @@ Psi =  -S.*sin(theta)./(2.*pi.*r);
 Phi = (S.*cos(theta))./(2.*pi.*r);
 end
 
+% This code was created by Trevor Smith for WVU NSF REU Summer 2021.

@@ -179,7 +179,7 @@ classdef agentEnv < handle
                                 collisionResolved = true;      
                             else
                             if round(newRelativePose,5) == round(initialPose,5)
-                                converged = true;2
+                                converged = true;
                             else
                             initialPose = newRelativePose;
                             initialHeading = newHeading;
@@ -315,7 +315,7 @@ classdef agentEnv < handle
             newShape = obj.transformShape(shape, heading);  
             x = newShape(1,:) + obj.agents(id).pose(1);
             y = newShape(2,:) + obj.agents(id).pose(2);
-            set(obj.lineAgent(id),'xdata',x,'ydata',y);
+            set(obj.lineAgent(id),'xdata',x,'ydata',y)
         end
 
         function newShape = transformShape(~,shape, heading)
@@ -492,21 +492,13 @@ classdef agentEnv < handle
         function tick(obj)
             obj.checkIfUpdateIsNeeded;
             tStart = cputime;
-            
-            %Gets measurements and velocity controls for each agent
-            for i = 1:obj.numberOfAgents
-                obj.agents(i).callMeasurement(obj);
-                obj.agents(i).callController;
-            end
-            
-            %Handles kinematics and collision simulation for all agents
             for i = randperm(obj.numberOfAgents)
-                obj.updateCollisionList('A',i);
-                obj.physics(i);
+                obj.agents(i).callMeasurement(obj);
+                obj.agents(i).callController; 
+                obj.updateCollisionList('A',i);    
+                obj.physics(i);   
             end
-            
             obj.updateGraph; %Can be put inside for loop but slower
-            
             tEnd = cputime - tStart;
             if obj.realTime
                 if tEnd > obj.timeStep
@@ -515,7 +507,7 @@ classdef agentEnv < handle
                     pause(obj.timeStep - tEnd);
                 end
             else
-                pause(.001);
+                pause(.00001);
             end
             
         end 
@@ -523,7 +515,7 @@ classdef agentEnv < handle
         function playback(obj, path)
             if exist(path, 'dir')
                 writerObj = VideoWriter(append(path,'playbackResult.avi'));
-                obj.playbackFlag = true;
+                obj.playbackFlag =true;
                 obj.hasCollsions = false;
 
                 sampleFrequency = 1/obj.timeStep;
@@ -571,29 +563,25 @@ classdef agentEnv < handle
         function tickRos(obj)
             tStart = cputime;
             for i = randperm(obj.numberOfAgents)
-                obj.agents(i).msgSub = receive(obj.agents(i).subscriber);
-                
-                obj.agents(i).pose = -[obj.agents(i).msgSub.Transform.Translation.X, ...
-                                      obj.agents(i).msgSub.Transform.Translation.Y]; 
-                eulAngles = quat2eul([obj.agents(i).msgSub.Transform.Rotation.X, ...
-                             obj.agents(i).msgSub.Transform.Rotation.Y, ...
-                             obj.agents(i).msgSub.Transform.Rotation.Z, ...
-                             obj.agents(i).msgSub.Transform.Rotation.W]);
-                         
-                obj.agents(i).heading = eulAngles(3); 
+%                 obj.agents(i).msgSub = receive(obj.agents(i).subscriber);
+%                 
+%                 obj.agents(i).pose = [obj.agents(i).msgSub.Transform.Translation.X, ...
+%                                       obj.agents(i).msgSub.Transform.Translation.Y]; 
+%                                   
+%                  obj.agents(i).heading = wrapTo2Pi(2*asin(obj.agents(i).msgSub.Transform.Rotation.Z));
                 obj.agents(i).callMeasurement(obj);          
                 obj.agents(i).callController;
                 contVel = obj.transform2D([obj.agents(i).velocityControl(1);
                                            obj.agents(i).velocityControl(2)], ...
                                            obj.agents(i).heading);
                                
-                obj.agents(i).msgPub.Linear.X = -contVel(1);
-                obj.agents(i).msgPub.Linear.Y = -contVel(2);
+                obj.agents(i).msgPub.Linear.X = contVel(1);
+                obj.agents(i).msgPub.Linear.Y = contVel(2);
                 obj.agents(i).msgPub.Angular.Z = obj.agents(i).angularVelocityControl;
                 
                 obj.agents(i).heading = obj.agents(i).heading + obj.agents(i).angularVelocityControl*obj.timeStep;
                 obj.agents(i).pose = obj.findAgentControllerKinematics(i);
-                  send(obj.agents(i).publisher,obj.agents(i).msgPub);
+                 send(obj.agents(i).publisher,obj.agents(i).msgPub);
                 obj.updateAgentPath(i,obj.agents(i).pose);
             end
             obj.updateGraph;

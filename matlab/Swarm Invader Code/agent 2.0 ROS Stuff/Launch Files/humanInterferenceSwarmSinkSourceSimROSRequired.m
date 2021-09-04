@@ -3,7 +3,7 @@ clear
 close all
 %   World Building
 numberOfAgents = 20;
-agentRadius = .5;
+agentRadius = .25;
 timeStep = 1;
 mapSize = 20;
 counter = 0;

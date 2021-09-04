@@ -1,13 +1,6 @@
-function testController5(Agent1)
-Agent1.color = [0 1 0]; % green
-maxvel = 5; % chase to make max vel [max vel, max vel] and min vel is [-max vel, -maxvel]
+function testControllerSwarm(Agent1)
+Agent1.color = [0 1 0];
 run('register_variables_for_function.m');
-placeholdervar = evolving_variables_function(Agent1);
-% placeholdervar is to satisfy the requirement of an output for the function
-% this value will not be used. all variables that needs to be changed were
-% changed within the function file using classes and built-in MATLAB
-% function to "assignin" base workspace. 
-%                                       Current State     Wallet
                         % Idle = 0                      ; w = $1
                         % On Alert = 1                  ; w = $2
                         % In Pursuit = 2                ; w = $5
@@ -18,75 +11,69 @@ placeholdervar = evolving_variables_function(Agent1);
                         % Searching = 7                 ; w = $2
                         % Gathering = 8                 ; w = $5
                         % Shut-down (battery = 1%) = 9  ; w = -$2
-placeholdervar1 = state_machine_function(Agent1); % same explanation above
 for i = 1:length(Agent1.measuredAgents)
-    if Agent1.measuredAgents(i).getProperty('isEnemy') == true
-        invader_detected = 1;
-        assignin('base','invader_detected',invader_detected); % changes base workspace variable value
-        Agent1.setProperty('invader_detected',invader_detected); % for use later in the state machine when deciding what to do next
-        fprintf('Invader Detected\n');
-    end
+if Agent1.measuredAgents(i).getProperty('isEnemy') == true
+    invader_detected = 1;
+    fprintf('Invader Detected\n');
 end
-% run('state_machine.m');
+end
+run('state_machine.m');
+current_state = 5;
+% Agent1.setProperty("Battery_Life",battery_life);
+% Agent1.setProperty("Distance_From_Home",distance_from_home);
+% Agent1.setProperty("Distance_From_Invader",distance_from_invader);
+% Agent1.getProperty("Battery_Life")
+% Agent1.getProperty("Distance_From_Home")
+% Agent1.getProperty("Distance_From_Invader")
 for i = 1:length(Agent1.measuredAgents) % 2 since invader is Agent #1
-    if Agent1.getProperty('current_state') == 0 || Agent1.getProperty('current_state') == 1
-        Agent1.velocityControl= [0,0]; % stationary 
-        if Agent1.getProperty('current_state') == 1
+    if current_state == 0 || current_state == 1 %revisit this one
+        Agent1.velocityControl= 0;
+        if current_state == 1
             fprintf('State: On Alert\n')
-        elseif Agent1.getProperty('current_state') == 0
+        elseif current_state == 0
             fprintf('State: Idle\n')
         end
         
-    elseif Agent1.getProperty('current_state') == 2
+    elseif current_state == 2
         
         if Agent1.measuredAgents(i).getProperty('isEnemy') == true
             maginvader = norm(Agent1.pose - Agent1.measuredAgents(i).pose);
-            % magnitude of vector from agent location to invader 
             maggoal = norm(Agent1.pose - Agent1.goalPose); 
-            % magnitude of vector from agent location to goal (home)
             maginvadergoal = norm(Agent1.measuredAgents(i).pose - Agent1.goalPose);
-            % magnitude of vector from invader to target (home) 
             
-            if maginvader > mapSize || maggoal < 5 || maginvadergoal < 5
+            if maginvader > mapSize || maggoal < 5 || maginvadergoal < 10
                 current_state = 5;
             else
-                for n = 1:length(Agent1.measuredAgents)
-                    if Agent1.measuredAgents(i).getProperty('isEnemy') == true 
-                        invaderpos = Agent1.measuredAgents(i).pose;
-                        x = objectFlow1(invaderpos, Agent1.pose,1000);
-                        currentvel= 5*(x/norm(x)); % speed is 5, unit vector is from objectFlow
-                        comp1 = currentvel(1);
-                        comp2 = currentvel(2);
-                        while comp1 > maxvel || comp2 > maxvel || comp1 < -maxvel || comp2 < -maxvel
-                        comp1 = comp1/1.1; % divide both vector component by 1.1 each loop so long as 
-                        comp2 = comp2/1.1; % at least one componenet is greater than max vel or less than min vel.
-                        end
-                    end
-                end
+                x = objectFlowFinal(Agent1.measuredAgents(i).pose, Agent1.pose,100000,Agent1);
+                Agent1.velocityControl= 5*(x/norm(x));
                 fprintf('State: In Pursuit\n')
             end
         end
         
-    elseif Agent1.getProperty('current_state') == 3 % state machine should not be outputting this
+    elseif current_state == 3 % state machine should not be outputting this
        fprintf('ERROR\nThe state machine is outputting current_state = 3\n');
        
-    elseif Agent1.getProperty('current_state') == 4
+    elseif current_state == 4
         Agent1.velocityControl = Agent1.calcIdealUnitVec * 5;
         fprintf('State: Returning Home\n')
         
-    elseif Agent1.getProperty('current_state') == 5
+    elseif current_state == 5
         %Agent1.velocityControl = 5 * objectFlow2(Home, Agent1.pose,100,Agent1);
+        l = -25:1:25;
        for n = 1:length(Agent1.measuredAgents)
         if Agent1.measuredAgents(i).getProperty('isEnemy') == true 
            invaderpos = Agent1.measuredAgents(i).pose;
-           currentvel = 5*objectFlow2(invaderpos, Agent1.pose, Home, numberOfAgents*(1000/3), Agent1);  % speed is 5, unit vector is from objectFlow
+           currentvel = 5*objectFlowFinal(invaderpos, Agent1.pose, Home, 100000, Agent1);
+%            ix = find( (Agent1.pose(1) <= l) & (Agent1.pose(1) +1 > l));
+%            iy = find( (Agent1.pose(2) <= l) & (Agent1.pose(2) +1 > l));
            comp1 = currentvel(1);
            comp2 = currentvel(2);
-           while comp1 > maxvel || comp2 > maxvel || comp1 < -maxvel || comp2 < -maxvel
-               comp1 = comp1/1.1; % divide both vector component by 1.1 each loop so long as
-               comp2 = comp2/1.1; % at least one componenet is greater than max vel or less than min vel.
+           while comp1 > 5 || comp2 > 5 || comp1 < -5 || comp2 < -5
+               comp1 = comp1/1.1;
+               comp2 = comp2/1.1;
            end
-           Agent1.velocityControl = [comp1 comp2]; 
+           Agent1.velocityControl = [comp1 comp2];
+           
         end
        end
 %         y = norm(Agent1.goalPose - Agent1.pose);
@@ -101,29 +88,28 @@ for i = 1:length(Agent1.measuredAgents) % 2 since invader is Agent #1
 %                                              % around home.
 %         end
 
-    elseif Agent1.getProperty('current_state') == 6
+    elseif current_state == 6
         Agent1.velocityControl = Agent1.calcIdealUnitVec * 5;
         y = norm(Agent1.goalPose - Agent1.pose);
-        if y < 2 % if magnitude of vector from goal (home) to agent is 2 or less, then it's close enough to begin charging
+        if y < 2
             Agent1.velocityControl= 0;
             fprintf('State: Charging\n')
         end
 
-    elseif Agent1.getProperty('current_state') == 7 
+    elseif current_state == 7 
         x = randi(mapSize,1,2);
         Agent1.velocityControl= 5*(x/norm(x));
         fprintf('Status: Searching\n')
         % random walk around small area for searching 
         
-    elseif Agent1.getProperty('current_state') == 8
+    elseif current_state == 8
         Agent1.velocityControl = Agent1.calcIdealUnitVec * 5;
         fprintf('State: Gathering\n')
         
         % set course for current position to back home and subtract battery
         % life from percentage required to go back home. also have it go
-        % back to original position (essentially subtract battery for a
-        % round trip home and back to original position)
-    elseif Agent1.getProperty('current_state') == 9
+        % back to original position
+    elseif current_state == 9
         Agent1.velocityControl = Agent1.calcIdealUnitVec * 5;
         fprintf('State: Shutdown\n')
         fprintf('Robot died %.2f ft. from home.\n',outstanding_distance)

@@ -1,5 +1,4 @@
-% iteration = iteration +1 , can add this
-% Script is to constantly evolve variables for use in the state machine
+% iteration = iteration +1
 for i = 1:numberOfAgents
 fprintf('Battery Life = %.2f\n',battery_life)
 battery_life = battery_life - .001; %This will control number of iterations
@@ -12,5 +11,3 @@ end
 % Multipled by two to take into account traveling to invader, then heading
 % back home after reaching the invader.
 % Added a 5% buffer (which is 10ft) to allow them to chase the invader
-
-% Any questions can be directed to danielvillarrealusa@gmail.com.

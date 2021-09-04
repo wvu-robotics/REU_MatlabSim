@@ -17,4 +17,3 @@ r = sqrt((X-xi).^2+(Y-yi).^2);
 
 end
 
-% This code was created by Trevor Smith, used in WVU NSF REU Summer 2021
