@@ -1,38 +1,50 @@
-clear
-close all;
-clc
+function cost = SearchingOptimScript(parameters, display)
+
+%Move parameters into a useable format
+try
+    for i = 1:size(parameters,2)
+        name = char(sprintf('param%i',i));
+        tempParameters(i) = parameters.(name);
+    end
+    parameters = tempParameters;
+    paramRows = 5;
+    paramCols = 4;
+    parameters = reshape(parameters, paramRows, paramCols);
+catch
+end
 
 %% Setting Up Sim
 %   World Building
-numberOfAgents = 20;
+numberOfAgents = 5;
+numOnGrid = 6^2;
 numberOfGroups = 1;
 agentRadius = .5;
 timeStep = .05;
-mapSize = 30;
+mapSize = 10;
 counter = 0;
-maxSpeed = 10;
-sensingRange = 4; %16
+maxSpeed = 5;
+sensingRange = 16; %16
 connectionRange = 2;
 newParameters = zeros(5,1);
-display = true;
-timeSteps = 1000;
+timeSteps = 400;
+tail_length = 25;
 
 spawnType = 'random';
 %spawnType = 'opposingGroups';
 
 %Set f to appropriate controller handle
-f = @FlockingController;
+f = @SearchingOptimController;
 
 %Set up the environment
-ENV = agentEnv(numberOfAgents,agentRadius,mapSize,timeStep); 
+figure(2)
+ENV = agentEnv(numberOfAgents+numOnGrid,agentRadius,mapSize,timeStep);
+figure(1)
 
 %Spawn the agents using a custom spawn function
-[initPositions, goalLocations] = FlockingSpawn(numberOfAgents, spawnType, mapSize);
+[initPositions, searchLocations] = SearchingOptimSpawn(numberOfAgents, spawnType, mapSize);
 
 %Set some variables in the environment
-ENV.setAgentPositions(initPositions);
-ENV.setGoalPositions(goalLocations);
-ENV.setAgentVelocities(zeros(numberOfAgents,2));
+ENV.setAgentVelocities(zeros(numberOfAgents+numOnGrid,2));
 ENV.realTime = false;
 ENV.pathVisibility(false);
 ENV.collisions = true;
@@ -40,43 +52,56 @@ ENV.collisions = true;
 %Set some variables for each agent
 for i = 1:numberOfAgents
     ENV.agents(i).setController(f);
-    ENV.agents(i).createProperty('group',mod(i,numberOfGroups)+1);
+    ENV.agents(i).createProperty('group',1);
+    ENV.agents(i).pose = initPositions(i,:);
     ENV.agents(i).measuringRange = sensingRange;
     ENV.agents(i).maxSpeed = maxSpeed;
-    ENV.agents(i).velocity = [maxSpeed*2*(rand()-0.5), maxSpeed*2*(rand()-0.5)];
+    ENV.agents(i).createProperty('parameters', parameters);
 end 
+for i = numberOfAgents+1:numberOfAgents+numOnGrid
+    ENV.agents(i).setController(f);
+    ENV.agents(i).createProperty('group', 2);
+    ENV.agents(i).createProperty('counter', 200);
+    ENV.agents(i).pose = searchLocations(i-numberOfAgents,:);
+    ENV.agents(i).measuringRange = 0;
+    ENV.agents(i).maxSpeed = 0;
+end
 
 %% Running Sim
 cost = 0;
 while(true)
-    customTick(ENV, timeStep, display, mapSize);
+    customTick(ENV, timeStep, display, mapSize, tail_length);
     counter = counter + 1;
     fprintf("Time: %i \n",counter)
     if counter > timeSteps
+        disp(cost);
         break
     end
     F(counter) = getframe(gcf);
     
 end
-%     video = VideoWriter('Flocking3', 'MPEG-4');
+%     video = VideoWriter('SearchingOptim1', 'MPEG-4');
 %     open(video);
 %     writeVideo(video, F);
 %     close(video)
 
 
 %% Required Functions
-    function customTick(ENV, timeStep, display, mapSize)
+    function customTick(ENV, timeStep, display, mapSize, tail_length)
             for ii = 1:length(ENV.agents)
                 ENV.agents(ii).callMeasurement(ENV);
                 ENV.agents(ii).callController;     
                 customPhys(ENV, ii, timeStep);
                 ENV.updateAgentPath(ii,ENV.agents(ii).pose);
+                if ENV.agents(ii).getProperty('group') == 2
+                    cost = cost+ENV.agents(ii).getProperty('counter');
+                end
             end
             if display
-                customDraw(ENV, mapSize);
+                customDraw(ENV, mapSize, tail_length);
             end
     end
-    function customDraw(ENV, mapSize)
+    function customDraw(ENV, mapSize, tail_length)
         figure(1);
         cla;
             hold on
@@ -87,8 +112,8 @@ end
                 RGB = ENV.agents(ii).color;
                 %RGB = RGB/256;
                 plot(ENV.agents(ii).pose(1), ENV.agents(ii).pose(2), '.', 'MarkerEdge', RGB, 'MarkerSize', 25);
-                if length(ENV.agents(ii).path(:,1)) > 10
-                    plot(ENV.agents(ii).path(end-10:end, 1), ENV.agents(ii).path(end-10:end, 2), '.', 'MarkerEdge', RGB);
+                if length(ENV.agents(ii).path(:,1)) > tail_length
+                    plot(ENV.agents(ii).path(end-tail_length:end, 1), ENV.agents(ii).path(end-tail_length:end, 2), '.', 'MarkerEdge', RGB);
                 else
                     plot(ENV.agents(ii).path(:, 1), ENV.agents(ii).path(:, 2), '.', 'MarkerEdge', RGB);
                 end
@@ -102,4 +127,4 @@ end
         ENV.agents(id).velocity = controlVel;
         ENV.agents(id).pose = ENV.agents(id).pose + ENV.agents(id).velocity*timeStep;
     end
-    
+end
