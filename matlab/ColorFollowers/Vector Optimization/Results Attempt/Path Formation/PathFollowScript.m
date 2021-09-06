@@ -5,10 +5,10 @@ clc
 %% Setting Up Sim
 %   World Building
 numberOfAgents = 100;
-numberOfGroups = 3;
+numberOfGroups = 1;
 agentRadius = .5;
 timeStep = .05;
-mapSize = 30;
+mapSize = 40;
 counter = 0;
 maxSpeed = 5;
 sensingRange = 15; %16
@@ -55,7 +55,15 @@ while(true)
         break
     end
     F(counter) = getframe(gcf);
-    
+    if counter == 10
+       saveas(gcf, 'Path_10.jpg'); 
+    end
+    if counter == 100
+       saveas(gcf, 'Path_100.jpg'); 
+    end
+    if counter == 500
+       saveas(gcf, 'Path_500.jpg'); 
+    end
 end
 %     video = VideoWriter('PathFollow3', 'MPEG-4');
 %     open(video);
@@ -83,8 +91,8 @@ end
             ylim([-mapSize*2,mapSize*2]);
             for ii = 1:length(ENV.agents)
                 
-                RGB = ENV.agents(ii).color;
-                %RGB = RGB/256;
+                %RGB = ENV.agents(ii).color;
+                RGB = [1 1 1];
                 plot(ENV.agents(ii).pose(1), ENV.agents(ii).pose(2), '.', 'MarkerEdge', RGB, 'MarkerSize', 25);
                 if length(ENV.agents(ii).path(:,1)) > 25
                     plot(ENV.agents(ii).path(end-25:end, 1), ENV.agents(ii).path(end-25:end, 2), '.', 'MarkerEdge', RGB);

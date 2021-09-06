@@ -4,7 +4,7 @@ clc
 
 %% Setting Up Sim
 %   World Building
-numberOfAgents = 20;
+numberOfAgents = 40;
 numberOfGroups = 1;
 agentRadius = .5;
 timeStep = .05;
@@ -15,7 +15,8 @@ sensingRange = 4; %16
 connectionRange = 2;
 newParameters = zeros(5,1);
 display = true;
-timeSteps = 1000;
+timeSteps = 1500;
+tail_length = 50;
 
 spawnType = 'random';
 %spawnType = 'opposingGroups';
@@ -56,7 +57,15 @@ while(true)
         break
     end
     F(counter) = getframe(gcf);
-    
+    if counter == 10
+       saveas(gcf, 'flocking_10.jpg'); 
+    end
+    if counter == 100
+       saveas(gcf, 'flocking_100.jpg'); 
+    end
+    if counter == 500
+       saveas(gcf, 'flocking_500.jpg'); 
+    end
 end
 %     video = VideoWriter('Flocking3', 'MPEG-4');
 %     open(video);
@@ -84,18 +93,18 @@ end
             ylim([-mapSize*2,mapSize*2]);
             for ii = 1:length(ENV.agents)
                 
-                RGB = ENV.agents(ii).color;
-                %RGB = RGB/256;
+                %RGB = ENV.agents(ii).color;
+                RGB = [1 1 1];
                 plot(ENV.agents(ii).pose(1), ENV.agents(ii).pose(2), '.', 'MarkerEdge', RGB, 'MarkerSize', 25);
-                if length(ENV.agents(ii).path(:,1)) > 10
-                    plot(ENV.agents(ii).path(end-10:end, 1), ENV.agents(ii).path(end-10:end, 2), '.', 'MarkerEdge', RGB);
+                if length(ENV.agents(ii).path(:,1)) > 20
+                    plot(ENV.agents(ii).path(end-20:end, 1), ENV.agents(ii).path(end-20:end, 2), '.', 'MarkerEdge', RGB);
                 else
                     plot(ENV.agents(ii).path(:, 1), ENV.agents(ii).path(:, 2), '.', 'MarkerEdge', RGB);
                 end
                 set(gca,'Color','k');
             end
             hold off
-            pause(0.075)
+            %pause(0.075)
     end
     function customPhys(ENV,id, timeStep)
         controlVel = ENV.agents(id).velocityControl;

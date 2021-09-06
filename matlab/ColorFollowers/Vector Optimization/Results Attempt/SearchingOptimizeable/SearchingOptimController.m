@@ -113,8 +113,8 @@ end
                         col = [0, 0, 1];
                 end
             case 2
-                col = [counter/maxCounter, 1 - counter/maxCounter, 0];
-                %col = [1 1 1];
+                %col = [counter/maxCounter, 1 - counter/maxCounter, 0];
+                col = [1 1 1];
         end
     end
 end

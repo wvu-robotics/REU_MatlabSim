@@ -12,12 +12,12 @@ timeStep = .05;
 mapSize = 10;
 counter = 0;
 maxSpeed = 5;
-sensingRange = 16; %16
+sensingRange = 8; %16
 connectionRange = 2;
 newParameters = zeros(5,1);
 display = true;
-timeSteps = 400;
-tail_length = 25;
+timeSteps = 300;
+tail_length = 300;
 
 spawnType = 'random';
 %spawnType = 'opposingGroups';
