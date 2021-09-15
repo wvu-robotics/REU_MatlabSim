@@ -1,15 +1,27 @@
+%           Current State        Wallet 
+% Idle = 0                      ; w = $1
+% On Alert = 1                  ; w = $2
+% In Pursuit = 2                ; w = $5
+% Deciding = 3                  ; w = $1
+% Returning Home = 4            ; w = $1
+% Protecting Home = 5           ; w = $2
+% Charging = 6                  ; w = $1
+% Searching = 7                 ; w = $2
+% Gathering = 8                 ; w = $5
+% Shut-down (battery = 1%) = 9  ; w = -$2
+
 %% Battery Check
 if battery_life < enough_battery_home
-    current_state = 9;
-    battery_life = battery_life - enough_battery_home;
-    outstanding_distance = abs(4*mapSize*battery_life); % 4ft/1% * battery life = ft
-    battery_life = 0;
-    wallet = wallet -2;
+    current_state = 9; %Shutdown
+    battery_life = battery_life - enough_battery_home; % to calculate outstanding distance
+    outstanding_distance = abs(4*mapSize*battery_life); % 4ft/1% * battery life = ft, can change.
+    battery_life = 0; %reset battery life, won't let state machine keep giving new states
+    wallet = wallet -2; %negative incentive 
     
     return
 
 elseif battery_life == enough_battery_home
-    current_state = 4;
+    current_state = 4; %Returning Home
     wallet = wallet + 1;
     
 end
@@ -42,7 +54,7 @@ if current_state == 1 % Battery life has been confirmed to be enough to go
                       % to invader and back home. Now they are deciding what to do
                                % to defend against the invader
     if distance_from_home <= 50 % Robots close to home will return home to
-                                % protect it.
+                                % protect it. value can change
         difference_invader_home = abs(distance_from_invader - distance_from_home);
 
             if distance_from_invader <= distance_from_home || difference_invader_home <= 5 
@@ -72,20 +84,19 @@ if current_state == 0 % If there is no invader detected then they
             if deciding_number >= 0.5
                  current_state = 7;
                  wallet = wallet + 2;
-                 dit = 0; % so I can do a for loop
-                 for dit = dit:10
+                 for dit = 0:10
                      if battery_life >= (enough_battery_home +1)
                          battery_life = battery_life - 1;
                          
                          searching_iterations = searching_iterations +1;
-                         foraging_number = rand(1)*(1-0)+0;
+                         foraging_number = rand(1)*(1-0)+0; %random number between [0,1]
 
                             if foraging_number >= 0.95 && battery_life >= enough_battery_home
                                     current_state = 8;
                                     wallet = wallet + 5;
-                                    battery_life = battery_life - (2*enough_battery_home);
+                                    battery_life = battery_life - (2*enough_battery_home); %this is so they go home and come back to same spot
                                     gathering_iterations = gathering_iterations + 1;
-                                    if battery_life < enough_battery_home || battery_life == enough_battery_home
+                                    if battery_life < enough_battery_home || battery_life == enough_battery_home % to stop them from foraging and return home
                                         current_state = 4;
                                         wallet = wallet +1;
                                     end
@@ -106,7 +117,7 @@ end
 if current_state == 4 || battery_life == enough_battery_home
    current_state = 6;
    wallet = wallet + 1;
-   battery_life = 100;
+   battery_life = 100; % full recharge, can be changed
    charging_iterations = charging_iterations +1;
 end
 
@@ -120,3 +131,5 @@ if battery_life <= 0
     fprintf('The battery of the robot has been depleted.\n')
     return
 end
+
+% Any questions can be directed to danielvillarrealusa@gmail.com.

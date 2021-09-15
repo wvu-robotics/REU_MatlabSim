@@ -5,7 +5,7 @@ close all;
 
 timeStep = 2;
 worldSize = 200;
-init_num_bots = 20;
+init_num_bots = 50;
 
 %spawnType = 'random';
 % spawnType = 'singleCoordinated';
@@ -27,10 +27,10 @@ for i = 1:1
         pause(0.01);
         
         
-          F(ii) = getframe(gcf);
+%           F(ii) = getframe(gcf);
     end
- video = VideoWriter('MultiDepot1', 'MPEG-4');
- open(video);
- writeVideo(video, F);
- close(video)
+%  video = VideoWriter('MultiDepot1', 'MPEG-4');
+%  open(video);
+%  writeVideo(video, F);
+%  close(video)
 end

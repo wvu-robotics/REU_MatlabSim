@@ -1,3 +1,10 @@
+%% Color_Followers_Improved Script
+%   In this improved version of the first color follower script, the
+%   control of the agents was pushed to a seperate function and some of the
+%   miscelaneous parts were cleaned up. In this version, the agents are
+%   able to successfully make streams with agents of similar colors and
+%   reach their goals without clumping up
+
 close all
 clear
 clc

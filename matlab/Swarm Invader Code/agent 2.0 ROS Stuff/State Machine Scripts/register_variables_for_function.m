@@ -1,3 +1,5 @@
+% This file is so that variables from the base workspace can be used in 
+% function files. 
 battery_life = evalin('base','battery_life');
 current_state = evalin('base','current_state');
 wallet = evalin('base','wallet');
@@ -21,3 +23,5 @@ Home = evalin('base','Home');
 numberOfAgents = evalin('base','numberOfAgents');
 agentRadius = evalin('base','agentRadius');
 ENV = evalin('base','ENV');
+
+% Any questions can be directed to danielvillarrealusa@gmail.com.

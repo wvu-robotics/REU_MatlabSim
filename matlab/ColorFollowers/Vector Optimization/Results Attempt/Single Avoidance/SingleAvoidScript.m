@@ -6,7 +6,7 @@ clc
 %   World Building
 numberOfAgents = 4;
 numberOfGroups = 4;
-agentRadius = .5;
+agentRadius = 5;
 timeStep = .1;
 mapSize = 10;
 counter = 0;
@@ -14,7 +14,7 @@ maxSpeed = 5;
 sensingRange = 16;
 connectionRange = 2;
 display = true;
-timeSteps = 500;
+timeSteps = 55;
 
 %Setup spawn type
 spawnType = 'antipodal';
@@ -51,9 +51,21 @@ while(true)
     counter = counter + 1;
     fprintf("Time: %i \n",counter)
     if counter > timeSteps
+        for i = 1:numberOfAgents
+            RGB = ENV.agents(i).color;
+            hold on
+            plot(ENV.agents(i).path(:, 1), ENV.agents(i).path(:, 2), '.', 'MarkerEdge', RGB);
+            hold off
+        end
         break
     end
+%         F(counter) = getframe(gcf);
+    
 end
+%     video = VideoWriter('SingleAvoid1', 'MPEG-4');
+%     open(video);
+%     writeVideo(video, F);
+%     close(video)
 
 %% Required Functions
     function customTick(ENV, timeStep, display, mapSize)
@@ -61,6 +73,7 @@ end
                 ENV.agents(ii).callMeasurement(ENV);
                 ENV.agents(ii).callController;     
                 customPhys(ENV, ii, timeStep);
+                ENV.updateAgentPath(ii,ENV.agents(ii).pose);
             end
             if display
                 customDraw(ENV, mapSize);
@@ -70,12 +83,12 @@ end
         figure(1);
         cla;
             hold on
-            xlim([-mapSize*3,mapSize*3]);
-            ylim([-mapSize*3,mapSize*3]);
+            xlim([-mapSize*2,mapSize*2]);
+            ylim([-mapSize*2,mapSize*2]);
             for ii = 1:length(ENV.agents)
                 
                 RGB = ENV.agents(ii).color;
-                plot(ENV.agents(ii).pose(1), ENV.agents(ii).pose(2), '.', 'MarkerEdge', RGB, 'MarkerSize', 25);
+                plot(ENV.agents(ii).pose(1), ENV.agents(ii).pose(2), '.', 'MarkerEdge', RGB, 'MarkerSize', 35);
                 set(gca,'Color','k');
             end
             hold off

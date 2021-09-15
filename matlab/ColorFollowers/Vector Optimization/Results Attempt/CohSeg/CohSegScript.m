@@ -4,18 +4,18 @@ clc
 
 %% Setting Up Sim
 %   World Building
-numberOfAgents = 30;
+numberOfAgents = 15;
 numberOfGroups = 3;
 agentRadius = .5;
-timeStep = .1;
+timeStep = .05;
 mapSize = 10;
 counter = 0;
 maxSpeed = 5;
-sensingRange = 16;
+sensingRange = 25; %16
 connectionRange = 2;
 newParameters = zeros(5,1);
 display = true;
-timeSteps = 500;
+timeSteps = 300;
 
 spawnType = 'random';
 %spawnType = 'opposingGroups';
@@ -54,7 +54,14 @@ while(true)
     if counter > timeSteps
         break
     end
+    F(counter) = getframe(gcf);
+    
 end
+    video = VideoWriter('CohSeg2', 'MPEG-4');
+    open(video);
+    writeVideo(video, F);
+    close(video)
+
 
 %% Required Functions
     function customTick(ENV, timeStep, display, mapSize)
@@ -62,6 +69,7 @@ end
                 ENV.agents(ii).callMeasurement(ENV);
                 ENV.agents(ii).callController;     
                 customPhys(ENV, ii, timeStep);
+                ENV.updateAgentPath(ii,ENV.agents(ii).pose);
             end
             if display
                 customDraw(ENV, mapSize);
@@ -71,13 +79,18 @@ end
         figure(1);
         cla;
             hold on
-            xlim([-mapSize*3,mapSize*3]);
-            ylim([-mapSize*3,mapSize*3]);
+            xlim([-mapSize*2,mapSize*2]);
+            ylim([-mapSize*2,mapSize*2]);
             for ii = 1:length(ENV.agents)
                 
                 RGB = ENV.agents(ii).color;
                 %RGB = RGB/256;
                 plot(ENV.agents(ii).pose(1), ENV.agents(ii).pose(2), '.', 'MarkerEdge', RGB, 'MarkerSize', 25);
+                if length(ENV.agents(ii).path(:,1)) > 25
+                    plot(ENV.agents(ii).path(end-25:end, 1), ENV.agents(ii).path(end-25:end, 2), '.', 'MarkerEdge', RGB);
+                else
+                    plot(ENV.agents(ii).path(:, 1), ENV.agents(ii).path(:, 2), '.', 'MarkerEdge', RGB);
+                end
                 set(gca,'Color','k');
             end
             hold off

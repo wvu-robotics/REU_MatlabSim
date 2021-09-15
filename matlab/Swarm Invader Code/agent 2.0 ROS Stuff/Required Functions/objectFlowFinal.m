@@ -48,7 +48,7 @@ if Agent1.getID == 5
     PHI = PHI2 + Phi;
     PSI = PSI1 + Psi;
     
-    for n = 1:length(Agent1.measuredAgents)
+    for n = 1:length(Agent1.measuredAgents) 
         measuredxy = Agent1.measuredAgents(n).pose;
         xn = measuredxy(1);
         yn = measuredxy(2);
@@ -65,6 +65,11 @@ if Agent1.getID == 5
     VY = Vy;
 end
 
-V_direction = cmd_vel;
+V_direction = cmd_vel; % One output to send to robots controller, this
+                       % will allow users to add a direction to a speed,
+                       % creating a velocity. 
 
 end
+
+% This code was created by Trevor Smith and altered by Daniel Villarreal
+% for WVU NSF REU Summer 2021

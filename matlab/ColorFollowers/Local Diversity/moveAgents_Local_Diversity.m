@@ -1,3 +1,8 @@
+%% moveAgents_Local_Diversity(environment, forceAngle, theta, mapSize, movePerStepFraction)
+%   This function is used by the Color_Followers_Local_Diversity script to
+%   actually move the agents once the appropriate dirrection has been
+%   determened. It is a much inproved version of the previous color
+%   follower movement method.
 function [environment, theta] = moveAgents_Local_Diversity(environment, forceAngle, theta, mapSize, movePerStepFraction)
 
 alreadyMoved = zeros(mapSize);

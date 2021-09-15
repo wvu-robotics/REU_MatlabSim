@@ -67,7 +67,13 @@ while(true)
     end
     cost = cost + SingleAvoidCost(ENV.agents);
     %close(figure(2));
+%     F(counter) = getframe(gcf);
+    
 end
+%     video = VideoWriter('SingleAvoid2', 'MPEG-4');
+%     open(video);
+%     writeVideo(video, F);
+%     close(video)
 
 %% Required Functions
     function customTick(ENV, timeStep, display, mapSize)

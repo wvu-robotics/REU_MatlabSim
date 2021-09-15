@@ -1,3 +1,10 @@
+%% moveAgents_Clump_Mitigating(environment, unitToGoal, sensingRadius, neighborToGoalForceRatio, theta, mapSize, movePerStepFraction)
+%   Description: This is the control function for the
+%   Color_follower_Improved script. In this control algorithm, each robot
+%   has a square scan radius and can see each other agent in that radius.
+%   The robots are attracted to other robots of similar colors and repelled
+%   by robots of different colors
+
 function [environment, theta] = moveAgents_Clump_Mitigating(environment, unitToGoal, sensingRadius, neighborToGoalForceRatio, theta, mapSize, movePerStepFraction)
 
 force = zeros([mapSize, mapSize, 2]);

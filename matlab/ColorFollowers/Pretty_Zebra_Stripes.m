@@ -1,3 +1,6 @@
+%% Pretty_Zebra_Stripes
+%   This was a bug that looks nice, I don't know what the bug is
+
 close all
 clear
 clc

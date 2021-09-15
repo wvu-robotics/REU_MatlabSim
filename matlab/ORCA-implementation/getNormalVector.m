@@ -46,7 +46,6 @@ radiusOfTruncationCircle = 2*agentRadius/timeHorizon;
 angleOfNormalLeft = mod((angleReftoB + VOAngle + pi/2), 2*pi);
 angleOfNormalRight = mod((angleReftoB - VOAngle - pi/2), 2*pi);
 
-
 for i = 1:size(relativeOptVel,1) %for each neighbor
     relOptVelAngle = mod( atan2(relativeOptVel(i,2),relativeOptVel(i,1)), 2*pi );
     
