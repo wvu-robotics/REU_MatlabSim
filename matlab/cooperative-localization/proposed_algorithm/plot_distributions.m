@@ -1,5 +1,5 @@
 function plot_distributions(COST,MEAN_ERROR,COVAR,PATH_DEVIATION,GOALS_REACHED,file_name)
-%plot gain distributions
+%plot results distribution from all itteriations of an experiment
     figure()
     sgtitle(file_name);
     subplot(2,3,2)

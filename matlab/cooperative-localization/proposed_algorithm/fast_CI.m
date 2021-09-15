@@ -1,4 +1,6 @@
 function [fused_state,fused_covariance] = fast_CI(states,covars)
+%covariance intersection based on Chizhao's "scalable framework" paper 
+%
 %states = [l,n] matrix :  holds all the states to be fused where
 %                         l is the number of states
 %                         n is the number of measured states to fuse

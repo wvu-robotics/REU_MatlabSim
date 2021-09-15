@@ -1,4 +1,6 @@
 function cost = optimizer_playback(gains)
+% plays the simlation with specified gains to see how the simulation
+% performed --> see "experiments.m" for comments
 
 num_agents = 10;
 estimator = 1;
