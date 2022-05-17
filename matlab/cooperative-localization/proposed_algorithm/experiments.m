@@ -32,7 +32,7 @@ simu.estimator = estimator;
 simu.dt = .5; % time step size [sec]
 simu.simulationTime=100;   %flight duration [sec]
 simu.accumulatedTime=0;  %first timestep
-
+simu.initdistance = range;   %distance between each pair of neighbot UAVs' initial positions
 %noise models-------------------------------------------------------------
 simu.percentNoiseDifference =0.01; %slightly varies sigma per agent
 simu.sigmaVelocity=0.05;  %standard deviation of velocity errors (m/s)
@@ -43,7 +43,7 @@ simu.biasVelocity=0.1*simu.sigmaVelocity; %standard deviation of velocity turn o
 simu.biasYawRate=0.1*simu.sigmaYawRate; %standard deviation of yaw rate turn on bias (rad/s)
 %---------------------------------------------------------------------------
 
-simu.initdistance = range;   %distance between each pair of neighbot UAVs' initial positions
+
 
 %% Results Parameters
 
@@ -168,7 +168,7 @@ while simu.accumulatedTime < simu.simulationTime
             total_goal_dist = total_goal_dist + norm(ROBOTS(r).position_t(1,2) - ROBOTS(r).goal)-range;
             
             %check to see if we actually reached the goal
-            if norm(ROBOTS(r).position_t(1:2) - ROBOTS(r).goal < ROBOTS(r).detection_range
+            if norm(ROBOTS(r).position_t(1:2) - ROBOTS(r).goal) < ROBOTS(r).detection_range
                 total_goals_reached = total_goals_reached + 1;
             else
                 total_false_goals_reached = total_false_goals_reached+1;

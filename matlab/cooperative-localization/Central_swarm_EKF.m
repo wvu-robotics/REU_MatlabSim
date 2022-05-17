@@ -49,8 +49,5 @@ I = eye(3*numBots);
 P_f = (I-K*H)*P_p;
 
 
-
-
-
 end
 

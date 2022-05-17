@@ -4,12 +4,14 @@ classdef Robot
         ID              % [int] id of the robot
         home            % [X, Y] home location of the robot
         goal            % [X, Y] goal location for the robot
+
         found_goal      % 0 = not found my current goal
-        % 1 = found my current goal
+                        % 1 = found my current goal
+
         estimator       % 0 = dead_reckoning,
-        % 1 = covariance intersection,
-        % 2 = decentralized EKF
-        % 3 = centralized EKF
+                        % 1 = covariance intersection,
+                        % 2 = decentralized EKF
+                        % 3 = centralized EKF
         
         % positioning------------------------------------------------
         %dead reckoning
@@ -17,7 +19,7 @@ classdef Robot
         velocity_d      % [Vx, Vy]
         covariance_d    % [3x3 X, Y, Yaw] covariance matrix
         path_d          % [X, Y, Yaw;   path taken by robot
-        %  .., ..,..];
+                        %  .., ..,..];
         
         %estimated localization
         position_e      % [X, Y, Yaw]
@@ -30,7 +32,7 @@ classdef Robot
         position_t      % [X, Y, Yaw]
         velocity_t      % [Vx, Vy]
         path_t          % [X, Y, Yaw;   path taken by robot
-        %  .., ..,..];
+                        %  .., ..,..];
         
         % sensors / measurment ----------------------------------------
         dt              % time step size
@@ -66,15 +68,15 @@ classdef Robot
        
         % filtering variables --------------------------------------------
         X               % cell{ [X1; Y1; Yaw1], [X2,Y2,Yaw2], ...}
-        % stores the estimated states of all the robots
+                        % stores the estimated states of all the robots
         
         P               % cell{ [3x3 1.1], [3x3 1.2], [3x3] 1.3, ... ;
-        %       [3x3 2.1], [3x3 2.2], [3x3] 2.3, ... ;
-        %       [3x3 3.1], [3x3 3.2], [3x3] 3.3, ...;
-        %        ...     ,   ...    ,    ...   , ... }
-        % stores the [X, Y, Yaw] covariance matrix for each
-        % robot and the cross covariances in the off
-        % diagonals
+                        %       [3x3 2.1], [3x3 2.2], [3x3] 2.3, ... ;
+                        %       [3x3 3.1], [3x3 3.2], [3x3] 3.3, ...;
+                        %        ...     ,   ...    ,    ...   , ... }
+                        % stores the [X, Y, Yaw] covariance matrix for each
+                        % robot and the cross covariances in the off
+                        % diagonals
         
         % assimilation colors ----------------------------------------------
         color_particles
@@ -350,17 +352,15 @@ classdef Robot
                 phi = atan2(ROBOTS(L).position_t(2)- ROBOTS(r).position_t(2), ROBOTS(L).position_t(1)- ROBOTS(r).position_t(1)); % truth
                 phi = phi + normrnd(0,ROBOTS(r).sigmaHeading,1,1); %noise
                 phi = phi + angdiff(ROBOTS(r).position_e(3), ROBOTS(r).position_t(3)); %bias
-                %phi = mod(phi,2*pi);
-                
-%                 if phi > pi
-%                     phi = phi - 2*pi;
-%                 elseif phi < -pi
-%                     phi = phi + 2*pi;
-%                 end
                 
                 dists = [dists, d];
                 angles = [angles, phi];
-                if d < obj.detection_range
+
+                detect_rng = obj.detection_range;
+                if obj.estimator == 3
+                    detect_rng = 50;
+                end
+                if d < detect_rng && r ~= L
                     neigh = [neigh, ROBOTS(L).ID];
                 end
             end
@@ -415,7 +415,12 @@ classdef Robot
                 phi2_1 = obj.bearing(L);
                 phi1_2 = ROBOTS(L).bearing(obj.ID);
                 
-                if L ~= obj.ID && d1_2 < obj.detection_range
+                detect_rng = obj.detection_range;
+                if obj.estimator == 3
+                    detect_rng = 50;
+                end
+
+                if L ~= obj.ID && d1_2 < detect_rng
                     
                     x1_2 = obj.X{L}(1) + d1_2 * cos(phi1_2);
                     y1_2 = obj.X{L}(2) + d1_2 * sin(phi1_2);
@@ -550,6 +555,7 @@ classdef Robot
                     obj = obj.Decentralized_EKF();
                 case 3 % centralized ekf
                     %obj = obj.Centralized_EKF();
+                    obj = obj.Decentralized_EKF();
             end
         end
         
@@ -671,10 +677,9 @@ classdef Robot
             
         end
 
-        % DECENTRALIZED / CENTRALIZED EKF ---------------------------------
+        % DECENTRALIZED ---------------------------------------------------
 
         function obj= Decentralized_EKF(obj)
-            [obj] = pick_neighbor(obj);
             [obj] = Relative_Measurement_Update(obj);
             %-------------------------dead reckoning update---------------
             new_theta = obj.position_e(3) + obj.yaw_rate_m*obj.dt;
@@ -698,9 +703,8 @@ classdef Robot
                 obj.neighbors = [];
             end
         end
-                  
+         %  CENTRALIZED EKF ----------------------------------------------         
         function obj= Centralized_EKF(obj)
-            [obj] = all_neighbor(obj);
             [obj] = Relative_Measurement_Update(obj);
             %-------------------------dead reckoning update---------------
             new_theta = obj.position_e(3) + obj.yaw_rate_m*obj.dt;
@@ -721,62 +725,7 @@ classdef Robot
             %------------------------------------------------------
             
         end
-        
-        function obj = pick_neighbor(obj)
-            
-            % Parameters
-            i = obj.ID; % Define robot i
-            range = obj.detection_range; % range of detection
-            Xi = obj.X{i}; % State Matrix for robot i
-            number_of_robots = size(obj.P(i,:),2); % Set the number of robots
-            
-            for j = 1:number_of_robots % For each robot
-                Xj = obj.X{j}; % State Matrix for robot j
-                if i == j % If robot i = robot j
-                    D(j) = 0; % Possible neighbor ID = 0
-                else
-                    D(j) = sqrt(((Xj(1)-Xi(1))^2)+((Xj(2)-Xi(2))^2)); % Rho measurement
-                end
-                if D(j) > range % If robot j out of range of robot i
-                    D(j) = 0; %Possible neighbor ID = 0
-                else
-                    % Do nothing
-                end
-            end
-
-            PN = find(D); % Find possible neighbor ID for each robot
-            if isempty(PN) == 1 % No neighbor around
-                N = 0; % Set N = 0
-            else
-                N = PN;
-            end
-            obj.neighbors = N;
-        end
-        
-        function obj = all_neighbor(obj)
-            
-            % Parameters
-            i = obj.ID; % Define robot i
-            Xi = obj.X{i}; % State Matrix for robot i
-            number_of_robots = size(obj.P(i,:),2); % Set the number of robots
-            
-            for j = 1:number_of_robots % For each robot
-                Xj = obj.X{j}; % State Matrix for robot j
-                if i == j % If robot i = robot j
-                    D(j) = 0; % Possible neighbor ID = 0
-                else
-                    D(j) = sqrt(((Xj(1)-Xi(1))^2)+((Xj(2)-Xi(2))^2)); % Rho measurement
-                end
-            end
-
-            PN = find(D); % Find possible neighbor ID for each robot
-            if isempty(PN) == 1 % No neighbor around
-                N = 0; % Set N = 0
-            else
-                N = PN;
-            end
-            obj.neighbors = N;
-        end
+       
         
         function obj = Relative_Measurement_Update(obj)
 
@@ -937,16 +886,17 @@ classdef Robot
                         end
                     end
                     
-                    obj.covariance_e = Pip{1,i}; % Update Covariance and correlated values for robot i            
-                    obj.position_e = Xip'; % Update location robot i
-                    obj.X{j} = Xjp; % Update location robot j
-                    obj.P(j,:) = Pjp; % Update Covariance and correlated values for robot j
+                    
                     
                     Error = sqrt(((Xip(1,1)-obj.X{i}(1,1))^2)+((Xip(2,1)-obj.X{i}(2,1))^2)); % Error
                     if Error < 2
-
+                        obj.covariance_e = Pip{1,i}; % Update Covariance and correlated values for robot i            
+                        obj.position_e = Xip'; % Update location robot i
+                       % obj.X{j} = Xjp; % Update location robot j
+                       % obj.P(j,:) = Pjp; % Update Covariance and correlated values for robot j
                     else
                         % Don´t Update
+                        disp("EXCEEDED ERROR THRESHOLD!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                     end   
                 end     
             end
@@ -1034,6 +984,8 @@ classdef Robot
                 
                 plot(ROBOTS(r).path_t(end,1), ROBOTS(r).path_t(end,2), 'ks');
                 hold on;
+                quiver(ROBOTS(r).position_t(1), ROBOTS(r).position_t(2),ROBOTS(r).velocity_t(1), ROBOTS(r).velocity_t(2), 'b');
+                hold on;
                 if show_detection_rng
                     viscircles([ROBOTS(r).path_t(end,1),ROBOTS(r).path_t(end,2)],range);
                     hold on;
@@ -1057,8 +1009,7 @@ classdef Robot
                 % plot dead reckoning position---------------------------------------------------------
                 plot(ROBOTS(r).position_d(1), ROBOTS(r).position_d(2), 'bo');
                 hold on;
-                quiver(ROBOTS(r).position_d(1), ROBOTS(r).position_d(2),ROBOTS(r).velocity_d(1), ROBOTS(r).velocity_d(2), 'b');
-                hold on;
+                
                 
                 %plot goal position---------------------------------------------
                 plot(ROBOTS(r).goal(1), ROBOTS(r).goal(2), 'rx')
@@ -1075,7 +1026,7 @@ classdef Robot
             viscircles([ROBOTS(1).home(1),ROBOTS(1).home(2)],range);
             hold on;
             title("Square = truth, * = estimate, o = dead reckoning");
-            axis([-50 50 -50 50])
+            axis([-10 10 -10 10])
             
             %plot gain distributions
 %                 subplot(2,3,2)

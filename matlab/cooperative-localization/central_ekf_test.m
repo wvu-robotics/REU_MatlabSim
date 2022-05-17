@@ -13,8 +13,7 @@ R = 1*eye(3*numBots);
 X_0 = X_i;
 figure()
 plot(X_0(1:numBots), X_0(numBots+1:2*numBots), 'r');
-hold on;
-plot(X_f(1:numBots), X_f(numBots+1:2*numBots), 'b');
+
 
 for t = 1:100
     [X_f,P_f] = Central_swarm_EKF(X_i,P_i,Y_m, X_dot, dt,Q, R);
@@ -23,6 +22,6 @@ for t = 1:100
     P_i = P_f;
     plot(X_f(1:numBots), X_f(numBots+1:2*numBots), 'b');
     hold on;
-    %pause(2);
+    pause(.2);
 end
 
