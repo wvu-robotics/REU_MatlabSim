@@ -103,7 +103,7 @@ for estimator = [0,1,2] %[0,1,2]
                 elseif estimator == 2
                    ESTIMATOR = [ESTIMATOR, 's']; 
                 else
-                   ESTIMATOR = [ESTIMATOR, '^']
+                   ESTIMATOR = [ESTIMATOR, '^'];
                 end
                 
                 if num_agents == 5
@@ -121,57 +121,54 @@ for estimator = [0,1,2] %[0,1,2]
     end
 end
 
-%% plotting
-MEAN_COST = mean(ALL_COST);
+%% metrics
+MEAN_COST  = mean(ALL_COST);
 MEAN_ERROR = mean(ALL_ERROR);
 MEAN_COVAR = mean(ALL_COVAR);
+MEAN_GOALS = mean(ALL_GOALS);
+MEAN_PATH  = mean(ALL_PATH);
 
-% figure()
-% plot([5,10,25], b0_DR_cost, 'r*-')
-% hold on;
-% plot([5,10,25], b2_DR_cost, 'b*-')
-% hold on;
-% plot([5,10,25], b0_CI_cost, 'r^-')
-% hold on;
-% plot([5,10,25], b2_CI_cost, 'b^-')
-% 
-% yaxis(0,8)
-% title('Proposed Algorithm Vs. Direct Goal following')
-% xlabel('Number of Agents')
-% ylabel('Goals Reached')
-% legend('Direct Goal w/ Dead Reckoning', 'Adaptive Boids w/ Dead Reckoning', 'Direct Goal w/ Covariance Intersection', 'Adaptive Boids w/ Covariance Intersection')
+MIN_COST  = min(ALL_COST);
+MIN_ERROR = min(ALL_ERROR);
+MIN_COVAR = min(ALL_COVAR);
+MIN_GOALS = min(ALL_GOALS);
+MIN_PATH  = min(ALL_PATH);
 
+MAX_COST  = max(ALL_COST);
+MAX_ERROR = max(ALL_ERROR);
+MAX_COVAR = max(ALL_COVAR);
+MAX_GOALS = max(ALL_GOALS);
+MAX_PATH  = max(ALL_PATH);
+
+%% plotting
+
+
+
+
+
+%-------------------------------------- RELATIVE PLOTS -------------------
+
+% relative plot for mean covariance and mean error
 figure()
 for p = 1:length(MEAN_COST)
 plot(MEAN_COVAR(p),MEAN_ERROR(p),ESTIMATOR(p), 'COLOR',COLOR(:,p),'MarkerSize',SIZE(p))
+%errorbar(MEAN_COVAR(p),MEAN_ERROR(p),MEAN_ERROR(p)-MIN_ERROR(p),MAX_ERROR(p)-MEAN_ERROR(p),MEAN_COVAR(p)-MIN_COVAR(p),MAX_COVAR(p)-MEAN_COVAR(p),ESTIMATOR(p), 'COLOR',COLOR(:,p),'MarkerSize',SIZE(p))
 hold on;
 end
-
-xlabel('Covariance [m^2]')
+xlabel('Covariance Norm [m^2]')
 ylabel('Mean Error [m]')
 
-%figure();
+% relative plot for path deviation and goals reached
+figure()
+for p = 1:length(MEAN_COST)
+plot(MEAN_PATH(p),MEAN_GOALS(p),ESTIMATOR(p), 'COLOR',COLOR(:,p),'MarkerSize',SIZE(p))
+hold on;
+end
+xlabel('mean path deviation [m]')
+ylabel('Number of goals reached')
 
-% figure();
-% %subplot(2,3,2)
-% boxplot(ALL_COST,NAMES)
-% ylabel('COST')
-% %subplot(2,3,3)
-% figure();
-% boxplot(ALL_ERROR,NAMES)
-% ylabel('Mean Error')
-% %subplot(2,3,4)
-% figure();
-% boxplot(ALL_COVAR,NAMES)
-% ylabel('Covariance')
-% %subplot(2,3,5)
-% figure();
-% boxplot(ALL_PATH,NAMES)
-% ylabel('Path Deviation')
-% %subplot(2,3,6)
-% figure();
-% boxplot(ALL_GOALS,NAMES)
-% ylabel('Goals Reached')
+
+
 
 
 

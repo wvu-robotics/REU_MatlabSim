@@ -25,7 +25,7 @@ function [cost, avg_mean_error, avg_covar, avg_path_deviation, avg_goals_reached
 
 %% Simulation Parameters
 simu.N=num_agents;           % number of Robots
-range = 1;           % robot detection range
+range = 1;           % robot detection range [m]
 e_max = 2;           % maximum mean localization error [m]
 cov_max = 5;         % maximum covariance norm [m^2]
 simu.estimator = estimator;  
@@ -56,13 +56,14 @@ total_covar = 0;            % covariance over every time step
 total_mean_error = 0;       % error between the dead reckoning and estimated position
 total_goal_dist = 0;        % total straightline goal path
 total_dist_traveled = 0;    % total distance covered by the robt
-total_goals_reached = 0;    % number of goals the agents have reached
+total_goals_reached = 0;    % number of goals the agents have actually reached
+total_false_goals_reached = 0; % number of goals the agents though they reached but did not
 
  %% initialize swarm
  
  show_detection_rng = 0;  %toggles on and off the detection range circles
  rho_max = simu.N / (pi*range^2); % maximum robot density
- world_len = 10;                  % side length of the world
+ world_len = 10;                  % side length of the world [m]
  
  ROBOTS = create_robot_swarm(simu.N,simu.initdistance,range); %create an array of Boids models for the robots
  v_max = ROBOTS(1).max_speed;
@@ -165,7 +166,13 @@ while simu.accumulatedTime < simu.simulationTime
             end
             %update the goal results parameters
             total_goal_dist = total_goal_dist + norm(ROBOTS(r).position_t(1,2) - ROBOTS(r).goal)-range;
-            total_goals_reached = total_goals_reached + 1;
+            
+            %check to see if we actually reached the goal
+            if norm(ROBOTS(r).position_t(1:2) - ROBOTS(r).goal < ROBOTS(r).detection_range
+                total_goals_reached = total_goals_reached + 1;
+            else
+                total_false_goals_reached = total_false_goals_reached+1;
+            end
         end
         
         %update results parameters
@@ -196,6 +203,8 @@ avg_covar = total_covar/(simu.N*simu.i)
 avg_mean_error = total_mean_error/(simu.N*simu.i)
 avg_path_deviation = (total_dist_traveled-total_goal_dist)/(simu.N*simu.i)
 avg_goals_reached = total_goals_reached/simu.N
+
+% TODO add in the false goals reached if needed
 
 % final cost function
 cost = ((avg_covar)/cov_max + (avg_mean_error)/e_max + (avg_path_deviation)/total_goal_dist)/((avg_goals_reached)/6.75);

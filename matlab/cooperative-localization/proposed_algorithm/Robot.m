@@ -106,9 +106,9 @@ classdef Robot
             obj.path_e = obj.path_d;
             
             % initalize boids parameters-------------------------------------------
-            obj.max_speed = 5;
-            obj.min_speed = .1; 
-            obj.max_yaw_rate = .5;
+            obj.max_speed = 1;          % [m/s]
+            obj.min_speed = .1;         % [m/s]
+            obj.max_yaw_rate = .5;      % [rad/s]
             obj.max_force = 5;%0.1;
             obj.acceleration = [0 0];
             
@@ -306,7 +306,7 @@ classdef Robot
         end
         
         function steer = cohesion(obj,boids)
-            neighbor_dist = 50;
+            neighbor_dist = obj.detection_range;%50;
             sum = [0 0];
             count = 0;
             steer = [0 0];

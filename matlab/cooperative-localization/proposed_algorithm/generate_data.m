@@ -23,12 +23,12 @@
 %                            50 = very high number of agents
 
 %% SAVE DATA ???????????
-save_data = 1; % if 0 then DO NOT SAVE DATA
+save_data = 0; % if 0 then DO NOT SAVE DATA
                % if 1 then SAVE DATA
                
 %% estimator parameters
 itterations = 100; %number of itterations per experiment
-headless = 1;
+headless = 0;
 
 %% run experiments
 

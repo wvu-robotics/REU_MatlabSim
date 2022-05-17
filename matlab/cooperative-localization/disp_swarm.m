@@ -55,7 +55,7 @@ KG = [];
     viscircles([ROBOTS(1).home(1),ROBOTS(1).home(2)],range);
     hold on;
     title("Square = truth, * = estimate, o = dead reckoning");
-    axis([-50 50 -50 50])
+    axis([-10 10 -10 10])
     
     %plot gain distributions
 %     subplot(2,3,2)
