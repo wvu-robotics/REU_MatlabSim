@@ -121,9 +121,10 @@ while simu.accumulatedTime < simu.simulationTime
         % all other robots' estimated position and covariance
        if simu.i == 2 || estimator ~= 2 || estimator ~= 3 
             [X,P] = ROBOTS(r).get_states(ROBOTS);
+            ROBOTS(r).X = X;
+            ROBOTS(r).P = P;
        end
-        ROBOTS(r).X = X;
-        ROBOTS(r).P = P;
+        
        
         % range and bearing to all other robots from  CURRENT Truth Position
         ROBOTS(r) = ROBOTS(r).lidar_measurement(ROBOTS);

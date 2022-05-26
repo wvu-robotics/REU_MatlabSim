@@ -37,7 +37,7 @@ headless = 0;
 for num_agents = 10 %[5,10,25]    %[5,10,25,50] range of number of agent experiments
     for enviorment = 0   % [0,1] enviroment type to use
         for boids_rules = 0 %[0,1,2]   %[0,1,2] boids rules to use
-            for estimator = 3 % [0,1,2,3] %[0,1,2,3] all estimators to use
+            for estimator = 2 % [0,1,2,3] %[0,1,2,3] all estimators to use
                 %% file name generator
                 %creates the file path to save the data to
                 switch estimator

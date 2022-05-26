@@ -897,7 +897,7 @@ classdef Robot
                         obj.covariance_e = Pip{1,i}; % Update Covariance and correlated values for robot i            
                         obj.position_e = Xip'; % Update location robot i
                         obj.X{i} = Xip;
-                        obj.P{i,:} = Pip;
+                        obj.P(i,:) = Pip;
                         obj.X{j} = Xjp; % Update location robot j
                         obj.P(j,:) = Pjp; % Update Covariance and correlated values for robot j
                     else
