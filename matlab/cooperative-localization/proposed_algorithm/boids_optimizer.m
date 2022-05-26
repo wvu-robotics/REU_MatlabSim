@@ -28,11 +28,13 @@ for r = 1:1 % number of trials to run
     % itterations
     results = bayesopt(fun,[Ka,Ks,Kc,Kh,Kg],'MaxObjectiveEvaluations',100)
     RESULTS = [RESULTS,results];
-    save('optimizer_results', 'RESULTS'); 
     % overwrite results with all the completed trials that way if it
-    % crashes then you still have all your 
-    save('optimizer_results', 'RESULTS');
+    % crashes then you still have all your data
+    save('optimizer_results_CI_25', 'RESULTS'); 
+    
 end
+
+    
 
 
 
@@ -47,8 +49,8 @@ end
 function cost = optimizer(gains)
 
 %% experiment parameters
-num_agents = 10; % number of robots used in the simulator
-estimator = 1;   % estimator 0 = dead reckoning
+num_agents = 25; % number of robots used in the simulator
+estimator = 0;   % estimator 0 = dead reckoning
                  % estimator 1 = covariance intersection
                  % estimator 2 = decentralized EKF
                  % estimator 3 = centralized EKF
@@ -67,6 +69,7 @@ simu.estimator = estimator; % estimator used for the experiment
 simu.dt = .5;               % time step size
 simu.simulationTime=500;    % total time steps duration (second)
 simu.accumulatedTime=0;     % current simulator time
+simu.i = 0;                 % current simulator time step
 
 %noise models-------------------------------------------------------------
 simu.percentNoiseDifference =0.01; %slightly varies sigma per agent
