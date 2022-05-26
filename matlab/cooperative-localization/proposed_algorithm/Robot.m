@@ -386,6 +386,38 @@ classdef Robot
             obj.yaw_rate_m = obj.yaw_rate_m + obj.biasYawRate; % bias
             
         end
+
+         function obj = home_update(obj,home_range)
+            
+            home_dist = norm(obj.position_t(1:2) - obj.home);
+            if home_dist < home_range
+                % update location for dead and estimated to truth at t+1
+                
+                obj.covariance_d = [.1,  0,  0;
+                                     0, .1   0;
+                                     0,  0, .1];
+                obj.covariance_e = obj.covariance_d;
+                
+                obj.position_d = obj.position_t + normrnd(0,.001,1,3);
+                obj.position_e = obj.position_d;
+               % obj.position_e(3) = mod(obj.position_e(3),2*pi);
+                
+                %% get color particles from home
+                if home_dist < home_range %within 5 squares
+                    theta = atan2d(obj.position_t(2) - obj.home(2),obj.position_t(1) - obj.home(1));
+                    if theta < -120 %red range
+                        obj.color_particles(1) = obj.color_particles(1) + 5;
+                    elseif theta < 0 %green
+                        obj.color_particles(2) = obj.color_particles(2) + 5;
+                    elseif theta < 120 %blue
+                        obj.color_particles(3) = obj.color_particles(3) + 5;
+                    else % red range
+                        obj.color_particles(1) = obj.color_particles(1) + 5;
+                    end
+                    
+                end
+            end
+        end
         
         function [X,P] = get_states(obj,ROBOTS)
             numBots = length(ROBOTS);
@@ -471,6 +503,7 @@ classdef Robot
                 obj.is_beacon = 0;
             else                     % i am not a beacon
                 
+                
                 %perform dead_reckoning
                 obj = obj.dead_reckoning(); % set dead reckoning position to t+1
                 
@@ -486,7 +519,7 @@ classdef Robot
                     % true position at t + 1
                 obj.position_t = [obj.position_t(1:2) + obj.velocity_t*obj.dt, new_theta]; 
                 
-                % check if we can see home
+                % Home Measurement
                 obj = obj.home_update(obj.detection_range);
                 
                 %record paths
@@ -566,8 +599,8 @@ classdef Robot
             obj.position_d = [obj.position_d(1:2) + obj.velocity_d*obj.dt, new_theta];
             
             F_d = [1,0,-obj.vel_m*sin(new_theta)*obj.dt;  % X
-                0,1, obj.vel_m*cos(new_theta)*obj.dt;  % Y
-                0,0,           1             ]; % Yaw
+                   0,1, obj.vel_m*cos(new_theta)*obj.dt;  % Y
+                   0,0,           1             ]; % Yaw
             
             
             Q_d = diag([obj.sigmaVelocity, obj.sigmaVelocity, obj.sigmaYawRate]);
@@ -577,38 +610,7 @@ classdef Robot
            
             
         end
-        
-        function obj = home_update(obj,home_range)
-            
-            home_dist = norm(obj.position_t(1:2) - obj.home);
-            if home_dist < home_range
-                % update location for dead and estimated to truth at t+1
-                
-                obj.covariance_d = [.1,  0,  0;
-                                     0, .1   0;
-                                     0,  0, .1];
-                obj.covariance_e = obj.covariance_d;
-                
-                obj.position_d = obj.position_t; % + normrnd(0,.001,1,3);
-                obj.position_e = obj.position_d;
-               % obj.position_e(3) = mod(obj.position_e(3),2*pi);
-                
-                %% get color particles from home
-                if home_dist < home_range %within 5 squares
-                    theta = atan2d(obj.position_t(2) - obj.home(2),obj.position_t(1) - obj.home(1));
-                    if theta < -120 %red range
-                        obj.color_particles(1) = obj.color_particles(1) + 5;
-                    elseif theta < 0 %green
-                        obj.color_particles(2) = obj.color_particles(2) + 5;
-                    elseif theta < 120 %blue
-                        obj.color_particles(3) = obj.color_particles(3) + 5;
-                    else % red range
-                        obj.color_particles(1) = obj.color_particles(1) + 5;
-                    end
-                    
-                end
-            end
-        end
+       
         
         % COVARIANCE INTERSECTION -----------------------------------------
         
@@ -688,20 +690,22 @@ classdef Robot
             obj.position_e = [obj.position_e(1:2) + obj.velocity_e*obj.dt, new_theta];
             
             F_d = [1,0,-obj.vel_m*sin(new_theta)*obj.dt;  % X
-                0,1, obj.vel_m*cos(new_theta)*obj.dt;     % Y
-                0,0,           1             ];           % Yaw
+                   0,1, obj.vel_m*cos(new_theta)*obj.dt;     % Y
+                   0,0,           1             ];           % Yaw
             
             Q_d = diag([obj.sigmaVelocity, obj.sigmaVelocity, obj.sigmaYawRate]);
             
             old_covar = obj.covariance_e;
             
             obj.covariance_e = F_d*obj.covariance_e*F_d' + Q_d;
+
+
             
             %------------------------------------------------------
             
-            if obj.neighbors == 0
-                obj.neighbors = [];
-            end
+            %if obj.neighbors == 0
+            %    obj.neighbors = [];
+            %end
         end
          %  CENTRALIZED EKF ----------------------------------------------         
         function obj= Centralized_EKF(obj)
@@ -889,14 +893,17 @@ classdef Robot
                     
                     
                     Error = sqrt(((Xip(1,1)-obj.X{i}(1,1))^2)+((Xip(2,1)-obj.X{i}(2,1))^2)); % Error
-                    if Error < 2
+                    if Error < .5
                         obj.covariance_e = Pip{1,i}; % Update Covariance and correlated values for robot i            
                         obj.position_e = Xip'; % Update location robot i
-                       % obj.X{j} = Xjp; % Update location robot j
-                       % obj.P(j,:) = Pjp; % Update Covariance and correlated values for robot j
+                        obj.X{i} = Xip;
+                        obj.P{i,:} = Pip;
+                        obj.X{j} = Xjp; % Update location robot j
+                        obj.P(j,:) = Pjp; % Update Covariance and correlated values for robot j
                     else
                         % Don´t Update
                         disp("EXCEEDED ERROR THRESHOLD!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                        disp(Error);
                     end   
                 end     
             end

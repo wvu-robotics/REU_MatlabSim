@@ -61,7 +61,7 @@ total_false_goals_reached = 0; % number of goals the agents though they reached 
 
  %% initialize swarm
  
- show_detection_rng = 0;  %toggles on and off the detection range circles
+ show_detection_rng = 1;  %toggles on and off the detection range circles
  rho_max = simu.N / (pi*range^2); % maximum robot density
  world_len = 10;                  % side length of the world [m]
  
@@ -115,9 +115,13 @@ while simu.accumulatedTime < simu.simulationTime
     %% measure the enviorment-----------------------
    
    %get every robot's CURRENT estimated position and estimated covariance
-   [X,P] = ROBOTS(1).get_states(ROBOTS); 
+   
+    
    for r = 1:simu.N
         % all other robots' estimated position and covariance
+       if simu.i == 2 || estimator ~= 2 || estimator ~= 3 
+            [X,P] = ROBOTS(r).get_states(ROBOTS);
+       end
         ROBOTS(r).X = X;
         ROBOTS(r).P = P;
        
@@ -125,7 +129,8 @@ while simu.accumulatedTime < simu.simulationTime
         ROBOTS(r) = ROBOTS(r).lidar_measurement(ROBOTS);
         % velocity magnitude and yaw rate from CURRENT True Velocity 
         %(carries CURRENT_POSITION -> NEXT_POSITION)
-        ROBOTS(r) = ROBOTS(r).encoder_measurement(); 
+        ROBOTS(r) = ROBOTS(r).encoder_measurement();
+         
         
    end
    
