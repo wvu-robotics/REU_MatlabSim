@@ -698,8 +698,14 @@ classdef Robot
             old_covar = obj.covariance_e;
             
             obj.covariance_e = F_d*obj.covariance_e*F_d' + Q_d;
-
-
+            i = obj.ID;
+            for c = 1:size(obj.P,2)
+                if c == i
+                    obj.P{i,i} = obj.covariance_e;
+                else
+                    obj.P{i,c} = F_d*obj.P{i,c};
+                end
+            end
             
             %------------------------------------------------------
             
@@ -707,28 +713,8 @@ classdef Robot
             %    obj.neighbors = [];
             %end
         end
-         %  CENTRALIZED EKF ----------------------------------------------         
-        function obj= Centralized_EKF(obj)
-            [obj] = Relative_Measurement_Update(obj);
-            %-------------------------dead reckoning update---------------
-            new_theta = obj.position_e(3) + obj.yaw_rate_m*obj.dt;
-            obj.velocity_e = obj.vel_m*[cos(new_theta), sin(new_theta)];
-            %new_theta = mod(new_theta,2*pi);
-            obj.position_e = [obj.position_e(1:2) + obj.velocity_e*obj.dt, new_theta];
-            
-            F_d = [1,0,-obj.vel_m*sin(new_theta)*obj.dt;  % X
-                0,1, obj.vel_m*cos(new_theta)*obj.dt;     % Y
-                0,0,           1             ];           % Yaw
-            
-            Q_d = diag([obj.sigmaVelocity, obj.sigmaVelocity, obj.sigmaYawRate]);
-            
-            old_covar = obj.covariance_e;
-            
-            obj.covariance_e = F_d*obj.covariance_e*F_d' + Q_d;
-            
-            %------------------------------------------------------
-            
-        end
+                  
+       
        
         
         function obj = Relative_Measurement_Update(obj)
