@@ -28,7 +28,7 @@ save_data = 0; % if 0 then DO NOT SAVE DATA
                
 %% estimator parameters
 itterations = 100; %number of itterations per experiment
-headless = 0;
+headless = 1;
 
 %% run experiments
 
@@ -37,7 +37,7 @@ headless = 0;
 for num_agents = 10 %[5,10,25]    %[5,10,25,50] range of number of agent experiments
     for enviorment = 0   % [0,1] enviroment type to use
         for boids_rules = 0 %[0,1,2]   %[0,1,2] boids rules to use
-            for estimator = 2 % [0,1,2,3] %[0,1,2,3] all estimators to use
+            for estimator = [0,1,2,3] % [0,1,2,3] %[0,1,2,3] all estimators to use
                 %% file name generator
                 %creates the file path to save the data to
                 switch estimator
@@ -87,12 +87,13 @@ for num_agents = 10 %[5,10,25]    %[5,10,25,50] range of number of agent experim
                 COVAR = [];
                 PATH_DEVIATION = [];
                 GOALS_REACHED = [];
+                FALSE_GOALS_REACHED = [];
                 
                 %% simulations
                 for s = 1:itterations
                     fprintf('simulation number, %i', s);
                     %run the experiment
-                    [cost, avg_mean_error, avg_covar, avg_path_deviation, avg_goals_reached] = ...
+                    [cost, avg_mean_error, avg_covar, avg_path_deviation, avg_goals_reached, avg_false_goals_reached] = ...
                         experiments(estimator,boids_rules,enviorment,headless,num_agents);
                     
                     %record the results for this experiment itteration
@@ -101,14 +102,15 @@ for num_agents = 10 %[5,10,25]    %[5,10,25,50] range of number of agent experim
                     COVAR = [COVAR,avg_covar];
                     PATH_DEVIATION = [PATH_DEVIATION,avg_path_deviation];
                     GOALS_REACHED = [GOALS_REACHED, avg_goals_reached];
+                    FALSE_GOALS_REACHED = [FALSE_GOALS_REACHED, avg_false_goals_reached];
                     
                 end
                 
                 %% Plot and save data
                 if save_data == 1
-                    save(file_name,'COST','MEAN_ERROR', 'COVAR', 'PATH_DEVIATION', 'GOALS_REACHED');
+                    save(file_name,'COST','MEAN_ERROR', 'COVAR', 'PATH_DEVIATION', 'GOALS_REACHED','FALSE_GOALS_REACHED');
                 end
-                plot_distributions(COST,MEAN_ERROR,COVAR,PATH_DEVIATION,GOALS_REACHED,file_name);
+                plot_distributions(COST,MEAN_ERROR,COVAR,PATH_DEVIATION,GOALS_REACHED,FALSE_GOALS_REACHED,file_name);7
                 
             end
         end

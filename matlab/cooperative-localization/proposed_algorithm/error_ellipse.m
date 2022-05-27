@@ -129,7 +129,8 @@ if r==3 & c==3
 elseif r==2 & c==2
   % Make the matrix has positive eigenvalues - else it's not a valid covariance matrix!
   if any(eig(C) <=0)
-    error('The covariance matrix must be positive definite (it has non-positive eigenvalues)')
+      pause(.1);
+      error('The covariance matrix must be positive definite (it has non-positive eigenvalues)')
   end
 
   [x,y,z] = getpoints(C,prop.clip);
