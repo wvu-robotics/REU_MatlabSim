@@ -7,7 +7,7 @@ Kc = 100;
 time = 10000;
 
 for i=1:boids_count
-   boids(i)=Boid(rand*640/3,rand*360/3, Ks,Ka, Kc,boids_count);
+   boids(i)=Boid(rand*640/3,rand*360/3, Ks,Ka, Kc,boids_count,1);
 end
 
 
