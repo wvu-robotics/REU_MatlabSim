@@ -1,6 +1,3 @@
-from re import A
-from matplotlib import animation
-from matplotlib.pyplot import scatter
 import numpy as np
 import plotly.express as px
 import pandas as pd
