@@ -14,7 +14,7 @@ import Boids as bo
 
 # for video encoding you need FFMPEG installed for opencv, or VFW on windows
 
-#toggles whether output to interactive graph of a video/gif
+#toggles whether output to interactive graph or a video/gif
 interactive_graph = True
 
 # sim parameters
