@@ -14,8 +14,8 @@ class LennardJones(GenericSwarmController.GenericSwarmController):
             #non linearities
 
             #lennard-jones, actually works
-            epsilon = 100 
-            sigma = 1
+            epsilon = 100000 
+            sigma = 5
             out = epsilon*(((sigma/dist)**12)+(-2*((sigma/dist)**6)))
 
             if out != 0:

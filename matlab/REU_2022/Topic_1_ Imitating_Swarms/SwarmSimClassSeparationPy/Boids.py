@@ -21,7 +21,7 @@ class Boids(GenericSwarmController.GenericSwarmController):
             centroidPos += position
         centroidPos /= len(agentPositions)
 
-        v_gain += self.cohesion_gain*centroidPos
+        v_gain += self.cohesion_gain*(centroidPos-pos)
 
         #pretty sure I need some kind of 
         centroidVel = np.zeros(2)
@@ -36,6 +36,8 @@ class Boids(GenericSwarmController.GenericSwarmController):
         for position in agentPositions:
             diffPos = position-pos
             dist = np.linalg.norm(diffPos)
+            if(dist == 0):
+                continue
             unit_diff = diffPos / dist
             if dist != 0:
                 separation_out += -1*self.separation_gain*unit_diff
