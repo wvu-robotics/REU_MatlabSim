@@ -4,13 +4,24 @@ clc
 
 %% define simulation params
 overallTime = 30; % s
-dt = .05; % s 
+dt = .1; % s 
 steps = overallTime/dt; 
-numAgents = 100;
-agentMaxSpeed = 1;
-agentMaxOmega = pi/2;
+numAgents = 1;
+
+maxForwardAccel = 20;
+maxAlpha = 2*pi;
+maxForwardVel = 1.5;
+minForwardVel = 1.0;
+maxOmega = pi;
+
+separation = 5;
+cohesion = 1.5;
+alignment = 3;
+separationWall = 10;
+
 neighborRadius = 1.5;
-%eventually could add a dimension param(2 or more)
+
+simParams = [maxForwardAccel, maxAlpha, maxForwardVel, minForwardVel, maxOmega, separation, cohesion, alignment, separationWall, neighborRadius];
 
 % define agent velocity and position list
 agentPositions = zeros(steps+1,numAgents,3);        %x,y,theta
@@ -24,16 +35,16 @@ for i = 1:numAgents
     agentPositions(1,i,2)= randInRange(-randPosMax,randPosMax);
     agentPositions(1,i,3)= randInRange(0,2*pi);
     %Initial velocities
-    agentVelocities(1,i,1)=randInRange(0,agentMaxSpeed); 
-    agentVelocities(1,i,2)=randInRange(-agentMaxOmega,agentMaxOmega);
+    agentVelocities(1,i,1)=randInRange(1.3,1.3); %minForwardVel,maxForwardVel
+    agentVelocities(1,i,2)=randInRange(0,0);%-maxOmega,maxOmega
 end
 
 %% setup video and figure
-video = VideoWriter('temp4.avi');
+video = VideoWriter('Output Media/temp1.avi');
 video.FrameRate = 1/dt;
 open(video);
 
-fig = figure('Visible','off');
+fig = figure('Visible','on');
 
 %% run simulation
 for step = 1:steps
@@ -55,7 +66,7 @@ for step = 1:steps
     %Simulate each agent
     for agent=1:numAgents
         %Step through simulation
-        [newAccel, newVel, newPos] = stepSim(agentPositions, agentVelocities, step, agent, dt, numAgents, neighborRadius, wallMag);
+        [newAccel, newVel, newPos] = stepSim(agentPositions, agentVelocities, step, agent, dt, numAgents, wallMag, simParams);
         %Update next positions, velocities
         for i=1:3
            agentPositions(step+1,agent,i) = newPos(i);
@@ -78,7 +89,7 @@ close(video);
 
 
 %% define simulation step function
-function [tempAccel, newVel, newPos] = stepSim(positions, velocities, step, agent, dt, numAgents, neighborRadius, wallMag)
+function [tempAccel, newVel, newPos] = stepSim(positions, velocities, step, agent, dt, numAgents, wallMag, simParams)
     %This squeeze method returns 2x1 matrices
     agentPos = squeeze(positions(step,agent,1:2));
     agentTheta = positions(step,agent,3);
@@ -86,15 +97,7 @@ function [tempAccel, newVel, newPos] = stepSim(positions, velocities, step, agen
     
     tempAccel = [0;0];
     
-    maxForwardAccel = 20;
-    maxAlpha = pi;
-    maxForwardVel = 1.5;
-    maxOmega = pi;
-    
-    separation = 5;
-    cohesion = 1.5;
-    alignment = 3;
-    separationWall = 300;
+    [maxForwardAccel, maxAlpha, maxForwardVel, minForwardVel, maxOmega, separation, cohesion, alignment, separationWall, neighborRadius] = unpack(simParams);
     
     %Iterate through all other agents
     for other = 1:numAgents
@@ -124,7 +127,8 @@ function [tempAccel, newVel, newPos] = stepSim(positions, velocities, step, agen
     
     %Enforce wall separation
     wallPoints = [[wallMag;agentPos(2)],[agentPos(1);wallMag],[-wallMag;agentPos(2)],[agentPos(1);-wallMag]];
-    separationWallAccel = [0;0];
+    wallAccelUnits = [[-1;0],[0;-1],[1;1],[0;1]];
+    wallAccel = [0;0];
     for i=1:4
        wallPoint = wallPoints(:,i);
        diffPos = wallPoint - agentPos;
@@ -132,18 +136,20 @@ function [tempAccel, newVel, newPos] = stepSim(positions, velocities, step, agen
        if(distToWall > neighborRadius)
            continue;
        end
-       diffUnit = diffPos / distToWall;
-       accelMag_separationWall = separationWall * -1/distToWall^4;
-       if(accelMag_separationWall > norm(separationWallAccel))
-           separationWallAccel = accelMag_separationWall * diffUnit;
-       end
+       accelMag_separationWall = separationWall * 1/distToWall^2;
+       tempAccel = tempAccel + accelMag_separationWall * wallAccelUnits(:,i);
+       wallAccel = wallAccel + accelMag_separationWall * wallAccelUnits(:,i);
     end
-    tempAccel = tempAccel + separationWallAccel;
     
     %Enforce boundary conditions
     forwardUnit = [cos(agentTheta);sin(agentTheta)];
     newAccel_forward = dot(tempAccel,forwardUnit);
-    newAccel_alpha = 1*sqrt((norm(tempAccel))^2-newAccel_forward^2);
+    newAccel_alpha = sqrt((norm(tempAccel))^2-newAccel_forward^2);
+    tempAccel3D = [tempAccel(1),tempAccel(2),0];
+    forwardUnit3D = [forwardUnit(1),forwardUnit(2),0];
+    turningCrossProduct = cross(forwardUnit3D,tempAccel3D);
+    newAccel_alpha = newAccel_alpha * sign(turningCrossProduct(3));
+    
     newAccel = [newAccel_forward; newAccel_alpha];
     
     if(norm(newAccel(1)) > maxForwardAccel)
@@ -154,9 +160,12 @@ function [tempAccel, newVel, newPos] = stepSim(positions, velocities, step, agen
         newAccel(2) = sign(newAccel(2)) * maxAlpha;
     end
     
-    newVel = agentVel + tempAccel*dt;
-    if(norm(newVel(1)) > maxForwardVel)
-        newVel(1) = sign(newVel(1)) * maxForwardVel;
+    newVel = agentVel + newAccel*dt;
+    
+    if(newVel(1) > maxForwardVel)
+        newVel(1) = maxForwardVel;
+    elseif(newVel(1) < minForwardVel)
+        newVel(1) = minForwardVel;
     end
     
     if(norm(newVel(2)) > maxOmega)
@@ -166,50 +175,23 @@ function [tempAccel, newVel, newPos] = stepSim(positions, velocities, step, agen
     newPos = agentPos + newVel(1)*forwardUnit*dt;
     newTheta = agentTheta + newVel(2)*dt;
     newPos(3) = newTheta;
-end
-
-%% define velocity function
-function vel = v(positions,src,v_0,neighborRadius,agentMaxVel)
-    v_gain = [0 ; 0]; %v_gain = [0 ; 0];
-    %would like to pull out param processing more
-
-    %calculate distance vectors for all nearby, apply non linearity
-    for i = 1:length(positions)
-        diffPos = squeeze(positions(1,i,:)) - src; %diffPos = positions(i) - src;
-        %implement some nonlinearity here
-        mag = norm(diffPos);
-        if(mag == 0 || mag > neighborRadius)
-            continue;
-        end
-        unit_diff = diffPos ./ mag;
-        
-        %lennard-jones, arb constants
-        %epsilon = 0.01; 
-        %sigma = 10; %best distance
-        %out = epsilon * (((sigma/mag)^12)+(-2*((sigma/mag)^6)));
-
-        %other attraction repulsion model         
-        F = .7;
-        L =  1.8;
-        out = (F * exp(-mag/L))-exp(-mag);
-
-        if(out ~= 0)
-            v_gain = v_gain + out*unit_diff;
-        end
-    end
-
-%     decide whether or not to have Vs accrue
-    inertia = 0;
-    uncapped = (v_0 * inertia) + v_gain;
-    uncapped_mag = norm(uncapped);
-    if(uncapped_mag > agentMaxVel)
-        unit_v = uncapped ./ uncapped_mag;
-        vel = unit_v * agentMaxVel;
-    else
-        vel = uncapped;
-    end
+    
+    fprintf("Agent %g: Pos(%g,%g,%g) Vel(%g,%g) Accel(%g,%g) WallAccelGlobal(%g,%g)\n",agent,newPos(1),newPos(2),newPos(3),newVel(1),newVel(2),newAccel(1),newAccel(2),wallAccel(1),wallAccel(2));
 end
 
 function num = randInRange(a,b)
     num = rand(1)*(b-a) + a;
+end
+
+function [maxForwardAccel, maxAlpha, maxForwardVel, minForwardVel, maxOmega, separation, cohesion, alignment, separationWall, neighborRadius] = unpack(simParams)
+    maxForwardAccel = simParams(1);
+    maxAlpha = simParams(2);
+    maxForwardVel = simParams(3);
+    minForwardVel = simParams(4);
+    maxOmega = simParams(5);
+    separation = simParams(6);
+    cohesion = simParams(7);
+    alignment = simParams(8);
+    separationWall = simParams(9);
+    neighborRadius = simParams(10);
 end
