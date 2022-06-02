@@ -11,6 +11,7 @@ import os
 #model imports
 import LenardJones as lj
 import Boids as bo
+import PFSM
 
 # for video encoding you need FFMPEG installed for opencv, or VFW on windows
 
@@ -36,7 +37,7 @@ agentPositions = np.zeros([steps+1,numAgents,2])
 agentVels = np.zeros([steps+1,numAgents,2])
 
 #base inertia stuff broken, need to fix
-agentControllers = [bo.Boids(1,3,0.2,1) for i in range(numAgents)]
+agentControllers = [PFSM.PFSM() for i in range(numAgents)]
 
 # initial positions and velocities
 randPosMax = 10
