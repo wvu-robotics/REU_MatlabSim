@@ -3,6 +3,7 @@ from pydtmc import MarkovChain
 import numpy as np
 import plotly.express as px
 import pandas as pd
+from PIL import Image
 
 # sim parameters
 overallTime = 5

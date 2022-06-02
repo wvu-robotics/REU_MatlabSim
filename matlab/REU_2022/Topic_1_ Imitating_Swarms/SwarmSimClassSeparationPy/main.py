@@ -22,17 +22,17 @@ interactive_graph = False
 overallTime = 15 # seconds
 dt = .1
 steps = int(overallTime/dt)
-numAgents = 10
+numAgents = 100
 neighborRadius = 4
 
 # BCs
-isPeriodic = True
+isPeriodic = False
 
 #agent motion constraints
 angularRate = 1.5*np.pi #radians per second
 maxAngleDeviation = angularRate*dt #radians per step
 agentMaxVel = 5 # m/s
-agentMaxAccel = 1 # m/s^2
+agentMaxAccel = np.inf # m/s^2
 agentMaxVelChange = agentMaxAccel*dt #m/s per step
 
 # define arrays of positions and vels over each step
@@ -43,8 +43,8 @@ agentVels = np.zeros([steps+1,numAgents,2])
 agentControllers = [PFSM.PFSM() for i in range(numAgents)]
 
 # initial positions and velocities
-enclosureSize = 25
-randPosMax = 4
+enclosureSize = 10
+randPosMax = 10
 
 for agentPos in agentPositions[0]:
     #probably a way to assign whole array at once, but this is more explicit
