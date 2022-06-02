@@ -15,19 +15,22 @@ import Boids as bo
 # for video encoding you need FFMPEG installed for opencv, or VFW on windows
 
 #toggles whether output to interactive graph or a video/gif
-interactive_graph = True
+interactive_graph = False
 
 # sim parameters
-overallTime = 30 # seconds
+overallTime = 15 # seconds
 dt = .1
 steps = int(overallTime/dt)
-numAgents = 70
-neighborRadius = 3
+numAgents = 10
+neighborRadius = 4
+
+# BCs
+isPeriodic = True
 
 #agent motion constraints
 angularRate = 1.5*np.pi #radians per second
 maxAngleDeviation = angularRate*dt #radians per step
-agentMaxVel = 7 # m/s
+agentMaxVel = 5 # m/s
 agentMaxAccel = 1 # m/s^2
 agentMaxVelChange = agentMaxAccel*dt #m/s per step
 
@@ -36,14 +39,15 @@ agentPositions = np.zeros([steps+1,numAgents,2])
 agentVels = np.zeros([steps+1,numAgents,2])
 
 #base inertia stuff broken, need to fix
-agentControllers = [bo.Boids(1,3,0.2,1) for i in range(numAgents)]
+agentControllers = [bo.Boids(1,3,1,1) for i in range(numAgents)]
 
 # initial positions and velocities
-randPosMax = 10
+enclosureSize = 25
+randPosMax = 4
 
 for agentPos in agentPositions[0]:
     #probably a way to assign whole array at once, but this is more explicit
-    agentPos[0] = np.random.uniform(low=-randPosMax,high=randPosMax)  
+    agentPos[0] = np.random.uniform(low=-randPosMax,high=randPosMax)
     agentPos[1] = np.random.uniform(low=-randPosMax,high=randPosMax)
 
 # print(agentPositions[0])
@@ -70,19 +74,36 @@ for step in range(0,steps):
             relevantVels.append(agentVels[step,other_agent])
 
         #if out of bounds, invert last velocity and don't update
-        if agentPos[0] > randPosMax or agentPos[0] < -randPosMax:
-            if((agentVel[0]<0 and agentPos[0]<-randPosMax) or (agentVel[0]>0 and agentPos[0]>randPosMax)):
-                agentVel[0] *= -1
-            agentVels[step+1,agent] = agentVel*(agentMaxVel/np.linalg.norm(agentVel))
-            agentPositions[step+1,agent] = agentPos  + agentVel*dt
-            continue
-        
-        if agentPos[1] > randPosMax or agentPos[1] < -randPosMax:
-            if((agentVel[1]<0 and agentPos[1]<-randPosMax) or (agentVel[1]>0 and agentPos[1]>randPosMax)):
-                agentVel[1] *= -1
-            agentVels[step+1,agent] = agentVel*(agentMaxVel/np.linalg.norm(agentVel))
-            agentPositions[step+1,agent] = agentPos  + agentVel*dt
-            continue
+        if isPeriodic == True:
+            pass
+        else:
+            if agentPos[0] > enclosureSize or agentPos[0] < -enclosureSize:
+                if((agentVel[0]<0 and agentPos[0]<-enclosureSize) or (agentVel[0]>0 and agentPos[0]>enclosureSize)):
+                    agentVel[0] *= -1
+                agentVels[step+1,agent] = agentVel*(agentMaxVel/np.linalg.norm(agentVel))
+                agentPositions[step+1,agent] = agentPos  + agentVel*dt
+                continue
+
+            if agentPos[1] > enclosureSize or agentPos[1] < -enclosureSize:
+                if((agentVel[1]<0 and agentPos[1]<-enclosureSize) or (agentVel[1]>0 and agentPos[1]>enclosureSize)):
+                    agentVel[1] *= -1
+                agentVels[step+1,agent] = agentVel*(agentMaxVel/np.linalg.norm(agentVel))
+                agentPositions[step+1,agent] = agentPos  + agentVel*dt
+                continue
+
+        #periodic BCs - neighbor radius does not cross periodic boundaries
+        if isPeriodic == True:
+            if agentPos[0] > enclosureSize or agentPos[0] < -enclosureSize:
+                if agentVel[0]<0 and agentPos[0]<-enclosureSize:
+                    agentPos[0] += 2*enclosureSize
+                elif agentVel[0]>0 and agentPos[0]>enclosureSize:
+                    agentPos[0] += -2*enclosureSize
+
+            if agentPos[1] > enclosureSize or agentPos[1] < -enclosureSize:
+                if agentVel[1] < 0 and agentPos[1] < -enclosureSize:
+                    agentPos[1] += 2 * enclosureSize
+                elif agentVel[1] > 0 and agentPos[1] > enclosureSize:
+                    agentPos[1] += -2 * enclosureSize
 
         vel_new = agentControllers[agent].vel(relevantPositions,relevantVels,agentPos,agentVel)
 
@@ -125,7 +146,7 @@ for step in range(0,steps):
 
 #graph with animation
 # graphScale = 1.75
-# axisBounds = graphScale*randPosMax
+# axisBounds = graphScale*enclosureSize
 # print(agentPositions)
 
 #everything gets flattened into a 2d tabular frame, with frame as a category
@@ -147,7 +168,7 @@ print("Simulation complete--Generating media")
 if(interactive_graph):
     #interactive graph
     fig = px.scatter(df,x="x",y="y",animation_frame="frame")
-    fig.update_layout(yaxis_range=[-randPosMax,randPosMax],xaxis_range=[-randPosMax,randPosMax])
+    fig.update_layout(yaxis_range=[-enclosureSize,enclosureSize],xaxis_range=[-enclosureSize,enclosureSize])
     fig.update_layout(width=500,height=500)
     fig.show()
 
@@ -158,7 +179,7 @@ else:
     def plot(i):
         d = df[df['frame'] == i]
         fig = px.scatter(d,x="x",y="y")
-        fig.update_layout(yaxis_range=[-randPosMax,randPosMax],xaxis_range=[-randPosMax,randPosMax])
+        fig.update_layout(yaxis_range=[-enclosureSize,enclosureSize],xaxis_range=[-enclosureSize,enclosureSize])
         fig.update_layout(width=500,height=500)
         fig.write_image("images/fig"+str(i)+".png")
         return fig
