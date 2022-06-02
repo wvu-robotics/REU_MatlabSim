@@ -17,6 +17,9 @@ import Boids as bo
 #toggles whether output to interactive graph or a video/gif
 interactive_graph = False
 
+#toggles graphing settings to black background w/o labels or grids
+vision_mode = False
+
 # sim parameters
 overallTime = 15 # seconds
 dt = .1
@@ -181,6 +184,12 @@ else:
         fig = px.scatter(d,x="x",y="y")
         fig.update_layout(yaxis_range=[-enclosureSize,enclosureSize],xaxis_range=[-enclosureSize,enclosureSize])
         fig.update_layout(width=500,height=500)
+        if vision_mode == True:
+            fig.update_layout(template="plotly_dark")
+            fig.update_layout(xaxis_title="", yaxis_title="")
+            fig.update_xaxes(showgrid=False,zeroline=False, showticklabels=False)
+            fig.update_yaxes(showgrid=False,zeroline=False, showticklabels=False)
+            fig.update_traces(marker=dict(size=8, color="#96D38C"))
         fig.write_image("images/fig"+str(i)+".png")
         return fig
 
