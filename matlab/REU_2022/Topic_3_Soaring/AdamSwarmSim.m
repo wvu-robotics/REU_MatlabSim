@@ -13,100 +13,142 @@ neighborRadius = 5;
 
 % define agent velocity and position list
 agentPositions = zeros(steps+1,numAgents,2);
-agentVels = zeros(steps+1,numAgents,2);
+agentVelocities = zeros(steps+1,numAgents,2);
+agentAccelerations = zeros(steps+1,numAgents,2);
 
 %% initialize to random positions
 randPosMax = 6;
 for i = 1:numAgents
+    %Initial positions
     agentPositions(1,i,1)= randInRange(-randPosMax,randPosMax);
     agentPositions(1,i,2)= randInRange(-randPosMax,randPosMax);
-%     initial v conditions
-    agentVels(1,i,1)=randInRange(-agentMaxVel,agentMaxVel); 
-    agentVels(1,i,2)=randInRange(-agentMaxVel,agentMaxVel);
+    %Initial velocities
+    agentVelocities(1,i,1)=randInRange(-agentMaxVel,agentMaxVel); 
+    agentVelocities(1,i,2)=randInRange(-agentMaxVel,agentMaxVel);
+    %Initial accelerations = 0
 end
+
+%% setup video and figure
+video = VideoWriter('temp2.avi');
+video.FrameRate = 1/dt;
+open(video);
+
+fig = figure('Visible','on');
 
 %% run simulation
 for step = 1:steps
+    fprintf("Frame %g/%g\n",step,steps);
     clf
     currentPositions = agentPositions(step,:,:);
+    
     % plot current positions
     xdata = currentPositions(:,:,1);
     ydata = currentPositions(:,:,2);
-    hold on
     scatter(xdata,ydata,50,'filled','black');
-    %plot(xdata(30),ydata(30),'o')
-    %axis(gca)
-    point30 = [xdata(30),ydata(30)];
-    figNorm30 = figNorm(point30);
-    dim30 = [figNorm30(1),figNorm30(2),0.1,0.1];
-    annotation('ellipse',dim30)
-
-    graphScale = 1.75;
+    hold on
+    
+    graphScale = 1.25;
     xlim([-graphScale*randPosMax graphScale*randPosMax])
     ylim([-graphScale*randPosMax graphScale*randPosMax])
+    daspect([1 1 1])
     
-    %update velocities, then integrate for position
+    %Simulate each agent
     for agent=1:numAgents
-        %matlab indexing is weird
-        agentPos = squeeze(currentPositions(:,agent,:));
-        agentVel = squeeze(agentVels(step,agent,:));
-
-        %written out because array assignment is not supported
-        %fprintf("BeforeSize: %g\n",size(currentPositions))
-        newVel = v(currentPositions,agentPos,agentVel,neighborRadius, agentMaxVel);
-        agentVels(step+1,agent,1) = newVel(1);
-        agentVels(step+1,agent,2) = newVel(2);
-
-        %note velocities are framed in termed of last movement, as opposed
-        %to future
-
-        newPos = agentVels(step+1,agent)*dt + agentPos;
-        agentPositions(step+1,agent,1)= newPos(1);
-        agentPositions(step+1,agent,2)= newPos(2);
-        
+        %Step through simulation
+        [newAccel, newVel, newPos] = stepSim(agentPositions, agentVelocities, agentAccelerations, step, agent, dt, numAgents, neighborRadius);
+        %Update next positions, velocities, and accelerations
+        for i=1:2
+           agentPositions(step+1,agent,i) = newPos(i);
+           agentVelocities(step+1,agent,i) = newVel(i);
+           agentAccelerations(step+1,agent,i) = newAccel(i);
+        end
     end
 
     %hold simulation to look at
+    hold off
+    currFrame = getframe(fig);
+    writeVideo(video,currFrame);
 
     %convert this to realtime
-    pause(dt);
+    pause(0.0001);
 end
 
+close(video);
+
+
+%% define simulation step function
+function [newAccel, newVel, newPos] = stepSim(positions, velocities, accelerations, step, agent, dt, numAgents, neighborRadius)
+    %This squeeze method returns 2x1 matrices
+    agentPos = squeeze(positions(step,agent,:));
+    agentVel = squeeze(velocities(step,agent,:));
+    agentAccel = squeeze(accelerations(step,agent,:));
+    
+    newAccel = [0;0];
+    
+    maxAccel = 2;
+    maxVel = 1;
+
+    %Iterate through all agents
+    for other = 1:numAgents
+        if (other == agent)
+            continue;
+        end
+        
+        otherPos = squeeze(positions(step,other,:));
+        
+        diffPos = otherPos - agentPos;
+        distToOther = norm(diffPos);
+        diffUnit = diffPos / distToOther;
+        
+        if (distToOther == 0 || distToOther > neighborRadius)
+            continue;
+        end
+        
+        separation = 1;
+        cohesion = 0.8;
+        
+        accelMag_separation = -1/distToOther^2; %Negative, to go AWAY from the other
+        accelMag_cohesion = 1/(distToOther-neighborRadius)^2; %Positive, to go TOWARDS the other
+        accelMag = separation*accelMag_separation + cohesion*accelMag_cohesion;
+        
+        accel = accelMag * diffUnit;
+        newAccel = newAccel + accel;
+    end
+    
+    %Enforce boundary conditions
+    newAccelMag = norm(newAccel);
+    if(newAccelMag > maxAccel)
+        newAccel = newAccel / newAccelMag * maxAccel;
+    end
+    
+    newVel = agentVel + newAccel*dt;
+    newVelMag = norm(newVel);
+    if(newVelMag > maxVel)
+        newVel = newVel / newVelMag * maxVel;
+    end
+    
+    newPos = agentPos + newVel*dt;
+end
 
 %% define velocity function
 function vel = v(positions,src,v_0,neighborRadius,agentMaxVel)
-    positions = squeeze(positions);
-    %fprintf("AfterSize: %g\n",size(positions))
-    v_gain = [0 ; 0];
+    v_gain = [0 ; 0]; %v_gain = [0 ; 0];
     %would like to pull out param processing more
 
     %calculate distance vectors for all nearby, apply non linearity
     for i = 1:length(positions)
-        pos = positions(i,:);
-        pos = pos';
-        %fprintf("PosSize: %g\n",size(pos))
-        %fprintf("SrcSize: %g\n",size(src))
-        diffPos = pos - src;
-        
+        diffPos = squeeze(positions(1,i,:)) - src; %diffPos = positions(i) - src;
         %implement some nonlinearity here
         mag = norm(diffPos);
         if(mag == 0 || mag > neighborRadius)
             continue;
         end
-        
-        if (i==30)
-            %fprintf("what: %g\n",diffPos)
-            %fprintf("Src: %g\n",src)
-            %fprintf("Pos(i): %g\n",pos)
-            annotation('arrow',figNorm(src),figNorm(pos))
-        end
-        
         unit_diff = diffPos ./ mag;
         
         %lennard-jones, arb constants
-%         epsilon = 1; 
-%         sigma = 10; %best distance
-%         out = epsilon * (((sigma/mag)^12)+(-2*((sigma/mag)^6)));
+        %epsilon = 0.01; 
+        %sigma = 10; %best distance
+        %out = epsilon * (((sigma/mag)^12)+(-2*((sigma/mag)^6)));
 
         %other attraction repulsion model         
         F = .7;
@@ -120,9 +162,9 @@ function vel = v(positions,src,v_0,neighborRadius,agentMaxVel)
 
 %     decide whether or not to have Vs accrue
     inertia = 0;
-    uncapped = (v_0* inertia) + v_gain;
+    uncapped = (v_0 * inertia) + v_gain;
     uncapped_mag = norm(uncapped);
-    if(uncapped_mag >agentMaxVel)
+    if(uncapped_mag > agentMaxVel)
         unit_v = uncapped ./ uncapped_mag;
         vel = unit_v * agentMaxVel;
     else
@@ -133,14 +175,3 @@ end
 function num = randInRange(a,b)
     num = rand(1)*(b-a) + a;
 end
-
-function out = figNorm(in)
-    out = zeros(size(in));
-    AX = axis(gca);
-    Xrange=AX(2)-AX(1);
-    Yrange=AX(4)-AX(3);       
-    out(1)=(in(1)-AX(1))/Xrange;
-    out(2)=(in(2)-AX(3))/Yrange;
-    %fprintf("figNormOut: [%g,%g]\n",out(1),out(2))
-end
-
