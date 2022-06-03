@@ -1,60 +1,104 @@
-clc;
-clear;
+close all
+clear
+clc
 
-fig = figure;
-hold on
+%% Set up parameters
+overallTime = 30; % s
+dt = .1; % s 
+steps = overallTime/dt; 
+
 xdims = [-100, 100];
 ydims = [-100, 100];
-xlim(xdims);
-ylim(ydims);
-daspect([1 1 1]);
 
 thermalPixels = 1000; %Number of map units across a side
-finalThermalMap = zeros(thermalPixels);
 
-numThermals = 3;
+numThermals = 6;
 thermalSizeLims = [5, 20];
+thermalVelLims = [20,50];
 
 mapX = linspace(xdims(1),xdims(2),thermalPixels);
 mapY = linspace(ydims(1),ydims(2),thermalPixels);
 
 thermalPosX = rand(numThermals,1)*(xdims(2)-xdims(1)) + xdims(1);
 thermalPosY = rand(numThermals,1)*(ydims(2)-ydims(1)) + ydims(1);
-%scatter(thermalPosX,thermalPosY);
+thermalVel = rand(numThermals,2)*(thermalVelLims(2)-thermalVelLims(1)) + thermalVelLims(1);
 thermalSize = rand(numThermals,1)*(thermalSizeLims(2)-thermalSizeLims(1)) + thermalSizeLims(1);
 
-%Iterate through thermals
-for thermalIndex = 1:numThermals
-    thermalPos = [thermalPosX(thermalIndex),thermalPosY(thermalIndex)];
-    %Create temporary empty matrix to hold distances from this thermal
-    distancesFromThermal = zeros(thermalPixels);
-    for row = 1:thermalPixels
-        for column = 1:thermalPixels
-            %At each position in the matrix, find the corresponding map
-            %position and calculate its distance from this thermal
-            mapPos = [mapX(column),mapY(row)];
-            diffPos = thermalPos - mapPos;
-            distancesFromThermal(row,column) = norm(diffPos);
+%% Set up video and figure
+video = VideoWriter('Output Media/thermals1.avi');
+video.FrameRate = 1/dt;
+open(video);
+
+simFig = figure;
+
+%% Run simulation
+for step = 1:steps
+    %% Set up frame
+    fprintf("Frame %g/%g\n",step,steps);
+    clf
+    hold on
+    xlim(xdims);
+    ylim(ydims);
+    daspect([1 1 1]);
+    
+    %% Render thermals
+    finalThermalMap = zeros(thermalPixels);
+    %Iterate through thermals
+    for thermalIndex = 1:numThermals
+        thermalPos = [thermalPosX(thermalIndex),thermalPosY(thermalIndex)];
+        %Create temporary empty matrix to hold distances from this thermal
+        distancesFromThermal = zeros(thermalPixels);
+        for row = 1:thermalPixels
+            for column = 1:thermalPixels
+                %At each position in the matrix, find the corresponding map
+                %position and calculate its distance from this thermal
+                mapPos = [mapX(column),mapY(row)];
+                diffPos = thermalPos - mapPos;
+                distancesFromThermal(row,column) = norm(diffPos);
+            end
+        end
+        %Use normal distribution to generate thermal (normpdf)
+        distancesFromThermal = distancesFromThermal/thermalSize(thermalIndex);
+        tempThermalMap = normpdf(distancesFromThermal)/normpdf(0);
+        finalThermalMap = finalThermalMap + tempThermalMap;
+    end
+
+    thermalMapImg = imagesc(finalThermalMap,'XData',xdims,'YData',ydims);
+    thermalMapImg.AlphaData = 1;
+    colorbar;
+    cbLimits = [0,2];
+    set(gca,'clim',cbLimits);
+    hold off
+    
+    %% Save frame
+    currFrame = getframe(simFig);
+    writeVideo(video,currFrame);
+    pause(0.0001);
+    
+    %% Step physics
+    for thermalIndex = 1:numThermals
+        thermalPosX(thermalIndex) = thermalPosX(thermalIndex) + thermalVel(thermalIndex,1)*dt;
+        thermalPosY(thermalIndex) = thermalPosY(thermalIndex) + thermalVel(thermalIndex,2)*dt;
+        
+        if(thermalPosX(thermalIndex) >= xdims(2))
+            thermalPosX(thermalIndex) = 2*xdims(2) - thermalPosX(thermalIndex);
+            thermalVel(thermalIndex,1) = -thermalVel(thermalIndex,1);
+        elseif(thermalPosX(thermalIndex) <= xdims(1))
+            thermalPosX(thermalIndex) = 2*xdims(1) - thermalPosX(thermalIndex);
+            thermalVel(thermalIndex,1) = -thermalVel(thermalIndex,1);
+        end
+        
+        if(thermalPosY(thermalIndex) >= ydims(2))
+            thermalPosY(thermalIndex) = 2*ydims(2) - thermalPosY(thermalIndex);
+            thermalVel(thermalIndex,2) = -thermalVel(thermalIndex,2);
+        elseif(thermalPosY(thermalIndex) <= ydims(1))
+            thermalPosY(thermalIndex) = 2*ydims(1) - thermalPosY(thermalIndex);
+            thermalVel(thermalIndex,2) = -thermalVel(thermalIndex,2);
         end
     end
-    %img = imagesc(distancesFromThermal,'XData',xdims,'YData',ydims);
-    %img.AlphaData = 1;
-    %colorbar
-    %scatter(thermalPos(1),thermalPos(2));
-    fprintf("ThermalPos: (%g,%g)\n",thermalPos(1),thermalPos(2));
     
-    %Use normal distribution to generate thermal (normpdf)
-    distancesFromThermal = distancesFromThermal/thermalSize(thermalIndex);
-    tempThermalMap = normpdf(distancesFromThermal)/normpdf(0);
-    finalThermalMap = finalThermalMap + tempThermalMap;
 end
 
-thermalMapImg = imagesc(finalThermalMap,'XData',xdims,'YData',ydims);
-thermalMapImg.AlphaData = 0.7;
-colorbar;
+close(video);
 
-x = linspace(0,100,50);
-y = x.^2;
-%plot(x,y);
 
-hold off

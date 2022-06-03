@@ -14,9 +14,9 @@ maxForwardVel = 1.5;
 minForwardVel = 1.0;
 maxOmega = pi;
 
-separation = 5;
+separation = 3;
 cohesion = 1.5;
-alignment = 3;
+alignment = 2;
 separationWall = 10;
 
 neighborRadius = 1.5;
@@ -46,14 +46,6 @@ open(video);
 
 %fig = figure('Visible','off','units','pixels','position',[0,0,1440,1080]);
 simFig = figure('Visible','on');
-%{
-uiFig = uifigure('Name','GUI','Position',[0, 0, 300, 300],'Resize','off');
-slowButton = uibutton(uiFig);
-slowButton.Position = [150, 150, 100, 100];
-slowButton.Text = 'Slow Boids';
-slowDown = false;
-slowButton.ButtonPushedFcn = @(btn,event) slowButtonPressed();
-%}
 
 %% run simulation
 for step = 1:steps
@@ -68,7 +60,7 @@ for step = 1:steps
     renderBoids(currentPositions,numAgents);
     hold on
     
-    graphScale = 1.75;
+    graphScale = 5;
     wallMag = graphScale*randPosMax;
     xlim([-wallMag wallMag])
     ylim([-wallMag wallMag])
@@ -230,7 +222,3 @@ function renderBoids(positions,numAgents)
         patch(globalBoidShape(1,:),globalBoidShape(2,:),'k');        
     end
 end
-
-%function slowButtonPressed()
-%    fprintf("SLOW\n");
-%end
