@@ -8,7 +8,7 @@ clc
 % 1 mi = 5280 ft
 % xy in mi, alti in ft
 % Simulation runs at exactly 60x real time.
-overallTime = 10; % min
+overallTime = 15; % min
 dt = .05; % min
 steps = overallTime/dt; 
 numAgents = 100;
@@ -24,13 +24,13 @@ simParams = [
     3,      ... alignment
     10,     ... separationWall
     1.5,    ... neighborRadius
-    1000];  ... sinkRate
+    50];  ... sinkRate
 
 thermal = [
     0,      ... X position
     0,      ... Y position
     8,      ... Width
-    1200,   ... Rise Rate (upwards boost)
+    150,   ... Rise Rate (upwards boost)
     8000];  ... Ceiling
 % bloat
 % maxForwardAccel = 20;
@@ -54,8 +54,6 @@ Ceiling = 8000;
 
 % define agent velocity and position list
 % X, Y, Theta, Altitude, Forward V, Turning V
-% agentPositions = zeros(steps+1,numAgents,4);        %x,y,theta, altitude
-% agentVelocities = zeros(steps+1,numAgents,2);       %forward,turning
 agentTelemetry = zeros(steps+1,numAgents,6);
 
 %% initialize to random positions
@@ -123,7 +121,7 @@ end
 
 close(video);
 toc
-%% define simulation step function
+%% StepSim
 function newTele = stepSim(telemetry, step, agent, dt, numAgents, wallMag, simParams,thermal)
     % btw this should never run on a dead agent
 
@@ -139,6 +137,12 @@ function newTele = stepSim(telemetry, step, agent, dt, numAgents, wallMag, simPa
      maxOmega, separation, cohesion, alignment, separationWall,...
      neighborRadius, sinkRate] = unpack(simParams);
     
+    % Respect the Thermal
+    distThermal = thermal(1:2) - agentPos(1:2);
+    if norm(distThermal) <= thermal(3)
+        maxForwardVel = maxForwardVel * 0.5;
+    end
+
     %Iterate through all other agents
     for other = 1:numAgents
         % Skip if comparing the agent with itself, and if the other is dead
@@ -152,8 +156,9 @@ function newTele = stepSim(telemetry, step, agent, dt, numAgents, wallMag, simPa
         
         diffPos = otherPos - agentPos;
         distToOther = norm(diffPos);
-        diffUnit = diffPos / distToOther;
+        diffUnit = diffPos / distToOther; % unit vector
         
+        % skip if right on top of each other (should change later)
         if (distToOther == 0 || distToOther > neighborRadius)
             continue;
         end
