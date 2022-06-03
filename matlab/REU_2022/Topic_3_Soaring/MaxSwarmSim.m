@@ -9,7 +9,7 @@ clc
 % xy in mi, alti in ft
 % Simulation runs at exactly 60x real time.
 overallTime = 5; % min
-dt = .1; % min
+dt = .05; % min
 steps = overallTime/dt; 
 numAgents = 100;
 
@@ -49,15 +49,17 @@ thermal = [
 % X position, Y position, Width, Rise Rate, Ceiling
 % thermal = [0,0,8,1200,8000];
 
-agentScale = 2;
+agentScale = 1;
 Ceiling = 8000;
-
+randPosMax = 4; % Starting area for spawning boids
+graphScale = 1.5; % extra area for the entire map
+wallMag = graphScale*randPosMax;
 % define agent velocity and position list
 % X, Y, Theta, Altitude, Forward V, Turning V
 agentTelemetry = zeros(steps+1,numAgents,6);
 
 %% Initialize Agents and Video
-randPosMax = 6;
+
 for i = 1:numAgents
     %Initial positions
     agentTelemetry(1,i,1)= randInRange(-randPosMax,randPosMax);
@@ -78,8 +80,6 @@ fig = figure('Visible','off');
 
 %% Main Loop
 tic
-graphScale = 1.75;
-wallMag = graphScale*randPosMax;
 for step = 1:steps
     fprintf("Frame %g/%g\n",step,steps);
     clf
