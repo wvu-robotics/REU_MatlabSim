@@ -2,14 +2,14 @@ close all
 clear
 clc
 
-%% define simulation params
+%% Initialize Parameters
 % Units mi/ft lb min + kt
 % 1 kt = 1.151 mph
 % 1 mi = 5280 ft
 % xy in mi, alti in ft
 % Simulation runs at exactly 60x real time.
-overallTime = 15; % min
-dt = .05; % min
+overallTime = 5; % min
+dt = .1; % min
 steps = overallTime/dt; 
 numAgents = 100;
 
@@ -24,13 +24,13 @@ simParams = [
     3,      ... alignment
     10,     ... separationWall
     1.5,    ... neighborRadius
-    50];  ... sinkRate
+    162];   ... sinkRate (taken from FAA Glider handbook)
 
 thermal = [
     0,      ... X position
     0,      ... Y position
-    8,      ... Width
-    150,   ... Rise Rate (upwards boost)
+    0.2,    ... Width
+    300,    ... Rise Rate (upwards boost) (also from FAA Glider Handbook)
     8000];  ... Ceiling
 % bloat
 % maxForwardAccel = 20;
@@ -56,7 +56,7 @@ Ceiling = 8000;
 % X, Y, Theta, Altitude, Forward V, Turning V
 agentTelemetry = zeros(steps+1,numAgents,6);
 
-%% initialize to random positions
+%% Initialize Agents and Video
 randPosMax = 6;
 for i = 1:numAgents
     %Initial positions
@@ -69,9 +69,8 @@ for i = 1:numAgents
     agentTelemetry(1,i,6)= randInRange(0,0);%-maxOmega,maxOmega
 end
 
-%% setup video and figure
 video = VideoWriter('Boids.avi');
-video.FrameRate = 1/dt;
+video.FrameRate = 1/dt; % Force to be 60x real time
 open(video);
 
 %fig = figure('Visible','off','units','pixels','position',[0,0,1440,1080]);
@@ -109,8 +108,11 @@ for step = 1:steps
             end
         end
     end
+    alive = nnz(agentTelemetry(step,:,4)>0);
     txt = ['Step: ', num2str(step)];
-    text(8,8,txt)
+    text(8,8,txt);
+    txt = ['Alive: ',num2str(alive)];
+    text(8,7,txt);
     %hold simulation to look at
     hold off
     currFrame = getframe(fig);
@@ -253,12 +255,11 @@ function [maxForwardAccel, maxAlpha, maxForwardVel, minForwardVel, maxOmega, sep
     sinkRate = simParams(11);
 end
 
-%% Render Boids
+%% Render
 %Assume positions = 3 x numAgents matrix
 function renderBoids(telemetry,numAgents,Ceiling,agentScale,thermal)
     %Define relative boid shape = x-values...; y-values...
-    boidShape = agentScale.*[-.5, .5, -.5;
-                 -.5, 0, .5];
+    boidShape = agentScale.*[-.5, .5, -.5; -.5, 0, .5];
     boidShape(1,:) = boidShape(1,:) * 0.4;
     boidShape(2,:) = boidShape(2,:) * 0.3;
     normAltitude = abs(telemetry(4,:)./Ceiling.*0.6);
