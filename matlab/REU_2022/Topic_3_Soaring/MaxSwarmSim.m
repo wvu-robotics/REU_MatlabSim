@@ -53,21 +53,22 @@ agentScale = 2;
 Ceiling = 8000;
 
 % define agent velocity and position list
-agentPositions = zeros(steps+1,numAgents,4);        %x,y,theta, altitude
-agentVelocities = zeros(steps+1,numAgents,2);       %forward,turning
-%agentTelemetry = [agentPositions;agentVelocities];
+% X, Y, Theta, Altitude, Forward V, Turning V
+% agentPositions = zeros(steps+1,numAgents,4);        %x,y,theta, altitude
+% agentVelocities = zeros(steps+1,numAgents,2);       %forward,turning
+agentTelemetry = zeros(steps+1,numAgents,6);
 
 %% initialize to random positions
 randPosMax = 6;
 for i = 1:numAgents
     %Initial positions
-    agentPositions(1,i,1)= randInRange(-randPosMax,randPosMax);
-    agentPositions(1,i,2)= randInRange(-randPosMax,randPosMax);
-    agentPositions(1,i,3)= randInRange(0,2*pi);
-    agentPositions(1,i,4)= randInRange(Ceiling-2000,Ceiling);
+    agentTelemetry(1,i,1)= randInRange(-randPosMax,randPosMax);
+    agentTelemetry(1,i,2)= randInRange(-randPosMax,randPosMax);
+    agentTelemetry(1,i,3)= randInRange(0,2*pi);
+    agentTelemetry(1,i,4)= randInRange(Ceiling-2000,Ceiling);
     %Initial velocities
-    agentVelocities(1,i,1)=randInRange(1.3,1.3); %minForwardVel,maxForwardVel
-    agentVelocities(1,i,2)=randInRange(0,0);%-maxOmega,maxOmega
+    agentTelemetry(1,i,5)= randInRange(1.3,1.3); %minForwardVel,maxForwardVel
+    agentTelemetry(1,i,6)= randInRange(0,0);%-maxOmega,maxOmega
 end
 
 %% setup video and figure
@@ -91,8 +92,8 @@ for step = 1:steps
     %ydata = agentPositions(step,:,2);
     %scatter(xdata,ydata,50,'filled','black');
     
-    currentPositions = (squeeze(agentPositions(step,:,:)))';
-    renderBoids(currentPositions,numAgents,Ceiling,agentScale,thermal);
+    currentTelemetry = (squeeze(agentTelemetry(step,:,:)))'; % Agent x 6
+    renderBoids(currentTelemetry,numAgents,Ceiling,agentScale,thermal);
     hold on
     
     xlim([-wallMag wallMag])
@@ -101,15 +102,12 @@ for step = 1:steps
     
     %Simulate each agent
     for agent=1:numAgents
-        if agentPositions(step,agent,4) > 0 % agent must not be dead
+        if agentTelemetry(step,agent,4) > 0 % agent must not be dead
             %Step through simulation
-            [newAccel, newVel, newPos] = stepSim(agentPositions, agentVelocities, step, agent, dt, numAgents, wallMag, simParams,thermal);
+            newTele = stepSim(agentTelemetry, step, agent, dt, numAgents, wallMag, simParams,thermal);
             %Update next positions, velocities
-            for i=1:4
-                agentPositions(step+1,agent,i) = newPos(i);
-            end
-            for i=1:2
-                agentVelocities(step+1,agent,i) = newVel(i);
+            for i=1:6
+                agentTelemetry(step+1,agent,i) = newTele(i);
             end
         end
     end
@@ -126,25 +124,30 @@ end
 close(video);
 toc
 %% define simulation step function
-function [tempAccel, newVel, newPos] = stepSim(positions, velocities, step, agent, dt, numAgents, wallMag, simParams,thermal)
+function newTele = stepSim(telemetry, step, agent, dt, numAgents, wallMag, simParams,thermal)
+    % btw this should never run on a dead agent
+
     %This squeeze method returns 2x1 matrices
-    agentPos = squeeze(positions(step,agent,1:2));
-    agentTheta = positions(step,agent,3);
-    agentAlti = positions(step,agent,4);
-    agentVel = squeeze(velocities(step,agent,:));
+    agentPos   = squeeze(telemetry(step,agent,1:2));
+    agentTheta =         telemetry(step,agent,  3);
+    agentAlti  =         telemetry(step,agent,  4);
+    agentVel   = squeeze(telemetry(step,agent,5:6));
     
     tempAccel = [0;0];
     
-    [maxForwardAccel, maxAlpha, maxForwardVel, minForwardVel, maxOmega, separation, cohesion, alignment, separationWall, neighborRadius, sinkRate] = unpack(simParams);
+    [maxForwardAccel, maxAlpha, maxForwardVel, minForwardVel,...
+     maxOmega, separation, cohesion, alignment, separationWall,...
+     neighborRadius, sinkRate] = unpack(simParams);
     
     %Iterate through all other agents
     for other = 1:numAgents
-        if (other == agent) || (positions(step,other,4) <= 0) % other agent cant be dead
+        % Skip if comparing the agent with itself, and if the other is dead
+        if (other == agent) || (telemetry(step,other,4) <= 0)
             continue;
         end
         
-        otherPos = squeeze(positions(step,other,1:2));
-        otherTheta = positions(step,other,3);
+        otherPos     = squeeze(telemetry(step,other,1:2));
+        otherTheta   = telemetry(step,other,3);
         otherVelUnit = [cos(otherTheta);sin(otherTheta)];
         
         diffPos = otherPos - agentPos;
@@ -156,19 +159,19 @@ function [tempAccel, newVel, newPos] = stepSim(positions, velocities, step, agen
         end
         
         accelMag_separation = separation * -1/distToOther^2; %Negative, to go AWAY from the other
-        accelMag_cohesion = cohesion * distToOther^2; %Positive, to go TOWARDS the other
-        accelMag_alignment = alignment * 1/distToOther^2;
+        accelMag_cohesion   = cohesion   *    distToOther^2; %Positive, to go TOWARDS the other
+        accelMag_alignment  = alignment  *  1/distToOther^2;
         
         accel = accelMag_separation*diffUnit + accelMag_cohesion*diffUnit + accelMag_alignment*otherVelUnit;
         tempAccel = tempAccel + accel;
     end
     % End interaction
 
-    %Enforce wall separation
+    % Enforce wall separation
     wallPoints = [[wallMag;agentPos(2)],[agentPos(1);wallMag],[-wallMag;agentPos(2)],[agentPos(1);-wallMag]];
     wallAccelUnits = [[-1;0],[0;-1],[1;1],[0;1]];
     wallAccel = [0;0];
-    for i=1:4
+    for i=1:4 % 4 walls
        wallPoint = wallPoints(:,i);
        diffPos = wallPoint - agentPos;
        distToWall= norm(diffPos);
@@ -179,9 +182,8 @@ function [tempAccel, newVel, newPos] = stepSim(positions, velocities, step, agen
        tempAccel = tempAccel + accelMag_separationWall * wallAccelUnits(:,i);
        wallAccel = wallAccel + accelMag_separationWall * wallAccelUnits(:,i);
     end
-    % End wall
     
-    %Enforce boundary conditions
+    % Enforce boundary conditions
     forwardUnit = [cos(agentTheta);sin(agentTheta)];
     newAccel_forward = dot(tempAccel,forwardUnit);
     newAccel_theta = 1.0 * sqrt((norm(tempAccel))^2-newAccel_forward^2);
@@ -215,15 +217,16 @@ function [tempAccel, newVel, newPos] = stepSim(positions, velocities, step, agen
         newVel(2) = sign(newVel(2)) * maxOmega;
     end
     
-    newPos = agentPos + newVel(1)*forwardUnit*dt;
-    newTheta = agentTheta + newVel(2)*dt;
-    newPos(3) = newTheta;
-    newPos(4) = agentAlti - sinkRate*dt;
+    newTele = agentPos + newVel(1)*forwardUnit*dt;
+    newTele(3) = agentTheta + newVel(2)*dt;
+    newTele(4) = agentAlti - sinkRate*dt;
     % giga jank
     
-    if norm([newPos(1),newPos(2)]) < thermal(3)/2 && newPos(4) < thermal(5)
-        newPos(4) = newPos(4) + thermal(4)*dt;
+    if norm([newTele(1),newTele(2)]) < thermal(3)/2 && newTele(4) < thermal(5)
+        newTele(4) = newTele(4) + thermal(4)*dt;
     end
+    newTele(5) = newVel(1);
+    newTele(6) = newVel(2);
     %fprintf("Agent %g: Pos(%g,%g,%g) Vel(%g,%g) Accel(%g,%g) WallAccelGlobal(%g,%g)\n",agent,newPos(1),newPos(2),newPos(3),newVel(1),newVel(2),newAccel(1),newAccel(2),wallAccel(1),wallAccel(2));
 end
 %% Utility Functions
@@ -247,18 +250,18 @@ end
 
 %% Render Boids
 %Assume positions = 3 x numAgents matrix
-function renderBoids(positions,numAgents,Ceiling,agentScale,thermal)
+function renderBoids(telemetry,numAgents,Ceiling,agentScale,thermal)
     %Define relative boid shape = x-values...; y-values...
     boidShape = agentScale.*[-.5, .5, -.5;
                  -.5, 0, .5];
     boidShape(1,:) = boidShape(1,:) * 0.4;
     boidShape(2,:) = boidShape(2,:) * 0.3;
-    normAltitude = abs(positions(4,:)./Ceiling.*0.6);
+    normAltitude = abs(telemetry(4,:)./Ceiling.*0.6);
     boidColor = hsv2rgb([normAltitude',ones(1,numAgents)',ones(1,numAgents)']);
     rectangle('Position',[-thermal(3)/2,-thermal(3)/2,thermal(3),thermal(3)],'Curvature',1,'FaceColor',[1,.5,.5]);
     for agent=1:numAgents
-        if positions(4,agent) > 0
-            position = positions(:,agent);
+        if telemetry(4,agent) > 0
+            position = telemetry(:,agent);
             theta = position(3);
         
             %Use 2D rotation matrix, there might be a better way to do this... https://en.wikipedia.org/wiki/Rotation_matrix
