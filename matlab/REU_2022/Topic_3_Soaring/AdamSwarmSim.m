@@ -3,10 +3,10 @@ clear
 clc
 
 %% define simulation params
-overallTime = 30; % s
-dt = .1; % s 
+overallTime = 60; % s
+dt = .05; % s 
 steps = overallTime/dt; 
-numAgents = 1;
+numAgents = 100;
 
 maxForwardAccel = 20;
 maxAlpha = 2*pi;
@@ -40,11 +40,12 @@ for i = 1:numAgents
 end
 
 %% setup video and figure
-video = VideoWriter('Output Media/temp1.avi');
+video = VideoWriter('Output Media/Boids.avi');
 video.FrameRate = 1/dt;
 open(video);
 
-fig = figure('Visible','on');
+%fig = figure('Visible','off','units','pixels','position',[0,0,1440,1080]);
+fig = figure('Visible','off');
 
 %% run simulation
 for step = 1:steps
@@ -52,9 +53,11 @@ for step = 1:steps
     clf
     
     % plot current positions
-    xdata = agentPositions(step,:,1);
-    ydata = agentPositions(step,:,2);
-    scatter(xdata,ydata,50,'filled','black');
+    %xdata = agentPositions(step,:,1);
+    %ydata = agentPositions(step,:,2);
+    %scatter(xdata,ydata,50,'filled','black');
+    currentPositions = (squeeze(agentPositions(step,:,:)))';
+    renderBoids(currentPositions,numAgents);
     hold on
     
     graphScale = 1.75;
@@ -144,13 +147,14 @@ function [tempAccel, newVel, newPos] = stepSim(positions, velocities, step, agen
     %Enforce boundary conditions
     forwardUnit = [cos(agentTheta);sin(agentTheta)];
     newAccel_forward = dot(tempAccel,forwardUnit);
-    newAccel_alpha = sqrt((norm(tempAccel))^2-newAccel_forward^2);
+    newAccel_theta = 1.0 * sqrt((norm(tempAccel))^2-newAccel_forward^2);
+    
     tempAccel3D = [tempAccel(1),tempAccel(2),0];
     forwardUnit3D = [forwardUnit(1),forwardUnit(2),0];
     turningCrossProduct = cross(forwardUnit3D,tempAccel3D);
-    newAccel_alpha = newAccel_alpha * sign(turningCrossProduct(3));
+    newAccel_theta = newAccel_theta * sign(turningCrossProduct(3));
     
-    newAccel = [newAccel_forward; newAccel_alpha];
+    newAccel = [newAccel_forward; newAccel_theta];
     
     if(norm(newAccel(1)) > maxForwardAccel)
        newAccel(1) = sign(newAccel(1)) * maxForwardAccel; 
@@ -160,13 +164,15 @@ function [tempAccel, newVel, newPos] = stepSim(positions, velocities, step, agen
         newAccel(2) = sign(newAccel(2)) * maxAlpha;
     end
     
-    newVel = agentVel + newAccel*dt;
+    newVel(1) = agentVel(1) + newAccel(1)*dt;
     
     if(newVel(1) > maxForwardVel)
         newVel(1) = maxForwardVel;
     elseif(newVel(1) < minForwardVel)
         newVel(1) = minForwardVel;
     end
+    
+    newVel(2) = newAccel(2);
     
     if(norm(newVel(2)) > maxOmega)
         newVel(2) = sign(newVel(2)) * maxOmega;
@@ -176,7 +182,7 @@ function [tempAccel, newVel, newPos] = stepSim(positions, velocities, step, agen
     newTheta = agentTheta + newVel(2)*dt;
     newPos(3) = newTheta;
     
-    fprintf("Agent %g: Pos(%g,%g,%g) Vel(%g,%g) Accel(%g,%g) WallAccelGlobal(%g,%g)\n",agent,newPos(1),newPos(2),newPos(3),newVel(1),newVel(2),newAccel(1),newAccel(2),wallAccel(1),wallAccel(2));
+    %fprintf("Agent %g: Pos(%g,%g,%g) Vel(%g,%g) Accel(%g,%g) WallAccelGlobal(%g,%g)\n",agent,newPos(1),newPos(2),newPos(3),newVel(1),newVel(2),newAccel(1),newAccel(2),wallAccel(1),wallAccel(2));
 end
 
 function num = randInRange(a,b)
@@ -194,4 +200,25 @@ function [maxForwardAccel, maxAlpha, maxForwardVel, minForwardVel, maxOmega, sep
     alignment = simParams(8);
     separationWall = simParams(9);
     neighborRadius = simParams(10);
+end
+
+%Assume positions = 3 x numAgents matrix
+function renderBoids(positions,numAgents)
+    %Define relative boid shape = x-values...; y-values...
+    boidShape = [-0.5, 0.5, -0.5;
+                 -0.5, 0, 0.5];
+    boidShape(1,:) = boidShape(1,:) * 0.4;
+    boidShape(2,:) = boidShape(2,:) * 0.3;
+    for agent=1:numAgents
+        position = positions(:,agent);
+        theta = position(3);
+        
+        %Use 2D rotation matrix, there might be a better way to do this... https://en.wikipedia.org/wiki/Rotation_matrix
+        rotationMatrix = [cos(theta), -sin(theta); sin(theta), cos(theta)];
+        rotatedBoidShape = rotationMatrix * boidShape;
+        globalBoidShape = rotatedBoidShape + position(1:2);
+        
+        %Render polygon
+        patch(globalBoidShape(1,:),globalBoidShape(2,:),'k');        
+    end
 end
