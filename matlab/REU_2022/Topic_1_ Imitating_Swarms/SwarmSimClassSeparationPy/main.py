@@ -17,6 +17,7 @@ import PFSM
 
 #toggles whether output to interactive graph or a video/gif
 interactive_graph = False
+writeToGif = True #only works if interactive_graph = False
 
 #toggles graphing settings to black background w/o labels or grids
 vision_mode = False
@@ -43,11 +44,11 @@ agentPositions = np.zeros([steps+1,numAgents,2])
 agentVels = np.zeros([steps+1,numAgents,2])
 
 #base inertia stuff broken, need to fix
-agentControllers = [PFSM.PFSM() for i in range(numAgents)]
+agentControllers = [bo.Boids(1,3,0.4,1) for i in range(numAgents)]
 
 # initial positions and velocities
-enclosureSize = 10
-randPosMax = 10
+enclosureSize = 25
+randPosMax = 3
 
 for agentPos in agentPositions[0]:
     #probably a way to assign whole array at once, but this is more explicit
@@ -58,7 +59,7 @@ for agentPos in agentPositions[0]:
 # print(agentPositions[0,0])
 
 for agentVel in agentVels[0]:
-    agentVel[0] = np.random.uniform(-agentMaxVel,agentMaxVel)  
+    agentVel[0] = np.random.uniform(-agentMaxVel,agentMaxVel)
     agentVel[1] = np.random.uniform(-agentMaxVel,agentMaxVel)
 
 #run simulation
@@ -117,7 +118,10 @@ for step in range(0,steps):
         if(np.linalg.norm(vel_new) > 0 and np.linalg.norm(agentVel) > 0):
             vel_new_angle = np.arctan2(vel_new[1],vel_new[0])
             vel_angle = np.arctan2(agentVel[1],agentVel[0])
-            angleDeviation = vel_new_angle-vel_angle
+            angleDeviation = vel_new_angle - vel_angle
+            if angleDeviation > np.pi or angleDeviation < -np.pi:
+                angleDeviation = -2*np.pi + angleDeviation
+
             if abs(angleDeviation) > maxAngleDeviation:
                 # print("Correcting a deviation", angleDeviation,agentVel,vel_new)
                 corrected = True
@@ -125,10 +129,17 @@ for step in range(0,steps):
                 agent_vel_complex = agent_vel_hat[0] + 1j*agent_vel_hat[1]
                 agent_vel_complex *= np.linalg.norm(vel_new)
                 # figure out which side to rotate
+                if vel_angle + maxAngleDeviation > np.pi:
+                    maxAngleDeviation += 2*np.pi
+                elif vel_angle - maxAngleDeviation < -1*np.pi:
+                    maxAngleDeviation -= 2*np.pi
+
                 if angleDeviation > 0:
                     agent_vel_complex *= cmath.exp(1j*-1*maxAngleDeviation)
-                else:
+                elif angleDeviation < 0:
                     agent_vel_complex *= cmath.exp(1j*maxAngleDeviation)
+                else:
+                    pass
                 vel_new = np.array([agent_vel_complex.real,agent_vel_complex.imag])
         
         # if corrected:
@@ -190,13 +201,11 @@ else:
             fig.update_layout(xaxis_title="", yaxis_title="")
             fig.update_xaxes(showgrid=False,zeroline=False, showticklabels=False)
             fig.update_yaxes(showgrid=False,zeroline=False, showticklabels=False)
-            fig.update_traces(marker=dict(size=8, color="#96D38C"))
+            fig.update_traces(marker=dict(size=8))
         fig.write_image("images/fig"+str(i)+".png")
         return fig
 
     frames = []
-
-    writeToGif = False
     
     if writeToGif:
         for i in range(0,steps):
