@@ -3,8 +3,8 @@ clear
 clc
 
 %% define simulation params
-overallTime = 60; % s
-dt = .05; % s 
+overallTime = 30; % s
+dt = .1; % s 
 steps = overallTime/dt; 
 numAgents = 100;
 
@@ -40,12 +40,20 @@ for i = 1:numAgents
 end
 
 %% setup video and figure
-video = VideoWriter('Output Media/Boids.avi');
+video = VideoWriter('Output Media/testUI2.avi');
 video.FrameRate = 1/dt;
 open(video);
 
 %fig = figure('Visible','off','units','pixels','position',[0,0,1440,1080]);
-fig = figure('Visible','off');
+simFig = figure('Visible','on');
+%{
+uiFig = uifigure('Name','GUI','Position',[0, 0, 300, 300],'Resize','off');
+slowButton = uibutton(uiFig);
+slowButton.Position = [150, 150, 100, 100];
+slowButton.Text = 'Slow Boids';
+slowDown = false;
+slowButton.ButtonPushedFcn = @(btn,event) slowButtonPressed();
+%}
 
 %% run simulation
 for step = 1:steps
@@ -81,7 +89,7 @@ for step = 1:steps
 
     %hold simulation to look at
     hold off
-    currFrame = getframe(fig);
+    currFrame = getframe(simFig);
     writeVideo(video,currFrame);
 
     %convert this to realtime
@@ -222,3 +230,7 @@ function renderBoids(positions,numAgents)
         patch(globalBoidShape(1,:),globalBoidShape(2,:),'k');        
     end
 end
+
+%function slowButtonPressed()
+%    fprintf("SLOW\n");
+%end
