@@ -8,30 +8,49 @@ clc
 % 1 mi = 5280 ft
 % xy in mi, alti in ft
 % Simulation runs at exactly 60x real time.
-overallTime = 5; % min
+overallTime = 10; % min
 dt = .05; % min
 steps = overallTime/dt; 
-numAgents = 20;
+numAgents = 100;
 
-maxForwardAccel = 20;
-maxAlpha = 2*pi;
-maxForwardVel = 1.6;
-minForwardVel = 1.1;
-maxOmega = 2*pi/3;
-separation = 5;
-cohesion = 1.5;
-alignment = 3;
-separationWall = 10;
-neighborRadius = 1.5;
-sinkRate = 500;
+simParams = [
+    20,     ... maxForwardAccel
+    2*pi,   ... maxAlpha
+    1.6,    ... maxForwardVel
+    1.1,    ... minForwardVel
+    2*pi/3, ... maxOmega
+    5,      ... separation
+    1.5,    ... cohesion
+    3,      ... alignment
+    10,     ... separationWall
+    1.5,    ... neighborRadius
+    1000];  ... sinkRate
+
+thermal = [
+    0,      ... X position
+    0,      ... Y position
+    8,      ... Width
+    1200,   ... Rise Rate (upwards boost)
+    8000];  ... Ceiling
+% bloat
+% maxForwardAccel = 20;
+% maxAlpha = 2*pi;
+% maxForwardVel = 1.6;
+% minForwardVel = 1.1;
+% maxOmega = 2*pi/3;
+% separation = 5;
+% cohesion = 1.5;
+% alignment = 3;
+% separationWall = 10;
+% neighborRadius = 1.5;
+% sinkRate = 1000;
+% simParams = [maxForwardAccel, maxAlpha, maxForwardVel, minForwardVel, maxOmega, ...
+%              separation, cohesion, alignment, separationWall, neighborRadius, sinkRate];
+% X position, Y position, Width, Rise Rate, Ceiling
+% thermal = [0,0,8,1200,8000];
 
 agentScale = 2;
-
-% X position, Y position, Width, Rise Rate, Ceiling
-thermal = [0,0,8,600,8000];
-
-simParams = [maxForwardAccel, maxAlpha, maxForwardVel, minForwardVel, maxOmega, ...
-             separation, cohesion, alignment, separationWall, neighborRadius, sinkRate];
+Ceiling = 8000;
 
 % define agent velocity and position list
 agentPositions = zeros(steps+1,numAgents,4);        %x,y,theta, altitude
@@ -40,7 +59,6 @@ agentVelocities = zeros(steps+1,numAgents,2);       %forward,turning
 
 %% initialize to random positions
 randPosMax = 6;
-Ceiling = 8000;
 for i = 1:numAgents
     %Initial positions
     agentPositions(1,i,1)= randInRange(-randPosMax,randPosMax);
@@ -62,6 +80,8 @@ fig = figure('Visible','off');
 
 %% Main Loop
 tic
+graphScale = 1.75;
+wallMag = graphScale*randPosMax;
 for step = 1:steps
     fprintf("Frame %g/%g\n",step,steps);
     clf
@@ -70,12 +90,11 @@ for step = 1:steps
     %xdata = agentPositions(step,:,1);
     %ydata = agentPositions(step,:,2);
     %scatter(xdata,ydata,50,'filled','black');
+    
     currentPositions = (squeeze(agentPositions(step,:,:)))';
     renderBoids(currentPositions,numAgents,Ceiling,agentScale,thermal);
     hold on
     
-    graphScale = 1.75;
-    wallMag = graphScale*randPosMax;
     xlim([-wallMag wallMag])
     ylim([-wallMag wallMag])
     daspect([1 1 1])
@@ -94,7 +113,8 @@ for step = 1:steps
             end
         end
     end
-
+    txt = ['Step: ', num2str(step)];
+    text(8,8,txt)
     %hold simulation to look at
     hold off
     currFrame = getframe(fig);
@@ -199,9 +219,9 @@ function [tempAccel, newVel, newPos] = stepSim(positions, velocities, step, agen
     newTheta = agentTheta + newVel(2)*dt;
     newPos(3) = newTheta;
     newPos(4) = agentAlti - sinkRate*dt;
-
     % giga jank
-    if norm(newPos(1),newPos(2)) < thermal(3)/2 && newPos(4) < thermal(5)
+    
+    if norm([newPos(1),newPos(2)]) < thermal(3)/2 && newPos(4) < thermal(5)
         newPos(4) = newPos(4) + thermal(4)*dt;
     end
     %fprintf("Agent %g: Pos(%g,%g,%g) Vel(%g,%g) Accel(%g,%g) WallAccelGlobal(%g,%g)\n",agent,newPos(1),newPos(2),newPos(3),newVel(1),newVel(2),newAccel(1),newAccel(2),wallAccel(1),wallAccel(2));
