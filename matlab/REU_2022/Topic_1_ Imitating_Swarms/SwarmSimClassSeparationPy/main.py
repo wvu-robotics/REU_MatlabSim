@@ -51,7 +51,6 @@ enclosureSize = 25
 randPosMax = 3
 
 for agentPos in agentPositions[0]:
-    #probably a way to assign whole array at once, but this is more explicit
     agentPos[0] = np.random.uniform(low=-randPosMax,high=randPosMax)
     agentPos[1] = np.random.uniform(low=-randPosMax,high=randPosMax)
 
