@@ -3,8 +3,8 @@ import GenericSwarmController
 
 class LennardJones(GenericSwarmController.GenericSwarmController):
     def __init__(self,sigma,epsilon):
-        self.sigma = sigma
-        self.epsilon = epsilon
+        self.sigma = float(sigma)
+        self.epsilon = float(epsilon)
 
 
     def vel(self,agentPositions,agentVels,pos,v):
