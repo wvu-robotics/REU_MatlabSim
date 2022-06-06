@@ -24,7 +24,7 @@ params = sim.SimParams(
 #define list of controllers
 controllers= [lj.LennardJones() for i in range(params.num_agents)]
 
-#grr there is an issue with this code sending them all to 0
+#ERROR: there is an issue with this code sending them all to 0, need to fix
 agentPositions, agentVels = sim.runSim(controllers,params)
 
 #export types, NONE, INTERACTIVE, GIF, MP4
