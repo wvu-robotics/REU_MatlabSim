@@ -77,7 +77,7 @@ def toMP4(name,agentPositions,params=sim.SimParams(),vision_mode=False):
     frames = []
     
     for i in range(0,len(agentPositions)):
-        plot(i,df,params.enclosure_size,vision_mode)
+        plot(i,df,params,vision_mode)
         pil_image = Image.open("frames/fig"+str(i)+".png")
         im = cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
         frames.append(im)

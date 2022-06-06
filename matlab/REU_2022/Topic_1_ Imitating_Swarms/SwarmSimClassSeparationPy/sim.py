@@ -75,77 +75,65 @@ def runSim(controllers=[],params=SimParams()):
                     agentPositions[step+1,agent] = agentPos  + agentVel*params.dt
                     continue
 
-        #Periodic Boundary Condition - neighbor radius does not cross periodic boundaries
-        if params.periodic_boundary == True:
-            if agentPos[0] > params.enclosure_size or agentPos[0] < -params.enclosure_size:
-                if agentVel[0]<0 and agentPos[0]<-params.enclosure_size:
-                    agentPos[0] += 2*params.enclosure_size
-                elif agentVel[0]>0 and agentPos[0]>params.enclosure_size:
-                    agentPos[0] += -2*params.enclosure_size
+            #Periodic Boundary Condition - neighbor radius does not cross periodic boundaries
+            if params.periodic_boundary == True:
+                if agentPos[0] > params.enclosure_size or agentPos[0] < -params.enclosure_size:
+                    if agentVel[0]<0 and agentPos[0]<-params.enclosure_size:
+                        agentPos[0] += 2*params.enclosure_size
+                    elif agentVel[0]>0 and agentPos[0]>params.enclosure_size:
+                        agentPos[0] += -2*params.enclosure_size
 
-            if agentPos[1] > params.enclosure_size or agentPos[1] < -params.enclosure_size:
-                if agentVel[1] < 0 and agentPos[1] < -params.enclosure_size:
-                    agentPos[1] += 2 * params.enclosure_size
-                elif agentVel[1] > 0 and agentPos[1] > params.enclosure_size:
-                    agentPos[1] += -2 * params.enclosure_size
+                if agentPos[1] > params.enclosure_size or agentPos[1] < -params.enclosure_size:
+                    if agentVel[1] < 0 and agentPos[1] < -params.enclosure_size:
+                        agentPos[1] += 2 * params.enclosure_size
+                    elif agentVel[1] > 0 and agentPos[1] > params.enclosure_size:
+                        agentPos[1] += -2 * params.enclosure_size
 
-        agentPos = agentPositions[step,agent]
-        agentVel = agentVels[step,agent]
+            agentPos = agentPositions[step,agent]
+            agentVel = agentVels[step,agent]
+            vel_new = controllers[agent].vel(relevantPositions,relevantVels,agentPos,agentVel)
 
-        relevantPositions = []
-        relevantVels = []
+            #Implement agent motion constraints
 
-        for other_agent in range(0,params.num_agents):
-            if agent == other_agent or np.linalg.norm(agentPos-agentPositions[step,other_agent]) > params.neighbor_radius:
-                continue
-            relevantPositions.append(agentPositions[step,other_agent])
-            relevantVels.append(agentVels[step,other_agent])
+            #angle deviation of velocity
+            if(np.linalg.norm(vel_new) > 0 and np.linalg.norm(agentVel) > 0):
+                vel_new_angle = np.arctan2(vel_new[1],vel_new[0])
+                vel_angle = np.arctan2(agentVel[1],agentVel[0])
+                angleDeviation = vel_new_angle - vel_angle
+                if angleDeviation > np.pi or angleDeviation < -np.pi:
+                    angleDeviation = -2*np.pi + angleDeviation
 
+                if abs(angleDeviation) > maxAngleDeviation:
+                    agent_vel_hat = agentVel/np.linalg.norm(agentVel)
+                    agent_vel_complex = agent_vel_hat[0] + 1j*agent_vel_hat[1]
+                    agent_vel_complex *= np.linalg.norm(vel_new)
+                    # figure out which side to rotate
+                    if vel_angle + maxAngleDeviation > np.pi:
+                        maxAngleDeviation += 2*np.pi
+                    elif vel_angle - maxAngleDeviation < -1*np.pi:
+                        maxAngleDeviation -= 2*np.pi
 
-
-        vel_new = controllers[agent].vel(relevantPositions,relevantVels,agentPos,agentVel)
-
-        #Implement agent motion constraints
-
-        #angle deviation of velocity
-        if(np.linalg.norm(vel_new) > 0 and np.linalg.norm(agentVel) > 0):
-            vel_new_angle = np.arctan2(vel_new[1],vel_new[0])
-            vel_angle = np.arctan2(agentVel[1],agentVel[0])
-            angleDeviation = vel_new_angle - vel_angle
-            if angleDeviation > np.pi or angleDeviation < -np.pi:
-                angleDeviation = -2*np.pi + angleDeviation
-
-            if abs(angleDeviation) > maxAngleDeviation:
-                agent_vel_hat = agentVel/np.linalg.norm(agentVel)
-                agent_vel_complex = agent_vel_hat[0] + 1j*agent_vel_hat[1]
-                agent_vel_complex *= np.linalg.norm(vel_new)
-                # figure out which side to rotate
-                if vel_angle + maxAngleDeviation > np.pi:
-                    maxAngleDeviation += 2*np.pi
-                elif vel_angle - maxAngleDeviation < -1*np.pi:
-                    maxAngleDeviation -= 2*np.pi
-
-                if angleDeviation > 0:
-                    agent_vel_complex *= cmath.exp(1j*-1*maxAngleDeviation)
-                elif angleDeviation < 0:
-                    agent_vel_complex *= cmath.exp(1j*maxAngleDeviation)
-                else:
-                    pass
-                vel_new = np.array([agent_vel_complex.real,agent_vel_complex.imag])
+                    if angleDeviation > 0:
+                        agent_vel_complex *= cmath.exp(1j*-1*maxAngleDeviation)
+                    elif angleDeviation < 0:
+                        agent_vel_complex *= cmath.exp(1j*maxAngleDeviation)
+                    else:
+                        pass
+                    vel_new = np.array([agent_vel_complex.real,agent_vel_complex.imag])
 
 
-        #max acceleration
-        if np.linalg.norm(vel_new)-np.linalg.norm(agentVel) > maxVelChange:
-            vel_new = vel_new*((maxVelChange+np.linalg.norm(agentVel))/np.linalg.norm(vel_new))
-        else:
-            if np.linalg.norm(vel_new)-np.linalg.norm(agentVel) < -maxVelChange:
-                vel_new = vel_new*((-maxVelChange+np.linalg.norm(agentVel))/np.linalg.norm(vel_new))
+            #max acceleration
+            if np.linalg.norm(vel_new)-np.linalg.norm(agentVel) > maxVelChange:
+                vel_new = vel_new*((maxVelChange+np.linalg.norm(agentVel))/np.linalg.norm(vel_new))
+            else:
+                if np.linalg.norm(vel_new)-np.linalg.norm(agentVel) < -maxVelChange:
+                    vel_new = vel_new*((-maxVelChange+np.linalg.norm(agentVel))/np.linalg.norm(vel_new))
 
-        #max vel
-        if np.linalg.norm(vel_new) > params.agent_max_vel:
-            vel_new *= (params.agent_max_vel/np.linalg.norm(vel_new))
+            #max vel
+            if np.linalg.norm(vel_new) > params.agent_max_vel:
+                vel_new *= (params.agent_max_vel/np.linalg.norm(vel_new))
 
 
-        agentVels[step+1,agent] = vel_new
-        agentPositions[step+1,agent] = vel_new*params.dt+agentPos
+            agentVels[step+1,agent] = vel_new
+            agentPositions[step+1,agent] = vel_new*params.dt+agentPos
     return agentPositions, agentVels
