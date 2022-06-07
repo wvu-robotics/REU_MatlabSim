@@ -10,20 +10,20 @@ from models import Dance
 
 #all parameters for simulation
 params = sim.SimParams(
-    num_agents=100, 
+    num_agents=10, 
     dt=0.1, 
     overall_time = 15, 
-    enclosure_size = 25, 
-    init_pos_max= None, #if None, then defaults to enclosure_size
+    enclosure_size = 10, 
+    init_pos_max= 3, #if None, then defaults to enclosure_size
     agent_max_vel=5,
-    agent_max_accel=1,
+    agent_max_accel=np.inf,
     agent_max_turn_rate=1.5*np.pi,
-    neighbor_radius=5,
+    neighbor_radius=3,
     periodic_boundary=False
     )
 
 #define list of controllers
-controllers= [Dance.Dance(4,1,2,1) for i in range(params.num_agents)]
+controllers= [bo.Boids(3,5,0.1,1) for i in range(params.num_agents)]
 
 agentPositions, agentVels = sim.runSim(controllers,params)
 print("Sim finished -- Generating media")
@@ -31,5 +31,5 @@ print("Sim finished -- Generating media")
 #export types, NONE, INTERACTIVE, GIF, MP4
 media_type = export.ExportType.GIF
 
-export.export(media_type,"new",agentPositions,params=params,vision_mode=True)
+export.export(media_type,"new",agentPositions,params=params,vision_mode=False)
 print("Media generated")

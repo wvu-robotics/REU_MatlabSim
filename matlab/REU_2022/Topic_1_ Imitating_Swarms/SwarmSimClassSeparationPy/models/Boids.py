@@ -1,7 +1,18 @@
 from ctypes import alignment
 import numpy as np
-import SwarmSimClassSeparationPy.models.GenericSwarmController as GenericSwarmController
+import GenericSwarmController
+from dataclasses import dataclass
 
+#inserting this dummy class here for debugging and printing purposes
+@dataclass
+class agentSlice:
+    #inputs
+    cohesion: np.ndarray
+    alignment: np.ndarray
+    separation: np.ndarray
+    last_vel: np.ndarray
+    #output
+    output_vel: np.ndarray
 
 #need to review paper, this is not working as expected, might need to add walls
 class Boids(GenericSwarmController.GenericSwarmController):    
@@ -32,6 +43,7 @@ class Boids(GenericSwarmController.GenericSwarmController):
 
         v_gain += self.alignment_gain*centroidVel
 
+        #this is the force field approach, should eventually implement steer to avoid
         separation_out = np.zeros(2)
         for position in agentPositions:
             diffPos = position-pos
@@ -40,11 +52,11 @@ class Boids(GenericSwarmController.GenericSwarmController):
                 continue
             unit_diff = diffPos / dist
             if dist != 0:
-                separation_out += -1*self.separation_gain*unit_diff
+                separation_out += -1*unit_diff*(1/(dist**2))
         
-        v_gain += separation_out
-        
+        v_gain += separation_out*self.separation_gain
         v_out = (v*self.inertia) + v_gain
+        # print(agentSlice(centroidPos-pos,centroidVel,separation_out,v,v_out))
         return v_out
 
 

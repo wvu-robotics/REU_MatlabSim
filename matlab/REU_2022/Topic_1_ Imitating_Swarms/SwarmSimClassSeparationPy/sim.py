@@ -23,7 +23,7 @@ class SimParams:
         self.periodic_boundary = periodic_boundary
 
 #closed function to run whole sim and spit out vels and positions
-def runSim(controllers=[],params=SimParams()):
+def runSim(controllers=[],params=SimParams(),initial_positions=None,initial_velocities=None):
     steps = int(params.overall_time/params.dt)
     maxAngleDeviation = params.agent_max_turn_rate*params.dt
     maxVelChange = params.agent_max_accel*params.dt
@@ -33,13 +33,19 @@ def runSim(controllers=[],params=SimParams()):
     agentVels = np.zeros([steps+1,params.num_agents,2])
 
     #initial positions and velocities
-    for agentPos in agentPositions[0]:
-        agentPos[0] = np.random.uniform(low=-params.init_pos_max,high=params.init_pos_max)
-        agentPos[1] = np.random.uniform(low=-params.init_pos_max,high=params.init_pos_max)
-    
-    for agentVel in agentVels[0]:
-        agentVel[0] = np.random.uniform(-params.agent_max_vel,params.agent_max_vel)
-        agentVel[1] = np.random.uniform(-params.agent_max_vel,params.agent_max_vel)
+    if initial_positions is None:
+        for agentPos in agentPositions[0]:
+            agentPos[0] = np.random.uniform(low=-params.init_pos_max,high=params.init_pos_max)
+            agentPos[1] = np.random.uniform(low=-params.init_pos_max,high=params.init_pos_max)
+    else:
+        agentPositions[0] = initial_positions
+
+    if initial_velocities is None:
+        for agentVel in agentVels[0]:
+            agentVel[0] = np.random.uniform(-params.agent_max_vel,params.agent_max_vel)
+            agentVel[1] = np.random.uniform(-params.agent_max_vel,params.agent_max_vel)
+    else:
+        agentVels[0] = initial_velocities
     
     #run full simulation
     for step in range(0,steps):
@@ -123,10 +129,16 @@ def runSim(controllers=[],params=SimParams()):
 
 
             #max acceleration
+            #have to account for going down to zero
             if np.linalg.norm(vel_new)-np.linalg.norm(agentVel) > maxVelChange:
-                vel_new = vel_new*((maxVelChange+np.linalg.norm(agentVel))/np.linalg.norm(vel_new))
-            else:
-                if np.linalg.norm(vel_new)-np.linalg.norm(agentVel) < -maxVelChange:
+                if np.linalg.norm(vel_new) == 0:
+                    vel_new = agentVel + maxVelChange*(agentVel/np.linalg.norm(agentVel))
+                else:
+                    vel_new = vel_new*((maxVelChange+np.linalg.norm(agentVel))/np.linalg.norm(vel_new)) 
+            elif np.linalg.norm(vel_new)-np.linalg.norm(agentVel) < -maxVelChange:
+                if np.linalg.norm(vel_new) == 0:
+                    vel_new = agentVel - maxVelChange*(agentVel/np.linalg.norm(agentVel))
+                else:
                     vel_new = vel_new*((-maxVelChange+np.linalg.norm(agentVel))/np.linalg.norm(vel_new))
 
             #max vel
