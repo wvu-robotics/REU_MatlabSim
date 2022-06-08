@@ -19,7 +19,7 @@ params = sim.SimParams(
     agent_max_accel=np.inf,
     agent_max_turn_rate=1.5*np.pi,
     neighbor_radius=3,
-    periodic_boundary=False
+    periodic_boundary=True
     )
 
 #define list of controllers

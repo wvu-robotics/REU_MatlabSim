@@ -81,6 +81,8 @@ def toMP4(name,agentPositions,params=sim.SimParams(),vision_mode=False):
         pil_image = Image.open("frames/fig"+str(i)+".png")
         im = cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
         frames.append(im)
+
+    #using ffmpeg command might be faster?
     video = cv2.VideoWriter(name+'.mp4',cv2.VideoWriter_fourcc(*'mp4v'), 1/params.dt, (500,500), True)
     for frame in frames:
         video.write(frame)

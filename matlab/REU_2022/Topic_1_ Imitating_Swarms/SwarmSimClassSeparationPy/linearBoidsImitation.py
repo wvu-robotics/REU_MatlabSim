@@ -7,13 +7,13 @@ from dataclasses import dataclass #data class is like the python equivalent of a
 from models import Boids as bo
 
 params = sim.SimParams(
-    num_agents=15, 
-    dt=0.1, 
+    num_agents=10, 
+    dt=0.01, 
     overall_time = 15, 
     enclosure_size = 10, 
-    init_pos_max= 5, #if None, then defaults to enclosure_size
-    agent_max_vel=3,
-    agent_max_accel=1,
+    init_pos_max= 3, #if None, then defaults to enclosure_size
+    agent_max_vel=5,
+    agent_max_accel=np.inf,
     agent_max_turn_rate=1.5*np.pi,
     neighbor_radius=3,
     periodic_boundary=False
@@ -32,7 +32,7 @@ true_gains = [k_coh, k_align, k_sep, k_inertia]
 controllers = [bo.Boids(*true_gains) for i in range(params.num_agents)]
 agentPositions, agentVels = sim.runSim(controllers,params)
 
-export.export(export.ExportType.GIF,"Initial",agentPositions,params=params,vision_mode=False)
+# export.export(export.ExportType.GIF,"Initial",agentPositions,params=params,vision_mode=False)
 
 # print("Agent positions:")
 # print(agentPositions)
@@ -78,6 +78,23 @@ for slice in posVelSlices:
         agentVel = slice.vel[agent]
         agentNextVel = slice.next_vel[agent]
         separation = np.zeros(2)
+        agentVelDifference = agentNextVel - agentVel
+
+        # throw out data that is at the edge of action constraints
+        # if np.linalg.norm(agentVel) >= params.agent_max_vel:
+        #     continue
+        
+        # if np.linalg.norm(agentVelDifference) >= params.agent_max_accel:
+        #     continue
+        
+        # vel_new_angle = np.arctan2(agentNextVel[1],agentNextVel[0])
+        # vel_angle = np.arctan2(agentVel[1],agentVel[0])
+        # angleDeviation = vel_new_angle - vel_angle
+        # if angleDeviation > np.pi or angleDeviation < -np.pi:
+        #     angleDeviation = -2*np.pi + angleDeviation
+        
+        # if abs(angleDeviation) >= params.agent_max_turn_rate*params.dt:
+        #     continue
 
         adjacent = 0
         for otherAgent in range(params.num_agents):
@@ -104,7 +121,7 @@ for slice in posVelSlices:
         posCentroid /= adjacent
         velCentroid /= adjacent
 
-        agentVelDifference = agentNextVel - agentVel
+
 
         agentSlices.append(agentSlice(posCentroid-agentPos,velCentroid,separation,np.zeros(2),agentVelDifference))
 
@@ -130,7 +147,7 @@ for slice in agentSlices:
 
 # print("True loss: ",true_loss)
 reg = lr().fit(x,y)
-
+print("R^2: ",reg.score(x,y))
 
 # #create some visuals with the imitated swarm
 #     #maybe do an imposter(s) pretending to be within the original swarm
@@ -142,4 +159,4 @@ print(gains)
 controllers_imitated = [bo.Boids(*gains) for i in range(params.num_agents)]
 #start at exactly the same place
 agentPositions_imitated, agentVels_imitated = sim.runSim(controllers_imitated,params,initial_positions=agentPositions[0],initial_velocities=agentVels[0])
-export.export(export.ExportType.GIF,"Imitated",agentPositions_imitated,params=params,vision_mode=False)
+# export.export(export.ExportType.GIF,"Imitated",agentPositions_imitated,params=params,vision_mode=False)
