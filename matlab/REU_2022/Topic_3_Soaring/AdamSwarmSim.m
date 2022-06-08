@@ -3,10 +3,10 @@ clear
 clc
 
 %% define simulation params
-overallTime = 30; % s
-dt = .1; % s 
+overallTime = 90; % s
+dt = .05; % s 
 steps = overallTime/dt; 
-numAgents = 100;
+numAgents = 200;
 
 maxForwardAccel = 20;
 maxAlpha = 2*pi;
@@ -40,16 +40,17 @@ for i = 1:numAgents
 end
 
 %% setup video and figure
-video = VideoWriter('Output Media/testUI2.avi');
+video = VideoWriter('Output Media/TestLong.avi');
 video.FrameRate = 1/dt;
 open(video);
 
 %fig = figure('Visible','off','units','pixels','position',[0,0,1440,1080]);
-simFig = figure('Visible','on');
+simFig = figure('Visible','off');
 
 %% run simulation
 for step = 1:steps
-    fprintf("Frame %g/%g\n",step,steps);
+    c1 = clock;
+    fprintf("Frame %g/%g:  ",step,steps);
     clf
     
     % plot current positions
@@ -60,7 +61,7 @@ for step = 1:steps
     renderBoids(currentPositions,numAgents);
     hold on
     
-    graphScale = 5;
+    graphScale = 3;
     wallMag = graphScale*randPosMax;
     xlim([-wallMag wallMag])
     ylim([-wallMag wallMag])
@@ -86,6 +87,9 @@ for step = 1:steps
 
     %convert this to realtime
     pause(0.0001);
+    c2 = clock;
+    elapsedTime = c2(6)-c1(6);
+    fprintf("%g sec\n",elapsedTime);
 end
 
 close(video);

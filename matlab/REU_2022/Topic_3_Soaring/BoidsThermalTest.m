@@ -58,18 +58,23 @@ for i = 1:numAgents
 end
 
 %% setup video and figure
-video = VideoWriter('Output Media/ThermalBoidsTest6.avi');
+video = VideoWriter('Output Media/SlopeField.avi');
 video.FrameRate = 1/dt;
 open(video);
 
-%fig = figure('Visible','off','units','pixels','position',[0,0,1440,1080]);
-simFig = figure('Visible','on');
+simFig = figure('Visible','off','units','pixels','position',[0,0,1440,1080]);
+%simFig = figure('Visible','on');
+subplot(1,2,1);
+subplot(1,2,2);
+h = get(gcf,'Children');
+set(h(1), 'NextPlot','add');
+set(h(2), 'NextPlot','add');
 
 %% run simulation
 for step = 1:steps
     fprintf("Frame %g/%g\n",step,steps);
-    clf
-    hold on
+    cla
+    subplot(1,2,1);
     xlim(xdims);
     ylim(ydims);
     daspect([1 1 1]);
@@ -100,9 +105,38 @@ for step = 1:steps
             agentVelocities(step+1,agent,i) = newVel(i);
         end
     end
-
+    
+    %Draw slope field
+    subplot(1,2,2);
+    cla
+    xlim(xdims);
+    ylim(ydims);
+    daspect([1 1 1]);
+    numSlopes = 30;
+    slopeDiffX = (xdims(2)-xdims(1))/numSlopes;
+    slopeDiffY = (ydims(2)-ydims(1))/numSlopes;
+    drawXPos = zeros(numSlopes^2,1);
+    drawYPos = zeros(numSlopes^2,1);
+    drawXSlope = zeros(numSlopes^2,1);
+    drawYSlope = zeros(numSlopes^2,1);
+    i = 1;
+    for xSlope = 1:numSlopes
+        for ySlope = 1:numSlopes
+            slopePos = [slopeDiffX * (xSlope-0.5) + xdims(1); slopeDiffY * (ySlope-0.5) + ydims(1)];
+            target = getTargetMovement(slopePos, 0, [0;0], step, -1, numAgents, agentPositions, xdims, ydims, simParams, thermalPixels, thermalMap);
+            target = target/norm(target)/10; %Normalize
+            
+            drawXPos(i) = slopePos(1);
+            drawYPos(i) = slopePos(2);
+            drawXSlope(i) = target(1);
+            drawYSlope(i) = target(2);
+            
+            i = i+1;
+        end
+    end
+    quiver(drawXPos, drawYPos, drawXSlope, drawYSlope,0.3);
+    
     %hold simulation to look at
-    hold off
     currFrame = getframe(simFig);
     writeVideo(video,currFrame);
 
@@ -121,9 +155,59 @@ function [tempAccel, newVel, newPos] = stepSim(positions, velocities, step, agen
     agentVel = squeeze(velocities(step,agent,:));
     agentForwardUnit = [cos(agentTheta);sin(agentTheta)];
     
-    tempAccel = [0;0];
-    
     [maxForwardAccel, maxAlpha, maxForwardVel, minForwardVel, maxOmega, separation, cohesion, alignment, separationWall, thermalSlow, neighborRadius] = unpack(simParams);
+    
+    tempAccel = getTargetMovement(agentPos, agentTheta, agentVel, step, agent, numAgents, positions, xdims, ydims, simParams, thermalPixels, thermalMap);
+    
+    %Enforce boundary conditions
+    newAccel_forward = dot(tempAccel,agentForwardUnit);
+    if(norm(tempAccel) - norm(newAccel_forward) < 1E-6)
+        newAccel_theta = 0;
+    else
+        newAccel_theta = 1.5 * sqrt((norm(tempAccel))^2-newAccel_forward^2);
+    end
+    
+    tempAccel3D = [tempAccel(1),tempAccel(2),0];
+    forwardUnit3D = [agentForwardUnit(1),agentForwardUnit(2),0];
+    turningCrossProduct = cross(forwardUnit3D,tempAccel3D);
+    newAccel_theta = newAccel_theta * sign(turningCrossProduct(3));
+    
+    newAccel = [newAccel_forward; newAccel_theta];
+    
+    if(norm(newAccel(1)) > maxForwardAccel)
+       newAccel(1) = sign(newAccel(1)) * maxForwardAccel; 
+    end
+    
+    if(norm(newAccel(2)) > maxAlpha)
+        newAccel(2) = sign(newAccel(2)) * maxAlpha;
+    end
+    
+    newVel(1) = agentVel(1) + newAccel(1)*dt;
+    
+    if(newVel(1) > maxForwardVel)
+        newVel(1) = maxForwardVel;
+    elseif(newVel(1) < minForwardVel)
+        newVel(1) = minForwardVel;
+    end
+    
+    newVel(2) = newAccel(2);
+    
+    if(norm(newVel(2)) > maxOmega)
+        newVel(2) = sign(newVel(2)) * maxOmega;
+    end
+    
+    newPos = agentPos + newVel(1)*agentForwardUnit*dt;
+    newTheta = agentTheta + newVel(2)*dt;
+    newPos(3) = newTheta;
+    
+    %fprintf("Agent %g: Pos(%g,%g,%g) Vel(%g,%g) Accel(%g,%g) WallAccelGlobal(%g,%g)\n",agent,newPos(1),newPos(2),newPos(3),newVel(1),newVel(2),newAccel(1),newAccel(2),wallAccel(1),wallAccel(2));
+end
+
+function target = getTargetMovement(agentPos, agentTheta, agentVel, step, agent, numAgents, positions, xdims, ydims, simParams, thermalPixels, thermalMap)
+    tempAccel = [0;0];
+    [maxForwardAccel, maxAlpha, maxForwardVel, minForwardVel, maxOmega, separation, cohesion, alignment, separationWall, thermalSlow, neighborRadius] = unpack(simParams);
+    
+    agentForwardUnit = [cos(agentTheta);sin(agentTheta)];
     
     %Iterate through all other agents
     for other = 1:numAgents
@@ -182,51 +266,11 @@ function [tempAccel, newVel, newPos] = stepSim(positions, velocities, step, agen
     if(thermalValue > 0.2)
         scatter(agentPos(1),agentPos(2));
     end
-    maxForwardVel = maxForwardVel * (1 - 0.7*thermalValue);
-    tempAccel = tempAccel - agentForwardUnit * thermalValue * thermalSlow;
-    
-    %Enforce boundary conditions
-    newAccel_forward = dot(tempAccel,agentForwardUnit);
-    if(norm(tempAccel) - norm(newAccel_forward) < 1E-6)
-        newAccel_theta = 0;
-    else
-        newAccel_theta = 1.5 * sqrt((norm(tempAccel))^2-newAccel_forward^2);
+    %maxForwardVel = maxForwardVel * (1 - 0.7*thermalValue);
+    if(agentVel(1) ~= 0)
+        tempAccel = tempAccel - agentForwardUnit * thermalValue * thermalSlow;
     end
-    
-    tempAccel3D = [tempAccel(1),tempAccel(2),0];
-    forwardUnit3D = [agentForwardUnit(1),agentForwardUnit(2),0];
-    turningCrossProduct = cross(forwardUnit3D,tempAccel3D);
-    newAccel_theta = newAccel_theta * sign(turningCrossProduct(3));
-    
-    newAccel = [newAccel_forward; newAccel_theta];
-    
-    if(norm(newAccel(1)) > maxForwardAccel)
-       newAccel(1) = sign(newAccel(1)) * maxForwardAccel; 
-    end
-    
-    if(norm(newAccel(2)) > maxAlpha)
-        newAccel(2) = sign(newAccel(2)) * maxAlpha;
-    end
-    
-    newVel(1) = agentVel(1) + newAccel(1)*dt;
-    
-    if(newVel(1) > maxForwardVel)
-        newVel(1) = maxForwardVel;
-    elseif(newVel(1) < minForwardVel)
-        newVel(1) = minForwardVel;
-    end
-    
-    newVel(2) = newAccel(2);
-    
-    if(norm(newVel(2)) > maxOmega)
-        newVel(2) = sign(newVel(2)) * maxOmega;
-    end
-    
-    newPos = agentPos + newVel(1)*agentForwardUnit*dt;
-    newTheta = agentTheta + newVel(2)*dt;
-    newPos(3) = newTheta;
-    
-    %fprintf("Agent %g: Pos(%g,%g,%g) Vel(%g,%g) Accel(%g,%g) WallAccelGlobal(%g,%g)\n",agent,newPos(1),newPos(2),newPos(3),newVel(1),newVel(2),newAccel(1),newAccel(2),wallAccel(1),wallAccel(2));
+    target = tempAccel;
 end
 
 function num = randInRange(a,b)
