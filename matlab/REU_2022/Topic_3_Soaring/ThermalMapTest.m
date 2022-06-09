@@ -40,6 +40,9 @@ for step = 1:steps
     xlim(xdims);
     ylim(ydims);
     daspect([1 1 1]);
+    colorbar;
+    cbLimits = [0,2];
+    set(gca,'clim',cbLimits);
     
     %% Render thermals
     finalThermalMap = zeros(thermalPixels);
@@ -65,9 +68,6 @@ for step = 1:steps
 
     thermalMapImg = imagesc(finalThermalMap,'XData',xdims,'YData',ydims);
     thermalMapImg.AlphaData = 1;
-    colorbar;
-    cbLimits = [0,2];
-    set(gca,'clim',cbLimits);
     hold off
     
     %% Save frame
