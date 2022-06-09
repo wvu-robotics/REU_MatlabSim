@@ -9,17 +9,19 @@ steps = overallTime/dt;
 numAgents = 100;
 
 simParams = [
-    20,     ... maxForwardAccel m/s/s
-    2*pi,   ... maxAlpha        rad/s/s
-    13,     ... maxForwardVel   m/s
-    8,      ... minForwardVel   m/s
-    2*pi/3, ... maxOmega        rad/s
-    5,      ... separation      ..
-    1.5,    ... cohesion        ..
-    3,      ... alignment       ..
-    10,     ... separationWall  ..
-    1500,   ... neighborRadius  m
-    162];   ... sinkRate (taken from FAA Glider handbook)
+    20,         ... maxForwardAccel m/s/s
+    2*pi,       ... maxAlpha        rad/s/s
+    13,         ... maxForwardVel   m/s
+    8,          ... minForwardVel   m/s
+    2*pi/3,     ... maxOmega        rad/s
+    5,          ... separation      ..
+    1.5,        ... cohesion        ..
+    3,          ... alignment       ..
+    10,         ... separationWall  ..
+    1500,       ... neighborRadius  m
+    -0.01843,   ... sinkRate Coeff A
+    0.3782,     ... sinkRate Coeff B
+    -2.3748];   ... sinkRate Coeff C
 
 thermal = [
     0,      ... X position
