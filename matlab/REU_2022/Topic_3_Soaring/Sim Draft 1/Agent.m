@@ -10,12 +10,20 @@ classdef Agent < handle
     
     methods
         function obj = update(obj,localAgents,thermalStrength)
-            % get location of centroid
-            % get nearest agent inside no-no zone
-            % Calculate desired heading
-            % Calculate desired speed
-            % Calculate vertical speed
-            % Calculate new position
+            %% get location of centroid
+            
+            %% get nearest agent inside no-no zone
+
+            %% Calculate desired heading
+
+            %% Calculate desired speed
+            
+            %% Calculate vertical speed
+            vsink = (a*obj.velocity(1).^2 + b*obj.velocity(1) + c)...
+                    / sqrt(cos(obj.bankAngle*2*pi/180));
+            vspeed = vsink + thermalStrength;
+            %% Calculate new position
+
         end
     end
 end
