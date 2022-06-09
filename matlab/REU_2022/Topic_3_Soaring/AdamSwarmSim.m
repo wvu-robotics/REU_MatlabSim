@@ -3,29 +3,33 @@ clear
 clc
 
 %% define simulation params
-overallTime = 90; % s
-dt = .05; % s 
+overallTime = 60; % s
+dt = .02; % s 
 steps = overallTime/dt; 
-numAgents = 200;
+numAgents = 10;
 
 maxForwardAccel = 20;
 maxAlpha = 2*pi;
-maxForwardVel = 1.5;
+maxForwardVel = 5.0;
 minForwardVel = 1.0;
 maxOmega = pi;
 
-separation = 3;
-cohesion = 1.5;
-alignment = 2;
-separationWall = 10;
+tempScale = 0.1;
+separation = 0.15 * tempScale;
+cohesion = 1.2 * tempScale;
+alignment = 0.30 * tempScale;
+separationWall = 20;
 
-neighborRadius = 1.5;
+neighborRadius = 3;
 
 simParams = [maxForwardAccel, maxAlpha, maxForwardVel, minForwardVel, maxOmega, separation, cohesion, alignment, separationWall, neighborRadius];
 
 % define agent velocity and position list
 agentPositions = zeros(steps+1,numAgents,3);        %x,y,theta
 agentVelocities = zeros(steps+1,numAgents,2);       %forward,turning
+
+% define string of parameter info
+simParamInfo = sprintf("Sep: %.3f, Coh: %.3f, Align: %.3f, SepWall: %.3f,\n N: %g, Vel: [%.1f,%.1f], NRad: %.1f, dt: %.2f",separation,cohesion,alignment,separationWall,numAgents, minForwardVel,maxForwardVel, neighborRadius,dt);
 
 %% initialize to random positions
 randPosMax = 6;
@@ -40,12 +44,12 @@ for i = 1:numAgents
 end
 
 %% setup video and figure
-video = VideoWriter('Output Media/TestLong.avi');
+video = VideoWriter('Output Media/Long50FpsCircles.avi');
 video.FrameRate = 1/dt;
 open(video);
 
 %fig = figure('Visible','off','units','pixels','position',[0,0,1440,1080]);
-simFig = figure('Visible','off');
+simFig = figure('Visible','on');
 
 %% run simulation
 for step = 1:steps
@@ -58,7 +62,7 @@ for step = 1:steps
     %ydata = agentPositions(step,:,2);
     %scatter(xdata,ydata,50,'filled','black');
     currentPositions = (squeeze(agentPositions(step,:,:)))';
-    renderBoids(currentPositions,numAgents);
+    renderBoids(currentPositions,numAgents, neighborRadius);
     hold on
     
     graphScale = 3;
@@ -66,6 +70,7 @@ for step = 1:steps
     xlim([-wallMag wallMag])
     ylim([-wallMag wallMag])
     daspect([1 1 1])
+    legend(simParamInfo,'AutoUpdate','off','Location','northoutside');
     
     %Simulate each agent
     for agent=1:numAgents
@@ -89,6 +94,9 @@ for step = 1:steps
     pause(0.0001);
     c2 = clock;
     elapsedTime = c2(6)-c1(6);
+    if(elapsedTime < 0)
+        elapsedTime = elapsedTime + 60;
+    end
     fprintf("%g sec\n",elapsedTime);
 end
 
@@ -124,9 +132,11 @@ function [tempAccel, newVel, newPos] = stepSim(positions, velocities, step, agen
             continue;
         end
         
-        accelMag_separation = separation * -1/distToOther^2; %Negative, to go AWAY from the other
-        accelMag_cohesion = cohesion * distToOther^2; %Positive, to go TOWARDS the other
-        accelMag_alignment = alignment * 1/distToOther^2;
+        distScaled = distToOther/neighborRadius;
+        
+        accelMag_separation = separation * -1/distScaled^2; %Negative, to go AWAY from the other
+        accelMag_cohesion = cohesion * distScaled^2; %Positive, to go TOWARDS the other
+        accelMag_alignment = alignment * 1/distScaled^2;
         
         accel = accelMag_separation*diffUnit + accelMag_cohesion*diffUnit + accelMag_alignment*otherVelUnit;
         tempAccel = tempAccel + accel;
@@ -207,12 +217,19 @@ function [maxForwardAccel, maxAlpha, maxForwardVel, minForwardVel, maxOmega, sep
 end
 
 %Assume positions = 3 x numAgents matrix
-function renderBoids(positions,numAgents)
+function renderBoids(positions,numAgents, neighborRadius)
     %Define relative boid shape = x-values...; y-values...
     boidShape = [-0.5, 0.5, -0.5;
                  -0.5, 0, 0.5];
     boidShape(1,:) = boidShape(1,:) * 0.4;
     boidShape(2,:) = boidShape(2,:) * 0.3;
+    circlePoints = 30;
+    neighborCircle = zeros(2,circlePoints);
+    angles = linspace(0,2*pi,circlePoints);
+    neighborCircle(1,:) = neighborRadius * cos(angles);
+    neighborCircle(2,:) = neighborRadius * sin(angles);
+    faces = 1:circlePoints;
+    
     for agent=1:numAgents
         position = positions(:,agent);
         theta = position(3);
@@ -223,6 +240,11 @@ function renderBoids(positions,numAgents)
         globalBoidShape = rotatedBoidShape + position(1:2);
         
         %Render polygon
-        patch(globalBoidShape(1,:),globalBoidShape(2,:),'k');        
+        patch(globalBoidShape(1,:),globalBoidShape(2,:),'k'); 
+        
+        %Calculate global circle
+        globalCircle = (neighborCircle + position(1:2))';
+        patch('Faces',faces,'Vertices',globalCircle,'EdgeColor','green','EdgeAlpha',0.4,'FaceColor','none');
     end
+    
 end

@@ -35,7 +35,7 @@ CEKF_ADAPT = [];
 %% data selection
 % each of these for loops specififes which data you want to load to see
 i = 1;
-for estimator = [0,1,2] %[0,1,2] 
+for estimator = [0,1,2,3] %[0,1,2] 
     for enviorment = 0
         for boids_rules = [0,1,2]
             for num_agents = [5,10,25] %[5,10,25,50]
@@ -387,7 +387,7 @@ MAX_PATH  = max(ALL_PATH);
   Y_pos = [MAX_GOALS(CEKF_GOAL); MAX_GOALS(CEKF_STATIC);MAX_GOALS(CEKF_ADAPT)] - Y_mean;
   errorbar(X',Y_mean',Y_neg',Y_pos', '^-');
   legend(["goal following","static rules","adaptive rules"]);
-  title("Goals Reached with Decentralized EKF with Centralized EKF");
+  title("Goals Reached  with Centralized EKF");
   xlabel("number of agents");
   ylabel("number of goals reached");
 
