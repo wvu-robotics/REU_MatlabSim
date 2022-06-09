@@ -10,7 +10,12 @@ classdef Agent < handle
     
     methods
         function obj = update(obj,localAgents,thermalStrength)
-            
+            % get location of centroid
+            % get nearest agent inside no-no zone
+            % Calculate desired heading
+            % Calculate desired speed
+            % Calculate vertical speed
+            % Calculate new position
         end
     end
 end
