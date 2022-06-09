@@ -1,10 +1,10 @@
 % Simulation parameter class
 classdef SimLaw
-    properties
+    properties (Constant)
         % Simulation constraints
         dt = 0.1        %s
         totalTime = 60  %s
-        mapSize = 200   %m, side of square map
+        mapSize = [-100,100]   %m, bounds of square map
         numAgents = 50  %agents
         numThermals = 2 %thermals
         
@@ -26,9 +26,20 @@ classdef SimLaw
         omegaMin = -pi          %rad/s
         omegaMax = pi           %rad/s
         omegaInertia = 1
+        fov = 2*pi              %rad
         
         % Thermal constraints
         thermalSpeedMin = 0.5   %m/s
         thermalSpeedMax = 2.0   %m/s
+        thermalSizeMin = 10     %m
+        thermalSizeMax = 50     %m
+        thermalStrengthMin = 3  %m/s, peak updraft speed
+        thermalStrengthMax = 10 %m/s, peak updraft speed
+    end
+    
+    methods (Static)
+        function steps = getSteps()
+            steps = SimLaw.totalTime/SimLaw.dt;
+        end
     end
 end
