@@ -66,7 +66,7 @@ def toGIF(name,agentPositions,params=sim.SimParams(),vision_mode=False,progress_
     frames = []
     
     for i in (tqdm(range(0,len(agentPositions))) if progress_bar else range(0,len(agentPositions))):
-        plot(i,df,params,vision_mode)
+        plot(i,df,params,vision_mode,write=True)
         im = Image.open("frames/fig"+str(i).zfill(5)+".png")
         frames.append(im)
     frames[0].save(name+'.gif', format='GIF', append_images=frames[1:], save_all=True, duration=params.overall_time, loop=0)
