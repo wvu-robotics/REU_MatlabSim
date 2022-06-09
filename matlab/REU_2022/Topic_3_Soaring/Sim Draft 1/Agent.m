@@ -5,15 +5,19 @@ classdef Agent < handle
         heading = 0.0                   %rad
         bankAngle = 0.0                 %rad
         velocity = [0.0, 0.0]           %m/s, rad/s, [forward,omega]
-        fov = 2*pi                      %rad
     end
     
     methods
         function obj = update(obj,localAgents,thermalStrength)
-            %% get location of centroid
             
-            %% get nearest agent inside no-no zone
+            for other = 1:numAgents
+                %% get location of centroid
 
+
+                %% get nearest agent inside no-no zone
+                % nonozone = SimLaw.neighborRadius;
+            end
+            
             %% Calculate desired heading
 
             %% Calculate desired speed
