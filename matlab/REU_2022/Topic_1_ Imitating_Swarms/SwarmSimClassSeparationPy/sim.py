@@ -1,5 +1,6 @@
 import numpy as np
 import cmath
+from tqdm import tqdm #might eventually make a param for this to ship, but later
 
 class SimParams:
     def __init__(self,
@@ -23,7 +24,7 @@ class SimParams:
         self.periodic_boundary = periodic_boundary
 
 #closed function to run whole sim and spit out vels and positions
-def runSim(controllers=[],params=SimParams(),initial_positions=None,initial_velocities=None):
+def runSim(controllers=[],params=SimParams(),initial_positions=None,initial_velocities=None,progress_bar=False):
     steps = int(params.overall_time/params.dt)
     maxAngleDeviation = params.agent_max_turn_rate*params.dt
     maxVelChange = params.agent_max_accel*params.dt
@@ -48,7 +49,7 @@ def runSim(controllers=[],params=SimParams(),initial_positions=None,initial_velo
         agentVels[0] = initial_velocities
     
     #run full simulation
-    for step in range(0,steps):
+    for step in (tqdm(range(0,steps)) if progress_bar else range(0,steps)):
         for agent in range(0,params.num_agents):
             agentPos = agentPositions[step,agent]
             agentVel = agentVels[step,agent]
