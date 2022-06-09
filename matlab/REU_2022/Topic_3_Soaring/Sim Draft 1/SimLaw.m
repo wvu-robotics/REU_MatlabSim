@@ -23,9 +23,9 @@ classdef SimLaw
         forwardSpeedMin = 5     %m/s
         forwardSpeedMax = 18    %m/s
         forwardInertia = 10
-        omegaMin = -pi          %rad/s
-        omegaMax = pi           %rad/s
-        omegaInertia = 1
+        bankMin = -pi          %rad/s
+        bankMax = pi           %rad/s
+        bankInertia = 1
         fov = 2*pi              %rad
         
         % Thermal constraints
