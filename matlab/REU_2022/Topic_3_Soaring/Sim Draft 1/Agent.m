@@ -10,48 +10,34 @@ classdef Agent < handle
     methods
         function obj = update(obj,localAgents,thermalStrength)
         %% Check other agents
+        % cant do anything here until I know what localAgents looks like
             for other = 1:numAgents
                 if (other == agent) || (telemetry(step,other,4) <= 0)
                     continue;
                 end
-                otherPos     = 0;
-                otherTheta   = 0;
-                otherVelUnit = 0;
+
+                if isnan(isNear(agent, other, neighborRadius))
+                    continue;
+                else
+                    distToOther = isNear(agent, other, neighborRadius);
+                end
+                otherPos     = Agent(other).position;
+                otherTheta   = Agent(other).heading;
+                otherVelUnit = Agent(other).velocity;
 
                 diffPos = otherPos - agentPos;
-                distToOther = norm(diffPos);
                 diffUnit = diffPos / distToOther; % unit vector
-                
-                % skip if right on top of each other (should change later)
-                if (distToOther == 0 || distToOther > neighborRadius)
-                    continue;
-                end
                 
                 accelMag_separation = separation * -1/distToOther^2; %Negative, to go AWAY from the other
                 accelMag_cohesion   = cohesion   *    distToOther^2; %Positive, to go TOWARDS the other
                 accelMag_alignment  = alignment  *  1/distToOther^2;
-                
-                accel = accelMag_separation*diffUnit + accelMag_cohesion*diffUnit + accelMag_alignment*otherVelUnit;
+                accelMag_migration  = migration  *    1e-6*distToTarget^6;
+
+                accel = accelMag_separation * diffUnit + ...
+                        accelMag_cohesion   * diffUnit + ...
+                        accelMag_alignment  * otherVelUnit + ...
+                        accelMag_migration  * targetUnit;
                 tempAccel = tempAccel + accel;
-
-            end
-            
-
-
-            %% Enforce wall separation
-            wallPoints = [[wallMag;agentPos(2)],[agentPos(1);wallMag],[-wallMag;agentPos(2)],[agentPos(1);-wallMag]];
-            wallAccelUnits = [[-1;0],[0;-1],[1;1],[0;1]];
-            wallAccel = [0;0];
-            for i=1:4 % 4 walls
-               wallPoint = wallPoints(:,i);
-               diffPos = wallPoint - agentPos;
-               distToWall= norm(diffPos);
-               if(distToWall > neighborRadius)
-                   continue;
-               end
-               accelMag_separationWall = separationWall * 1/distToWall^2;
-               tempAccel = tempAccel + accelMag_separationWall * wallAccelUnits(:,i);
-               wallAccel = wallAccel + accelMag_separationWall * wallAccelUnits(:,i);
             end
             
 
@@ -60,7 +46,7 @@ classdef Agent < handle
             %% Calculate desired speed
             
             %% Calculate vertical speed
-            vsink = (a*obj.velocity(1).^2 + b*obj.velocity(1) + c)...
+            vsink = (simLaw.Sink_A*obj.velocity(1).^2 + simLaw.Sink_B*obj.velocity(1) + simLaw.Sink_C)...
                     / sqrt(cos(obj.bankAngle*2*pi/180));
             vspeed = vsink + thermalStrength;
             %% Create New Telemetry
