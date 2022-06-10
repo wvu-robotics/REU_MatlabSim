@@ -27,5 +27,35 @@ classdef Swarm
             %% Generate thermal map
             obj.thermalMap = ThermalMap();
         end
+        
+        function obj = stepSimulation(obj)
+            numAgents = SimLaw.numAgents;   %Get total number of agents
+            for i=1:numAgents
+                currentAgent = obj.agents(i);
+                
+                %Find local agents for currentAgent
+                numLocalAgents = 0;
+                localAgentIndices = -1 * ones(1:numAgents);
+                for j=1:numAgents
+                    if(j==i)
+                        continue
+                    end
+                    otherAgent = obj.agents(j);
+                    dist = Utility.isNear(currentAgent,otherAgent,SimLaw.neighborRadius);
+                    if(~isnan(dist))
+                        numLocalAgents = numLocalAgents + 1;
+                        localAgentIndices(numLocalAgents) = j;
+                    end
+                end
+                localAgents(1:numLocalAgents) = obj.agents(localAgentIndices(1:numLocalAgents));
+                
+                %Find thermal strength from ThermalMap
+                %thermalStrength = thermalMap.getStrength(currentAgent.position);
+                thermalStrength = 5;
+                
+                %Update currentAgent
+                currentAgent.update(localAgents,thermalStrength);
+            end
+        end
     end
 end
