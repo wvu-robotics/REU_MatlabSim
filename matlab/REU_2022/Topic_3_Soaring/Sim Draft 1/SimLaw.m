@@ -11,6 +11,7 @@ classdef SimLaw
         % Initial conditions
         agentSpawnPosRange = [-70,-70; 70,70];     %m, [xMin,yMin;xMax,yMax]
         agentSpawnVelRange = [8,0;13,0];           %m/s,rad/s [forwardMin,omegaMin;forwardMax,omegaMax];
+        g = 9.81;                                  % m/s/s
         
         % Rule constraints
         separation = 1.0
@@ -23,8 +24,8 @@ classdef SimLaw
         forwardSpeedMin = 5     %m/s
         forwardSpeedMax = 18    %m/s
         forwardInertia = 10
-        bankMin = -pi           %rad/s
-        bankMax = pi            %rad/s
+        bankMin = -11*pi/12           %rad/s
+        bankMax = 11*pi/12            %rad/s
         bankInertia = 1
         fov = 2*pi              %rad
         Sink_A = -0.01843

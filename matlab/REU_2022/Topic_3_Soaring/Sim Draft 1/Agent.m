@@ -52,41 +52,30 @@ classdef Agent < handle
             if(norm(newAccel(1)) > maxForwardAccel)
                newAccel(1) = sign(newAccel(1)) * maxForwardAccel; 
             end
-            
-            if(norm(newAccel(2)) > maxAlpha) % not realistic
-                newAccel(2) = sign(newAccel(2)) * maxAlpha;
-            end
-            
 
             %% Get Vel
             newVel(1) = agentVel(1) + newAccel(1)*dt;
-
-            vsink = (simLaw.Sink_A*obj.velocity(1).^2 + simLaw.Sink_B*obj.velocity(1) + simLaw.Sink_C)...
-                    / sqrt(cos(obj.bankAngle*2*pi/180));
-            vspeed = vsink + thermalStrength;
-            
             if(newVel(1) > maxForwardVel)
                 newVel(1) = maxForwardVel;
             elseif(newVel(1) < minForwardVel)
                 newVel(1) = minForwardVel;
             end
-            
-            newVel(2) = newAccel(2);
-            
+            % v^2/r = a
+            newVel(2) = newAccel(2)/newVel(1);
             if(norm(newVel(2)) > maxOmega)
                 newVel(2) = sign(newVel(2)) * maxOmega;
+                newAccel(2) = newVel(1)*newVel(2);
             end
-            
+            obj.bankAngle = atan(newAccel(2)/g);
+
+            vsink = (simLaw.Sink_A*newVel(1).^2 + simLaw.Sink_B*newVel(1) + simLaw.Sink_C)...
+                    / sqrt(cos(obj.bankAngle));
+            vspeed = -vsink + thermalStrength;
 
             %% Get Pos
-            newPos = agentPos + newVel(1)*forwardUnit*dt;
-            newPos(3) = agentTheta + newVel(2)*dt;
-            newPos(4) = agentAlti - sinkRate*dt;
-            % giga jank
-            
-            if norm([newPos(1),newPos(2)]) < thermal(3)/2 && newPos(4) < thermal(5)
-                newPos(4) = newPos(4) + thermal(4)*dt;
-            end
+            newPos(1:2) = agentPos(1:2) + newVel(1)*forwardUnit*dt;
+            newPos(3) = agentAlti + vspeed*dt;
+            newTheta = agentTheta + newVel(2)*dt;
 
         end
         
