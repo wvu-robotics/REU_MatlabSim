@@ -33,7 +33,7 @@ def toPandasFrame(agentPositions,colors=[],params=sim.SimParams()):
 
     steps = int(params.overall_time/params.dt)
     if colors == []:
-        colors = np.repeat("blue",(steps+1)*params.num_agents)
+        colors = np.repeat('rgb(99, 110, 250)',(steps+1)*params.num_agents)
     else:
         colors = np.tile(colors,(steps+1)) #should already be num_agents long
     return pd.DataFrame(
