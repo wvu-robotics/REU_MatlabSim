@@ -1,12 +1,12 @@
 % Utility class: stores helper functions
 classdef Utility
     methods (Static)
-        %Calculates Random number In Range (randIR) between low and high
+        %% Calculates Random number In Range (randIR) between low and high
         function value = randIR(low,high) 
             value = rand() * (high-low) + low;
         end
         
-        % Calculates distance if within threshold.
+        %% Calculates distance if within threshold.
         function [Verdict] = isNear(A1, A2, Threshold)
             if ~isnan(Threshold)
                 Verdict = NaN;
