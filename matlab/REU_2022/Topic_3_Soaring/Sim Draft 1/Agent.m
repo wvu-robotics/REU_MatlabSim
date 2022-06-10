@@ -5,6 +5,7 @@ classdef Agent < handle
         heading = 0.0                   %rad
         bankAngle = 0.0                 %rad
         velocity = [0.0, 0.0]           %m/s, rad/s, [forward,omega]
+        patchObj = NaN
     end
     
     methods
@@ -98,7 +99,11 @@ classdef Agent < handle
             rotatedShape = rotatedShape'; %Convert to [x,y];
             globalShape = rotatedShape + obj.position(1:2); %[x,y] matrix
             
-            patch(globalShape(:,1),globalShape(:,2),'k'); 
+            if(isnan(obj.patchObj))
+                obj.patchObj = patch('FaceColor','k');
+            end
+            obj.patchObj.XData = globalShape(:,1);
+            obj.patchObj.YData = globalShape(:,2);
         end
     end
 end
