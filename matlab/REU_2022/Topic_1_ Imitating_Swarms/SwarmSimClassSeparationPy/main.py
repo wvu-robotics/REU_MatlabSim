@@ -38,5 +38,8 @@ print("Sim finished -- Generating media")
 #export types, NONE, INTERACTIVE, GIF, MP4
 media_type = export.ExportType.MP4
 
-export.export(media_type,"new",agentPositions,controllers=controllers,params=params,vision_mode=False,progress_bar=True)
+export.export(media_type,"new",agentPositions,agentVels,controllers=controllers,params=params,vision_mode=False,progress_bar=True)
 print("Media generated")
+
+filename="sim_data"
+export.toCVS(filename,agentPositions,agentVels,params)

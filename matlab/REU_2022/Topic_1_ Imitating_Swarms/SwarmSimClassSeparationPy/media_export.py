@@ -15,8 +15,9 @@ class ExportType(enum.Enum):
     INTERACTIVE = 1
     GIF = 2
     MP4 = 3
+    CVS=4
 
-def export(export_type,name,agentPositions,params=sim.SimParams(),controllers = [],vision_mode=False,progress_bar=False):
+def export(export_type,name,agentPositions,agentVels,params=sim.SimParams(),controllers = [],vision_mode=False,progress_bar=False):
     #controllers used to grab per-agent color
     colors = [controller.color for controller in controllers]
     
@@ -26,6 +27,8 @@ def export(export_type,name,agentPositions,params=sim.SimParams(),controllers = 
         toGIF(name,agentPositions,params,colors,vision_mode=vision_mode,progress_bar=progress_bar)
     elif export_type == ExportType.MP4:
         toMP4(name,agentPositions,params,colors,vision_mode=vision_mode,progress_bar=progress_bar)
+    elif export_type == ExportType.CVS:
+        toCVS(name,agentPositions,agentVels,params)
     else:
         pass
 
@@ -90,3 +93,26 @@ def toMP4(name,agentPositions,params=sim.SimParams(),colors=[],vision_mode=False
         img = Image.open(buf) #would like a way to go from bytes to cv2 image immediately, haven't found yet
         im = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
         video.write(im)
+
+def toCVS(name,agentPositions,agentVels,params=sim.SimParams()):
+    path="./data/"
+    filename=path+name
+
+    if not os.path.exists(path):
+        os.makedirs(path)
+    
+    if os.path.exists(filename):
+        os.remove(filename)
+    
+    steps = int(params.overall_time/params.dt)
+    data=pd.DataFrame(
+    {
+       "x":np.reshape(agentPositions[:,:,0],params.num_agents*(steps+1)),
+       "y":np.reshape(agentPositions[:,:,1],params.num_agents*(steps+1)),
+       "vx":np.reshape(agentVels[:,:,0],params.num_agents*(steps+1)),
+       "vy":np.reshape(agentVels[:,:,1],params.num_agents*(steps+1)),
+       "frame":np.repeat(range(0,steps+1),params.num_agents),
+    }
+    )
+   
+    data.to_csv(filename)
