@@ -1,5 +1,5 @@
 import numpy as np
-import sim
+import sim_mp as sim
 import media_export as export
 from timeit import default_timer as timer
 
@@ -12,8 +12,8 @@ from models import Dance
 #all parameters for simulation
 params = sim.SimParams(
     num_agents=10, 
-    dt=0.01, 
-    overall_time = 15, 
+    dt=0.1, 
+    overall_time = 1, 
     enclosure_size = 10, 
     init_pos_max= 3, #if None, then defaults to enclosure_size
     agent_max_vel=5,
@@ -27,12 +27,12 @@ params = sim.SimParams(
 controllers= [bo.Boids(3,5,0.1,1) for i in range(params.num_agents)]
 
 fullStart = timer()
-agentPositions, agentVels = sim.runSim(controllers,params,progress_bar=True)
+agentPositions, agentVels = sim.runSim(controllers,params,progress_bar=False)
 simDone = timer()
 print("Sim finished -- Generating media")
 
 #export types, NONE, INTERACTIVE, GIF, MP4
-media_type = export.ExportType.MP4
+media_type = export.ExportType.GIF
 
 exportStart = timer()
 export.export(media_type,"bench",agentPositions,params=params,vision_mode=False,progress_bar=True)

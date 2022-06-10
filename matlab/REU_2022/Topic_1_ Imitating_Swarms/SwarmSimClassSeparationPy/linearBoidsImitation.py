@@ -2,19 +2,22 @@ import numpy as np
 import sim
 import media_export as export
 
+
 from sklearn.linear_model import LinearRegression as lr
+from tqdm import tqdm
 from dataclasses import dataclass #data class is like the python equivalent of a struct
 from models import Boids as bo
 
 params = sim.SimParams(
-    num_agents=10, 
-    dt=0.01, 
+    num_agents=30, 
+    dt=0.05, 
     overall_time = 15, 
     enclosure_size = 10, 
-    init_pos_max= 3, #if None, then defaults to enclosure_size
+    init_pos_max= None, #if None, then defaults to enclosure_size
     agent_max_vel=5,
+    init_vel_max = None,
     agent_max_accel=np.inf,
-    agent_max_turn_rate=1.5*np.pi,
+    agent_max_turn_rate=np.inf,
     neighbor_radius=3,
     periodic_boundary=False
     )
@@ -22,17 +25,22 @@ params = sim.SimParams(
 #constants to imitate
 k_coh = 3
 k_align = 5
-k_sep = .1
-k_inertia = 1
+k_sep = .01
+k_inertia = 0
 
 true_gains = [k_coh, k_align, k_sep, k_inertia]
 
 #run sim
 # print("Original agent slices")
-controllers = [bo.Boids(*true_gains) for i in range(params.num_agents)]
-agentPositions, agentVels = sim.runSim(controllers,params)
 
-# export.export(export.ExportType.GIF,"Initial",agentPositions,params=params,vision_mode=False)
+#ran first sim
+controllers = [bo.Boids(*true_gains) for i in range(params.num_agents)]
+print("First sim and export")
+agentPositions, agentVels = sim.runSim(controllers,params,progress_bar=True)
+
+export.export(export.ExportType.GIF,"Initial",agentPositions,params=params,vision_mode=False,progress_bar=True)
+
+
 
 # print("Agent positions:")
 # print(agentPositions)
@@ -46,7 +54,16 @@ class posVelSlice:
     vel: np.ndarray
     next_vel: np.ndarray
 
-posVelSlices = [posVelSlice(agentPositions[i],agentVels[i],agentVels[i+1]) for i in range(len(agentPositions)-1)]
+# posVelSlices = [posVelSlice(agentPositions[i],agentVels[i],agentVels[i+1]) for i in range(len(agentPositions)-1)]
+
+posVelSlices = []
+#run tons more short sims
+print("Running short sims")
+params.overall_time=3
+extra_sims = 100
+for extra_sim in tqdm(range(extra_sims)):
+    agentPositions, agentVels = sim.runSim(controllers,params)
+    posVelSlices.extend([posVelSlice(agentPositions[i],agentVels[i],agentVels[i+1]) for i in range(len(agentPositions)-1)])
 
 # print("PosVelSlices:")
 # print(posVelSlices)
@@ -78,11 +95,11 @@ for slice in posVelSlices:
         agentVel = slice.vel[agent]
         agentNextVel = slice.next_vel[agent]
         separation = np.zeros(2)
-        agentVelDifference = agentNextVel - agentVel
+        agentVelDifference = agentNextVel #- agentVel
 
         # throw out data that is at the edge of action constraints
-        # if np.linalg.norm(agentVel) >= params.agent_max_vel:
-        #     continue
+        if np.linalg.norm(agentVel) >= params.agent_max_vel:
+            continue
         
         # if np.linalg.norm(agentVelDifference) >= params.agent_max_accel:
         #     continue
@@ -152,11 +169,14 @@ print("R^2: ",reg.score(x,y))
 # #create some visuals with the imitated swarm
 #     #maybe do an imposter(s) pretending to be within the original swarm
 gains = reg.coef_.tolist()
-gains[3]=1
+gains[3]=k_inertia
 
 print(gains)
 
 controllers_imitated = [bo.Boids(*gains) for i in range(params.num_agents)]
+
+params.overall_time = 15
 #start at exactly the same place
-agentPositions_imitated, agentVels_imitated = sim.runSim(controllers_imitated,params,initial_positions=agentPositions[0],initial_velocities=agentVels[0])
-# export.export(export.ExportType.GIF,"Imitated",agentPositions_imitated,params=params,vision_mode=False)
+print("Running final visual")
+agentPositions_imitated, agentVels_imitated = sim.runSim(controllers_imitated,params,initial_positions=agentPositions[0],initial_velocities=agentVels[0],progress_bar=True)
+export.export(export.ExportType.GIF,"Imitated",agentPositions_imitated,params=params,vision_mode=False,progress_bar=True)
