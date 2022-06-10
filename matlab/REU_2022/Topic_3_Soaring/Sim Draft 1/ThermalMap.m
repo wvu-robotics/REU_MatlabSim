@@ -6,7 +6,7 @@ classdef ThermalMap < handle
         thermals = Thermal.empty(0,SimLaw.numThermals);
     end
 
-    methods
+    methods (Static)
         % Default construcor
         function thermalMap = ThermalMap() 
             thermalMap.thermals(1,SimLaw.numThermals) = Thermal();
@@ -16,8 +16,11 @@ classdef ThermalMap < handle
                 thermalMap.thermals(i).position(1) = Utility.randIR(SimLaw.mapSize(1),SimLaw.mapSize(2));
                 thermalMap.thermals(i).position(2) = Utility.randIR(SimLaw.mapSize(1),SimLaw.mapSize(2));
                         
-                thermalMap.thermals(i).velocity(1) = Utility.randIR(thermalMap.thermalVelLims(1),thermalMap.thermalVelLims(2))*randi([-1 1],1);
-                thermalMap.thermals(i).velocity(2) = Utility.randIR(thermalMap.thermalVelLims(1),thermalMap.thermalVelLims(2))*randi([-1 1],1);
+                % Randomly decide if the velocity is negative or positive
+                randFactor = randi([0 1],1,2);
+                randFactor(randFactor == 0) = -1;
+                thermalMap.thermals(i).velocity(1) = Utility.randIR(thermalMap.thermalVelLims(1),thermalMap.thermalVelLims(2))*randFactor(1);
+                thermalMap.thermals(i).velocity(2) = Utility.randIR(thermalMap.thermalVelLims(1),thermalMap.thermalVelLims(2))*randFactor(2);
                         
                 thermalMap.thermals(i).radius = Utility.randIR(thermalMap.thermalSizeLims(1),thermalMap.thermalSizeLims(2));
                 thermalMap.thermals(i).strength = 1;
@@ -30,10 +33,19 @@ classdef ThermalMap < handle
         %end
 
         % Ensure thermals don't overlap
-        function newMap = adjustThermalPositions()
+        function thermals = adjustThermalPositions(thermals)
             for i = 1:SimLaw.numThermals
-                
+                for j = (i + 1):SimLaw.numThermals
+                    % Calculate if the thermals overlap
+                    distance = norm(thermals(i).position - thermals(j).position);
+                    if distance <= (thermals(i).radius + thermals(j).radius)
+                        % Needs a better way to change direction
+                        thermals(i).velocity(1) = -thermals(i).velocity(1);
+                        thermals(j).velocity(1) = -thermals(j).velocity(1);
+                    end
+                end
             end
         end
+
     end
 end
