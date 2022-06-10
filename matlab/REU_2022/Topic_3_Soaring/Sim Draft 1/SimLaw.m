@@ -38,6 +38,10 @@ classdef SimLaw
         thermalSizeMax = 50     %m
         thermalStrengthMin = 3  %m/s, peak updraft speed
         thermalStrengthMax = 10 %m/s, peak updraft speed
+        
+        %Visuals
+        agentShape_triangle = [-0.5,0.5,-0.5; -0.375,0,0.375]
+        agentShape_plane = [-0.5,-0.3,0,0.1,0.2,0.3,0.5,0.3,0.2,0.1,0,-0.3,-0.5;-0.2,-0.1,-0.1,-0.5,-0.5,-0.1,0,0.1,0.5,0.5,0.1,0.1,0.2]
     end
     
     methods (Static)

@@ -89,5 +89,14 @@ classdef Agent < handle
             end
 
         end
+        
+        function render(obj)
+            rotationMatrix = [cos(obj.heading), -sin(obj.heading); sin(obj.heading), cos(obj.heading)];
+            rotatedShape = rotationMatrix * SimLaw.agentShape_plane; %[x;y] matrix
+            rotatedShape = rotatedShape'; %Convert to [x,y];
+            globalShape = rotatedShape + obj.position(1:2); %[x,y] matrix
+            
+            patch(globalShape(:,1),globalShape(:,2),'k'); 
+        end
     end
 end
