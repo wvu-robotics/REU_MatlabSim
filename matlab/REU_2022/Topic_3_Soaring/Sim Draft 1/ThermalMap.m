@@ -1,0 +1,1 @@
+% Thermal map class: stores list of Thermals
