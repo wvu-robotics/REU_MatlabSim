@@ -13,9 +13,15 @@ classdef Utility
                 return
             elseif abs(A1.pos(2) - A2.pos(2)) > Threshold
                 return
+            elseif abs(A1.pos(3) - A2.pos(3)) > Threshold
+                return
+            elseif A1.pos(1) == A2.pos(1) && A1.pos(2) == A2.pos(2)
+                return
             end
             
-            dist = norm([(A1.pos(1)-A2.pos(1)), (A1.pos(2)-A2.pos(2))]);
+            dist = norm([(A1.pos(1)-A2.pos(1)), ...
+                         (A1.pos(2)-A2.pos(2)), ...
+                         (A1.pos(3)-A2.pos(3))]);
             if dist < Threshold
                 Verdict = dist;
             end
