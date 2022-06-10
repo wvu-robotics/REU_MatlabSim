@@ -70,17 +70,12 @@ classdef Agent < handle
 
             vsink = (simLaw.Sink_A*newVel(1).^2 + simLaw.Sink_B*newVel(1) + simLaw.Sink_C)...
                     / sqrt(cos(obj.bankAngle));
-            vspeed = vsink + thermalStrength;
+            vspeed = -vsink + thermalStrength;
 
             %% Get Pos
-            newPos = agentPos + newVel(1)*forwardUnit*dt;
+            newPos(1:2) = agentPos(1:2) + newVel(1)*forwardUnit*dt;
+            newPos(3) = agentAlti + vspeed*dt;
             newTheta = agentTheta + newVel(2)*dt;
-            newPos(4) = agentAlti + vspeed*dt;
-            % giga jank
-            
-            if norm([newPos(1),newPos(2)]) < thermal(3)/2 && newPos(4) < thermal(5)
-                newPos(4) = newPos(4) + thermal(4)*dt;
-            end
 
         end
         
