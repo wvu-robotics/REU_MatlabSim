@@ -2,15 +2,18 @@ close all
 clear
 clc
 
-numBoids = 1000;
-mapSize = [-10,10];
-spawnSize = 0.9 * mapSize;
+numBoids = 20;
+mapSize = [-6,6];
+spawnSize = 1 * mapSize;
 
 shape_triangle = [-0.5,0.5,-0.5; -0.375,0,0.375];
 shape_plane = [-0.5,-0.3,0,0.1,0.2,0.3,0.5,0.3,0.2,0.1,0,-0.3,-0.5;-0.2,-0.1,-0.1,-0.5,-0.5,-0.1,0,0.1,0.5,0.5,0.1,0.1,0.2];
 
 positions(1:2,1:numBoids) = rand(2,numBoids) .* (spawnSize(2)-spawnSize(1)) + spawnSize(1);
 positions(3,1:numBoids) = rand(1,numBoids) .* (2*pi);
+
+%positions(1:2,:) = positions(1:2,:) + [5;3];
+%positions(1:2,1) = [-15;-5];
 
 renderBoids("Triangle",shape_triangle,positions,mapSize,numBoids);
 renderBoids("Plane",shape_plane,positions,mapSize,numBoids);

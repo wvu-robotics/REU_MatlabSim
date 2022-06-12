@@ -70,9 +70,11 @@ for step = 1:steps
     
     %% Step physics
     for thermalIndex = 1:SimLaw.numThermals
+        thermals = thermalMap.adjustThermalPositions(thermals);
+
         xPos = thermals(thermalIndex).position(1);
         yPos = thermals(thermalIndex).position(2);
-        
+
         % Update the position of the thermal
         thermals(thermalIndex).position(1) = thermals(thermalIndex).position(1) + thermals(thermalIndex).velocity(1)*dt;
         thermals(thermalIndex).position(2) = thermals(thermalIndex).position(2) + thermals(thermalIndex).velocity(2)*dt;

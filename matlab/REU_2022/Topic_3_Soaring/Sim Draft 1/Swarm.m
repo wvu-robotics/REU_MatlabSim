@@ -1,5 +1,5 @@
 % Swarm class
-classdef Swarm
+classdef Swarm < handle
     properties
         agents
         thermalMap
@@ -55,6 +55,12 @@ classdef Swarm
                 
                 %Update currentAgent
                 currentAgent.update(localAgents,thermalStrength);
+            end
+        end
+        
+        function obj = renderAgents(obj)
+            for i=1:SimLaw.numAgents
+                obj.agents(i).render();
             end
         end
     end
