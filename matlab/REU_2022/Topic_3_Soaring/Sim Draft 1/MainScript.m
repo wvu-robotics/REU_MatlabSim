@@ -55,6 +55,7 @@ for step = 1:steps
     pause(0.0001);
     
     % Step simulation
+    swarm.saveAgentData();
     swarm.stepSimulation();
     
     % Find and print elapsed time

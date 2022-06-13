@@ -7,70 +7,83 @@ classdef Agent < handle
         velocity = [0.0, 0.0]           %m/s, rad/s, [forward,omega]
         patchObj = NaN
         
+        savedPosition = [0.0, 0.0, 0.0]
+        savedVelocity = [0.0, 0.0]
+        savedHeading = 0.0
     end
     
     methods
         % Function 1 : Updates telemetry of obj
         function obj = update(obj,localAgents,thermalStrength, target)
-            %% Get Centroid
-            Centroid = obj.position;
-            distance = zeros(1,length(localAgents));
-            for i = 1:length(localAgents)
-                if localAgents(i).position(3) <= 0
-                    continue;
+            numLocalAgents = size(localAgents,2);
+            if(numLocalAgents > 0)
+                %% Get Centroid
+                centroid = [0,0,0];
+                distances = zeros(1,numLocalAgents);
+                for i = 1:numLocalAgents
+                    if localAgents(i).savedPosition(3) <= 0
+                        continue;
+                    end
+                    distances(i) = norm(obj.position - localAgents(i).savedPosition);
+                    centroid = centroid + localAgents(i).savedPosition;
                 end
-                distance(i) = norm(obj.position - localAgents(i).position);
-                Centroid = Centroid + localAgents(i).position*Utility.isNear(obj, localAgents(i), NaN);
-            end
-            
-            %% Get Vectors
-            % Cohesion
-            distToCentroid = norm(obj.position - Centroid);
-            if distToCentroid == 0
-                centroidUnit = [0,0,0];
-            else
-                centroidUnit   = (obj.position - Centroid) / distToCentroid;
-            end
-            
-            % Seperation & Alignment
-            nearest        = find(distance == min(distance));
-            if ~isempty(nearest)
-                nearest        = nearest(1);
-                distToNearest  = norm(obj.position - localAgents(nearest).position);
-                nearestUnit    = (obj.position - localAgents(nearest).position) / distToNearest;
-                nearestVelUnit = localAgents(nearest).velocity(1)*...
-                                [cos(localAgents(nearest).heading), sin(localAgents(nearest).heading), 0];
-            else
-                distToNearest  = 1;
-                nearestUnit    = [0,0,0];
-                nearestVelUnit = [0,0,0];
-            end
-            
-            % Alignment
-            
+                centroid = centroid / numLocalAgents;
 
-            % Migration
-            distToTarget   = norm(obj.position(1:2) - target);
-            targetUnit     = (obj.position(1:2) - target) / distToTarget;
-            targetUnit     = [targetUnit 0];
-            
-            %% Get Accel
-            accelMag_cohesion   = SimLaw.cohesion   *      distToCentroid^2; %Positive, to go TOWARDS the other
-            accelMag_separation = SimLaw.separation *   -1/distToNearest^2; %Negative, to go AWAY from the other
-            accelMag_alignment  = SimLaw.alignment  *    1/distToNearest^2;
-            accelMag_migration  = SimLaw.migration  *      distToTarget^6;
-        
-            newAccel = accelMag_separation * nearestUnit + ...
-                       accelMag_cohesion   * centroidUnit + ...
-                       accelMag_alignment  * nearestVelUnit + ...
-                       accelMag_migration  * targetUnit; % nets accel vector to add on to current accel
+                %% Get Vectors
+                % Cohesion
+                diffCentroid = centroid - obj.position;
+                diffCentroid(3) = 0;
+                distToCentroid = norm(diffCentroid);
+                if distToCentroid == 0
+                    centroidUnit = [0,0,0];
+                else
+                    centroidUnit   = diffCentroid / distToCentroid;
+                end
 
-            newAccel = newAccel.*[1,1,0]; % removes z component
+                % Separation & Alignment
+                nearest = find(distances == min(distances));
+                if ~isempty(nearest)
+                    nearest        = nearest(1);
+                    diffNearest    = localAgents(nearest).savedPosition - obj.position;
+                    diffNearest(3) = 0;
+                    distToNearest  = norm(diffNearest);
+                    nearestUnit    = diffNearest / distToNearest;
+                    nearestVelUnit = [cos(localAgents(nearest).savedHeading), sin(localAgents(nearest).savedHeading), 0];
+                else
+                    distToNearest  = 1;
+                    nearestUnit    = [0,0,0];
+                    nearestVelUnit = [0,0,0];
+                end
+
+                % Migration
+                diffTarget     = target - obj.position;
+                diffTarget(3)  = 0;
+                distToTarget   = norm(diffTarget);
+                targetUnit     = diffTarget / distToTarget;
+
+                %% Get Accel
+                accelMag_cohesion   = SimLaw.cohesion   *      distToCentroid^2; %Positive, to go TOWARDS the other
+                accelMag_separation = SimLaw.separation *   -1/distToNearest^2; %Negative, to go AWAY from the other
+                accelMag_alignment  = SimLaw.alignment  *    1/distToNearest^2;
+                accelMag_migration  = SimLaw.migration  *      distToTarget^6;
+
+                newAccel = accelMag_separation * nearestUnit + ...
+                           accelMag_cohesion   * centroidUnit + ...
+                           accelMag_alignment  * nearestVelUnit + ...
+                           accelMag_migration  * targetUnit; % nets accel vector to add on to current accel
+
+                newAccel(3) = 0; % removes z component
+            else
+                newAccel = [0,0,0];
+            end
     
             forwardUnit      = [cos(obj.heading);sin(obj.heading);0];
             newAccel_forward = dot(newAccel,forwardUnit);
-            newAccel_circ    = 1.0 * sqrt((norm(newAccel))^2-newAccel_forward^2);
-            
+            if(norm(newAccel) - norm(newAccel_forward) < 1E-6)
+                newAccel_circ = 0;
+            else
+                newAccel_circ = 1.0 * sqrt((norm(newAccel))^2-newAccel_forward^2);
+            end
             turningCrossProduct = cross(forwardUnit,newAccel);
             newAccel_circ = newAccel_circ * sign(turningCrossProduct(3));
 
@@ -110,7 +123,7 @@ classdef Agent < handle
         end
         
         % function 2
-        function render(obj)
+        function obj = render(obj)
             rotationMatrix = [cos(obj.heading), -sin(obj.heading); sin(obj.heading), cos(obj.heading)];
             shape = SimLaw.agentShape_plane .* SimLaw.renderScale;
             rotatedShape = rotationMatrix * shape; %[x;y] matrix
@@ -122,6 +135,12 @@ classdef Agent < handle
             end
             obj.patchObj.XData = globalShape(:,1);
             obj.patchObj.YData = globalShape(:,2);
+        end
+        
+        function obj = saveData(obj)
+            obj.savedPosition = obj.position;
+            obj.savedVelocity = obj.velocity;
+            obj.savedHeading = obj.heading;
         end
     end
 end

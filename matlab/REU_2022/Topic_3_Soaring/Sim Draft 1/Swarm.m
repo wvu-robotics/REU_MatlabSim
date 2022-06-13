@@ -28,6 +28,13 @@ classdef Swarm < handle
             obj.thermalMap = ThermalMap();
         end
         
+        function obj = saveAgentData(obj)
+            numAgents = SimLaw.numAgents;
+            for i=1:numAgents
+                obj.agents(i).saveData();
+            end
+        end
+        
         function obj = stepSimulation(obj)
             numAgents = SimLaw.numAgents;   %Get total number of agents
             for i=1:numAgents
@@ -41,20 +48,29 @@ classdef Swarm < handle
                         continue
                     end
                     otherAgent = obj.agents(j);
-                    dist = Utility.isNear(currentAgent,otherAgent,SimLaw.neighborRadius);
-                    if(~isnan(dist))
+                    dist = norm(currentAgent.position - otherAgent.position);
+                    fprintf("Agent %g (%g,%g,%g) to %g (%g,%g,%g), dist: %g\n",i,currentAgent.position(1),currentAgent.position(2),currentAgent.position(3),j,otherAgent.position(1),otherAgent.position(2),otherAgent.position(3),dist);
+                    if(dist < SimLaw.neighborRadius)
                         numLocalAgents = numLocalAgents + 1;
                         localAgentIndices(numLocalAgents) = j;
                     end
                 end
+                clear localAgents
                 localAgents(1:numLocalAgents) = obj.agents(localAgentIndices(1:numLocalAgents));
+                if(numLocalAgents > 0)
+                    fprintf("SwarmNear!\n");
+                end
+               % if(numLocalAgents == 0)
+                %    localAgents = NaN;
+                %end
                 
                 %Find thermal strength from ThermalMap
                 %thermalStrength = thermalMap.getStrength(currentAgent.position);
                 thermalStrength = 5;
                 
                 %Update currentAgent
-                currentAgent.update(localAgents,thermalStrength,[0,0]);
+                %fprintf("SwarmLocalAgents Size: (%g,%g)\n",size(localAgents,1),size(localAgents,2));
+                currentAgent.update(localAgents,thermalStrength,[0,0,0]);
             end
         end
         
