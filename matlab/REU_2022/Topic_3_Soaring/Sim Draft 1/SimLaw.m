@@ -33,10 +33,10 @@ classdef SimLaw
         Sink_C = -2.3782
         
         % Thermal constraints
-        thermalSpeedMin = 0.5   %m/s
-        thermalSpeedMax = 2.0   %m/s
-        thermalSizeMin = 10     %m
-        thermalSizeMax = 50     %m
+        thermalSpeedMin = 20   %m/s
+        thermalSpeedMax = 50   %m/s
+        thermalRadiusMin = 5     %m
+        thermalRadiusMax = 20     %m
         thermalStrengthMin = 3  %m/s, peak updraft speed
         thermalStrengthMax = 10 %m/s, peak updraft speed
         
