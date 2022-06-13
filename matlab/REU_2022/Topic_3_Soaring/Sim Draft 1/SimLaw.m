@@ -10,17 +10,20 @@ classdef SimLaw
         
         % Initial conditions
         agentSpawnPosRange = [-70,-70; 70,70];     %m, [xMin,yMin;xMax,yMax]
+        agentSpawnAltiRange = [80,90];             %m, [Min,Max]
         agentSpawnVelRange = [8,0;13,0];           %m/s,rad/s [forwardMin,omegaMin;forwardMax,omegaMax];
         g = 9.81;                                  % m/s/s
         
         % Rule constraints
-        separation = 1.0
-        cohesion = 1
-        alignment = 1.0
-        migration = 1e-4
+        separation = 5.0
+        cohesion = 0.03
+        alignment = 5
+        migration = 0
         
         % Agent constraints
-        neighborRadius = 20     %m
+        neighborRadius = 50     %m
+        agentCeiling   = 100    %m
+        agentFloor     = 0      %m
         forwardSpeedMin = 5     %m/s
         forwardSpeedMax = 18    %m/s
         forwardInertia = 10

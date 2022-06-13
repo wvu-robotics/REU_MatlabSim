@@ -14,10 +14,12 @@ classdef Swarm < handle
             %Iterate through all agents
             posRange = SimLaw.agentSpawnPosRange;
             velRange = SimLaw.agentSpawnVelRange;
+            altiRange = SimLaw.agentSpawnAltiRange;
             for i=1:numAgents
                 %Set agent initial position, heading, bank angle, velocity
                 obj.agents(i).position(1) = Utility.randIR(posRange(1,1),posRange(2,1));
                 obj.agents(i).position(2) = Utility.randIR(posRange(1,2),posRange(2,2));
+                obj.agents(i).position(3) = Utility.randIR(altiRange(1),altiRange(2));
                 obj.agents(i).heading = Utility.randIR(0,2*pi); %rad
                 obj.agents(i).bankAngle = 0; %rad
                 obj.agents(i).velocity(1) = Utility.randIR(velRange(1,1),velRange(2,1));

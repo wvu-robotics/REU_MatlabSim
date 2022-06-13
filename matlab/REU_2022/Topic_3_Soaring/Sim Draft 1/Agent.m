@@ -119,6 +119,11 @@ classdef Agent < handle
             %% Get Pos
             newPos(1:2) = obj.position(1:2) + newVel(1)*forwardUnit(1:2)'*SimLaw.dt;
             newPos(3) = obj.position(3) + vspeed*SimLaw.dt;
+            if newPos(3) > SimLaw.agentCeiling
+                newPos(3) = SimLaw.agentCeiling;
+            elseif newPos(3) < SimLaw.agentFloor % not Giga-Jank
+                newPos (3) = SimLaw.agentFloor; % Tera-Jank
+            end
             obj.heading = obj.heading + newVel(2)*SimLaw.dt;
 
             obj.velocity = newVel;
@@ -140,15 +145,15 @@ classdef Agent < handle
             globalArrow = rotatedArrow + obj.position(1:2);
 
             if(class(obj.patchObj) == "double")
-                scaledAlti = ((obj.position(3)+25)/100);
+                scaledAlti = ((obj.position(3)-SimLaw.agentFloor)/(SimLaw.agentCeiling - SimLaw.agentFloor));
                 color = hsv2rgb([scaledAlti,1,1]);
                 obj.patchObj = patch('FaceColor',color);
                 obj.patchArr = patch('FaceColor',color);
             end
             obj.patchObj.XData = globalShape(:,1);
             obj.patchObj.YData = globalShape(:,2);
-            obj.patchArr.XData = globalArrow(:,1);
-            obj.patchArr.YData = globalArrow(:,2);
+            %obj.patchArr.XData = globalArrow(:,1);
+            %obj.patchArr.YData = globalArrow(:,2);
         end
         
         function obj = saveData(obj)
