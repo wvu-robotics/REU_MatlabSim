@@ -6,6 +6,9 @@ classdef Agent < handle
         bankAngle = 0.0                 %rad
         velocity = [0.0, 0.0]           %m/s, rad/s, [forward,omega]
         patchObj = NaN
+        patchArr = NaN
+
+        accelDir = 0.0;
         
         savedPosition = [0.0, 0.0, 0.0]
         savedVelocity = [0.0, 0.0]
@@ -73,6 +76,7 @@ classdef Agent < handle
                            accelMag_migration  * targetUnit; % nets accel vector to add on to current accel
 
                 newAccel(3) = 0; % removes z component
+                obj.accelDir = atan2(newAccel(2), newAccel(1));
             else
                 newAccel = [0,0,0];
             end
@@ -105,7 +109,7 @@ classdef Agent < handle
             if(obj.bankAngle < SimLaw.bankMin)
                 obj.bankAngle = SimLaw.bankMin;
             end
-            newAccel(2) = tan(obj.bankAngle*SimLaw.g);
+            newAccel(2) = tan(obj.bankAngle)*SimLaw.g;
             newVel(2) = newAccel(2)/newVel(1);
 
             vsink = (SimLaw.Sink_A*newVel(1).^2 + SimLaw.Sink_B*newVel(1) + SimLaw.Sink_C)...
@@ -125,16 +129,26 @@ classdef Agent < handle
         % function 2
         function obj = render(obj)
             rotationMatrix = [cos(obj.heading), -sin(obj.heading); sin(obj.heading), cos(obj.heading)];
+            AccelMatrix    = [cos(obj.accelDir), -sin(obj.accelDir); sin(obj.accelDir), cos(obj.accelDir)];
             shape = SimLaw.agentShape_plane .* SimLaw.renderScale;
+            arrow = SimLaw.Arrow .* SimLaw.renderScale;
             rotatedShape = rotationMatrix * shape; %[x;y] matrix
             rotatedShape = rotatedShape'; %Convert to [x,y];
+            rotatedArrow = AccelMatrix * arrow;
+            rotatedArrow = rotatedArrow';
             globalShape = rotatedShape + obj.position(1:2); %[x,y] matrix
-            
+            globalArrow = rotatedArrow + obj.position(1:2);
+
             if(class(obj.patchObj) == "double")
-                obj.patchObj = patch('FaceColor','k');
+                scaledAlti = ((obj.position(3)+25)/100);
+                color = hsv2rgb([scaledAlti,1,1]);
+                obj.patchObj = patch('FaceColor',color);
+                obj.patchArr = patch('FaceColor',color);
             end
             obj.patchObj.XData = globalShape(:,1);
             obj.patchObj.YData = globalShape(:,2);
+            obj.patchArr.XData = globalArrow(:,1);
+            obj.patchArr.YData = globalArrow(:,2);
         end
         
         function obj = saveData(obj)
