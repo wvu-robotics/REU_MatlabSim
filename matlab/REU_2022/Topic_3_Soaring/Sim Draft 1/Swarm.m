@@ -62,20 +62,13 @@ classdef Swarm < handle
                 end
                 clear localAgents
                 localAgents(1:numLocalAgents) = obj.agents(localAgentIndices(1:numLocalAgents));
-                if(numLocalAgents > 0)
-                    %fprintf("SwarmNear!\n");
-                end
-               % if(numLocalAgents == 0)
-                %    localAgents = NaN;
-                %end
                 
                 %Find thermal strength from ThermalMap
                 %thermalStrength = thermalMap.getStrength(currentAgent.position);
                 thermalStrength = 5;
                 
                 %Update currentAgent
-                %fprintf("SwarmLocalAgents Size: (%g,%g)\n",size(localAgents,1),size(localAgents,2));
-                currentAgent.update(localAgents,thermalStrength,[0,0,0]);
+                agentControl_Update(currentAgent,localAgents,thermalStrength,[0,0,0]);
             end
         end
         
