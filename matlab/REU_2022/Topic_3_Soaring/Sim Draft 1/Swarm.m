@@ -51,7 +51,9 @@ classdef Swarm < handle
                     end
                     otherAgent = obj.agents(j);
                     dist = norm(currentAgent.position - otherAgent.position);
-                    %fprintf("Agent %g (%g,%g,%g) to %g (%g,%g,%g), dist: %g\n",i,currentAgent.position(1),currentAgent.position(2),currentAgent.position(3),j,otherAgent.position(1),otherAgent.position(2),otherAgent.position(3),dist);
+                    if i == 1
+                        %fprintf("Agent %g (%g,%g,%g) to %g (%g,%g,%g), dist: %g\n",i,currentAgent.position(1),currentAgent.position(2),currentAgent.position(3),j,otherAgent.position(1),otherAgent.position(2),otherAgent.position(3),dist);
+                    end
                     %fprintf("Agent %g Angle: %g\n", i, currentAgent.bankAngle/2/pi*180);
                     if(dist < SimLaw.neighborRadius)
                         numLocalAgents = numLocalAgents + 1;

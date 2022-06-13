@@ -143,13 +143,15 @@ classdef Agent < handle
             rotatedArrow = rotatedArrow';
             globalShape = rotatedShape + obj.position(1:2); %[x,y] matrix
             globalArrow = rotatedArrow + obj.position(1:2);
-
+            scaledAlti = 0.8*((obj.position(3)-SimLaw.agentFloor)/(SimLaw.agentCeiling - SimLaw.agentFloor));
+            color = hsv2rgb([scaledAlti,1,1]);
+            fprintf("hue: %g\n",color(1));
+            
             if(class(obj.patchObj) == "double")
-                scaledAlti = ((obj.position(3)-SimLaw.agentFloor)/(SimLaw.agentCeiling - SimLaw.agentFloor));
-                color = hsv2rgb([scaledAlti,1,1]);
                 obj.patchObj = patch('FaceColor',color);
-                obj.patchArr = patch('FaceColor',color);
+                %obj.patchArr = patch('FaceColor',color);
             end
+            obj.patchObj.FaceColor = color;
             obj.patchObj.XData = globalShape(:,1);
             obj.patchObj.YData = globalShape(:,2);
             %obj.patchArr.XData = globalArrow(:,1);

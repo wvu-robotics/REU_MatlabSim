@@ -18,7 +18,7 @@ classdef SimLaw
         separation = 5.0
         cohesion = 0.03
         alignment = 5
-        migration = 0
+        migration = 1e-12
         
         % Agent constraints
         neighborRadius = 50     %m
@@ -49,7 +49,7 @@ classdef SimLaw
         agentShape_triangle = [-0.5,0.5,-0.5; -0.375,0,0.375]
         agentShape_plane = [-0.5,-0.3,0,0.1,0.2,0.3,0.5,0.3,0.2,0.1,0,-0.3,-0.5;-0.2,-0.1,-0.1,-0.5,-0.5,-0.1,0,0.1,0.5,0.5,0.1,0.1,0.2]
         Arrow = [2 1.5 1.5 0 0 1.5 1.5; 0 .5 .2 .2 -.2 -.2 -.5];
-        renderScale = [5;5]; %[scaleX; scaleY];
+        renderScale = [10;10]; %[scaleX; scaleY];
     end
     
     methods (Static)
