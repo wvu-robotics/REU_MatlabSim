@@ -40,7 +40,8 @@ classdef SimLaw
         thermalStrengthMin = 3  % m/s, peak updraft speed
         thermalStrengthMax = 10 % m/s, peak updraft speed
         thermalFadeRate = 1     % m/s, rate at which thermals fade in or out 
-        
+        thermalPlateauTime = 10 % steps at a max or min strength
+
         %Visuals
         agentShape_triangle = [-0.5,0.5,-0.5; -0.375,0,0.375]
         agentShape_plane = [-0.5,-0.3,0,0.1,0.2,0.3,0.5,0.3,0.2,0.1,0,-0.3,-0.5;-0.2,-0.1,-0.1,-0.5,-0.5,-0.1,0,0.1,0.5,0.5,0.1,0.1,0.2]

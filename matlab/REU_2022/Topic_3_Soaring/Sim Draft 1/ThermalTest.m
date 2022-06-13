@@ -5,7 +5,7 @@ clc
 
 %% Set up parameters
 overallTime = 30; % s
-dt = .1; % s 
+dt = .05; % s 
 steps = overallTime/dt; 
 
 % Initialize background of map
@@ -15,7 +15,6 @@ mapY = linspace(SimLaw.mapSize(1),SimLaw.mapSize(2),thermalPixels);
 
 % Initialize thermals as a matrix of Thermals
 thermalMap = ThermalMap();
-thermals = thermalMap.thermals;
 
 %% Set up video and figure
 video = VideoWriter('thermals1.avi');
@@ -54,7 +53,7 @@ for step = 1:steps
             end
         end
         % Use normal distribution to generate thermal (normpdf)
-        distancesFromThermal = distancesFromThermal/thermals(thermalIndex).radius;
+        distancesFromThermal = distancesFromThermal/thermalMap.thermals(thermalIndex).radius;
         tempThermalMap = normpdf(distancesFromThermal)/normpdf(0);
         finalThermalMap = finalThermalMap + tempThermalMap;
     end
@@ -70,32 +69,34 @@ for step = 1:steps
     
     %% Step physics
     for thermalIndex = 1:SimLaw.numThermals
-        thermals = thermalMap.adjustThermalPositions(thermals);
+        thermalMap.adjustThermalPositions();
+        thermalMap.fadeThermals();
+        thermalList = thermalMap.thermals;
 
-        xPos = thermals(thermalIndex).position(1);
-        yPos = thermals(thermalIndex).position(2);
+        xPos = thermalList(thermalIndex).position(1);
+        yPos = thermalList(thermalIndex).position(2);
 
         % Update the position of the thermal
-        thermals(thermalIndex).position(1) = thermals(thermalIndex).position(1) + thermals(thermalIndex).velocity(1)*dt;
-        thermals(thermalIndex).position(2) = thermals(thermalIndex).position(2) + thermals(thermalIndex).velocity(2)*dt;
+        thermalList(thermalIndex).position(1) = thermalList(thermalIndex).position(1) + 2 * thermalList(thermalIndex).velocity(1)*dt;
+        thermalList(thermalIndex).position(2) = thermalList(thermalIndex).position(2) + 2 * thermalList(thermalIndex).velocity(2)*dt;
         
         % Check the left and right bounds of the map: if the thermal hits
         % one, move it in the opposite direction
-        if(thermals(thermalIndex).position(1) >= SimLaw.mapSize(2))
-            thermals(thermalIndex).position(1) = 2*SimLaw.mapSize(2) - thermals(thermalIndex).position(1);
-            thermals(thermalIndex).velocity(1) = -thermals(thermalIndex).velocity(1);
-        elseif(thermals(thermalIndex).position(1) <= SimLaw.mapSize(1))
-            thermals(thermalIndex).position(1) = 2*SimLaw.mapSize(1) - thermals(thermalIndex).position(1);
-            thermals(thermalIndex).velocity(1) = -thermals(thermalIndex).velocity(1);
+        if(thermalList(thermalIndex).position(1) >= SimLaw.mapSize(2))
+            thermalList(thermalIndex).position(1) = 2*SimLaw.mapSize(2) - thermalList(thermalIndex).position(1);
+            thermalList(thermalIndex).velocity(1) = -thermalList(thermalIndex).velocity(1);
+        elseif(thermalList(thermalIndex).position(1) <= SimLaw.mapSize(1))
+            thermalList(thermalIndex).position(1) = 2*SimLaw.mapSize(1) - thermalList(thermalIndex).position(1);
+            thermalList(thermalIndex).velocity(1) = -thermalList(thermalIndex).velocity(1);
         end
         
         % Check the upper and lower bounds of the map
-        if(thermals(thermalIndex).position(2) >= SimLaw.mapSize(2))
-            thermals(thermalIndex).position(2) = 2*SimLaw.mapSize(2) - thermals(thermalIndex).position(2);
-            thermals(thermalIndex).velocity(2) = -thermals(thermalIndex).velocity(2);
-        elseif(thermals(thermalIndex).position(2) <= SimLaw.mapSize(1))
-            thermals(thermalIndex).position(2) = 2*SimLaw.mapSize(1) - thermals(thermalIndex).position(2);
-            thermals(thermalIndex).velocity(2) = -thermals(thermalIndex).velocity(2);
+        if(thermalList(thermalIndex).position(2) >= SimLaw.mapSize(2))
+            thermalList(thermalIndex).position(2) = 2*SimLaw.mapSize(2) - thermalList(thermalIndex).position(2);
+            thermalList(thermalIndex).velocity(2) = -thermalList(thermalIndex).velocity(2);
+        elseif(thermalList(thermalIndex).position(2) <= SimLaw.mapSize(1))
+            thermalList(thermalIndex).position(2) = 2*SimLaw.mapSize(1) - thermalList(thermalIndex).position(2);
+            thermalList(thermalIndex).velocity(2) = -thermalList(thermalIndex).velocity(2);
         end
     end
     

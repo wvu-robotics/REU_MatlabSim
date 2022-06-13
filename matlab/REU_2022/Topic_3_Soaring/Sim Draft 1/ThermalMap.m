@@ -28,19 +28,19 @@ classdef ThermalMap < handle
         end
 
         % Calculate updraft strength at a given point
-        function strength = getStrength(thermal, position)
+        function strength = getStrength(thermalMap, position)
             % determine distance to all thermals
-            distTherm = zeros(1,numThermals);
-            for i = 1:numThermals
-                distTherm(i) = norm(position - thermal(i).position);
+            distTherm = zeros(1,SimLaw.numThermals);
+            for i = 1:SimLaw.numThermals
+                distTherm(i) = norm(position - thermalMap.thermals(i).position);
             end
 
             % check which thermal we are in. Returns one number or empty.
-            inTh = find(distTherm <= thermal(i).radius);
+            inTh = find(distTherm <= thermalMap.thermals(i).radius);
             
             % currently assumes strength is the same at all altitudes
-            strength = thermal(i).strength*exp(-(3*distTherm(inTh)/thermal(i).radius)^2)*...
-                                             (1-(3*distTherm(inTh)/thermal(i).radius)^2);
+            strength = thermalMap.thermals(i).strength*exp(-(3*distTherm(inTh)/thermalMap.thermals(i).radius)^2)*...
+                                             (1-(3*distTherm(inTh)/thermalMap.thermals(i).radius)^2);
         end
 
         % Ensure thermals don't overlap
