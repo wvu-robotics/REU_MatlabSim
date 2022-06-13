@@ -32,15 +32,22 @@ classdef Agent < handle
                 centroidUnit   = (obj.position - Centroid) / distToCentroid;
             end
             
-            % Seperation
+            % Seperation & Alignment
             nearest        = find(distance == min(distance));
-            nearest        = nearest(1);
-            distToNearest  = norm(obj.position - localAgents(nearest).position);
-            nearestUnit    = (obj.position - localAgents(nearest).position) / distToNearest;
+            if ~isempty(nearest)
+                nearest        = nearest(1);
+                distToNearest  = norm(obj.position - localAgents(nearest).position);
+                nearestUnit    = (obj.position - localAgents(nearest).position) / distToNearest;
+                nearestVelUnit = localAgents(nearest).velocity(1)*...
+                                [cos(localAgents(nearest).heading), sin(localAgents(nearest).heading), 0];
+            else
+                distToNearest  = 1;
+                nearestUnit    = [0,0,0];
+                nearestVelUnit = [0,0,0];
+            end
             
             % Alignment
-            nearestVelUnit = localAgents(nearest).velocity(1)*...
-                             [cos(localAgents(nearest).heading), sin(localAgents(nearest).heading), 0];
+            
 
             % Migration
             distToTarget   = norm(obj.position(1:2) - target);
@@ -51,7 +58,7 @@ classdef Agent < handle
             accelMag_cohesion   = SimLaw.cohesion   *      distToCentroid^2; %Positive, to go TOWARDS the other
             accelMag_separation = SimLaw.separation *   -1/distToNearest^2; %Negative, to go AWAY from the other
             accelMag_alignment  = SimLaw.alignment  *    1/distToNearest^2;
-            accelMag_migration  = SimLaw.migration  * 1e-6*distToTarget^6;
+            accelMag_migration  = SimLaw.migration  *      distToTarget^6;
         
             newAccel = accelMag_separation * nearestUnit + ...
                        accelMag_cohesion   * centroidUnit + ...

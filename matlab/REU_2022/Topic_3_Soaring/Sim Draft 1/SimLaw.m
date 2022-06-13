@@ -17,7 +17,7 @@ classdef SimLaw
         separation = 1.0
         cohesion = 1.0
         alignment = 1.0
-        migration = 1.0
+        migration = 1e-2
         
         % Agent constraints
         neighborRadius = 20     %m
