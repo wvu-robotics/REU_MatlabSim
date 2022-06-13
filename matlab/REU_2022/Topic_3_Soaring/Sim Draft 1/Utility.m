@@ -8,6 +8,7 @@ classdef Utility
         
         %% Calculates distance if within threshold.
         function [Verdict] = isNear(A1, A2, Threshold)
+            % A NaN Threshold will tell isNear to ignore the threshold.
             if ~isnan(Threshold)
                 Verdict = NaN;
                 if abs(A1.position(1) - A2.position(1)) > Threshold 
