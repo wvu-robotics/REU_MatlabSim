@@ -6,7 +6,7 @@ classdef SimLaw
         totalTime = 60  %s
         mapSize = [-100,100]   %m, bounds of square map
         numAgents = 50  %agents
-        numThermals = 2 %thermals
+        numThermals = 4 %thermals
         
         % Initial conditions
         agentSpawnPosRange = [-70,-70; 70,70];     %m, [xMin,yMin;xMax,yMax]
@@ -33,12 +33,13 @@ classdef SimLaw
         Sink_C = -2.3782
         
         % Thermal constraints
-        thermalSpeedMin = 20   %m/s
-        thermalSpeedMax = 50   %m/s
-        thermalRadiusMin = 5     %m
-        thermalRadiusMax = 20     %m
-        thermalStrengthMin = 3  %m/s, peak updraft speed
-        thermalStrengthMax = 10 %m/s, peak updraft speed
+        thermalSpeedMin = 20    % m/s
+        thermalSpeedMax = 50    % m/s
+        thermalRadiusMin = 5    % m
+        thermalRadiusMax = 20   % m
+        thermalStrengthMin = 3  % m/s, peak updraft speed
+        thermalStrengthMax = 10 % m/s, peak updraft speed
+        thermalFadeRate = 1     % m/s, rate at which thermals fade in or out 
         
         %Visuals
         agentShape_triangle = [-0.5,0.5,-0.5; -0.375,0,0.375]
