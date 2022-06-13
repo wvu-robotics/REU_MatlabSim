@@ -1,7 +1,7 @@
 % Swarm class
 classdef Swarm < handle
     properties
-        agents
+        agents = Agent.empty(0,SimLaw.numAgents)
         thermalMap
     end
     
@@ -9,7 +9,7 @@ classdef Swarm < handle
         function obj = Swarm()
             %% Generate agents
             numAgents = SimLaw.numAgents;   %Get total number of agents
-            obj.agents(1:numAgents) = Agent();  %Fill agents with default constructors of Agent
+            obj.agents(1,numAgents) = Agent();  %Fill agents with default constructors of Agent
             
             %Iterate through all agents
             posRange = SimLaw.agentSpawnPosRange;
@@ -35,7 +35,7 @@ classdef Swarm < handle
                 
                 %Find local agents for currentAgent
                 numLocalAgents = 0;
-                localAgentIndices = -1 * ones(1:numAgents);
+                localAgentIndices = -1 * ones(1,numAgents);
                 for j=1:numAgents
                     if(j==i)
                         continue
@@ -54,7 +54,7 @@ classdef Swarm < handle
                 thermalStrength = 5;
                 
                 %Update currentAgent
-                currentAgent.update(localAgents,thermalStrength);
+                currentAgent.update(localAgents,thermalStrength,[0,0]);
             end
         end
         
