@@ -13,32 +13,38 @@ classdef Agent < handle
         function obj = update(obj,localAgents,thermalStrength, target)
             %% Get Centroid
             Centroid = obj.position;
-            distance = zeros(1,size(localAgents));
-            for i = 1:size(localAgents)
+            distance = zeros(1,length(localAgents));
+            for i = 1:length(localAgents)
                 if localAgents(i).position(3) <= 0
                     continue;
                 end
                 distance(i) = norm(obj.position - localAgents(i).position);
-                Centroid = Centroid + localAgents(i).position*isnear(obj, localAgents(i), NaN);
+                Centroid = Centroid + localAgents(i).position*Utility.isNear(obj, localAgents(i), NaN);
             end
             
             %% Get Vectors
             % Cohesion
             distToCentroid = norm(obj.position - Centroid);
-            centroidUnit   = (obj.position - Centroid) / distToCentroid;
+            if distToCentroid == 0
+                centroidUnit = [0,0,0];
+            else
+                centroidUnit   = (obj.position - Centroid) / distToCentroid;
+            end
             
             % Seperation
             nearest        = find(distance == min(distance));
-            distToNearest  = norm(obj.position - localAgents(nearest));
+            nearest        = nearest(1);
+            distToNearest  = norm(obj.position - localAgents(nearest).position);
             nearestUnit    = (obj.position - localAgents(nearest).position) / distToNearest;
             
             % Alignment
             nearestVelUnit = localAgents(nearest).velocity(1)*...
-                             [cos(localAgents(nearest).heading); sin(localAgents(nearest).heading)];
+                             [cos(localAgents(nearest).heading), sin(localAgents(nearest).heading), 0];
 
             % Migration
-            distToTarget   = norm(obj.position - target);
-            targetUnit     = (obj.position - target) / distToTarget;
+            distToTarget   = norm(obj.position(1:2) - target);
+            targetUnit     = (obj.position(1:2) - target) / distToTarget;
+            targetUnit     = [targetUnit 0];
             
             %% Get Accel
             accelMag_cohesion   = SimLaw.cohesion   *      distToCentroid^2; %Positive, to go TOWARDS the other
@@ -62,33 +68,33 @@ classdef Agent < handle
 
             newAccel = [newAccel_forward; newAccel_circ];
 
-            if(norm(newAccel(1)) > maxForwardAccel)
-               newAccel(1) = sign(newAccel(1)) * SimLaw.maxForwardAccel; 
-            end
-
             %% Get Vel
-            newVel(1) = obj.velocity(1) + newAccel(1)*dt;
-            if(newVel(1) > SimLaw.maxForwardVel)
-                newVel(1) = SimLaw.maxForwardVel;
-            elseif(newVel(1) < SimLaw.minForwardVel)
-                newVel(1) = SimLaw.minForwardVel;
+            newVel(1) = obj.velocity(1) + newAccel(1)*SimLaw.dt;
+            if(newVel(1) > SimLaw.forwardSpeedMax)
+                newVel(1) = SimLaw.forwardSpeedMax;
+            elseif(newVel(1) < SimLaw.forwardSpeedMin)
+                newVel(1) = SimLaw.forwardSpeedMin;
             end
             % a = omega * v
-            newVel(2) = newAccel(2)/newVel(1);
-            if(norm(newVel(2)) > SimLaw.maxOmega)
-                newVel(2) = sign(newVel(2)) * SimLaw.maxOmega;
-                newAccel(2) = newVel(1)*newVel(2);
-            end
             obj.bankAngle = atan(newAccel(2)/SimLaw.g);
 
-            vsink = (simLaw.Sink_A*newVel(1).^2 + simLaw.Sink_B*newVel(1) + simLaw.Sink_C)...
+            if(obj.bankAngle > SimLaw.bankMax)
+                obj.bankAngle = SimLaw.bankMax;
+            end
+            if(obj.bankAngle < SimLaw.bankMin)
+                obj.bankAngle = SimLaw.bankMin;
+            end
+            newAccel(2) = tan(obj.bankAngle*SimLaw.g);
+            newVel(2) = newAccel(2)/newVel(1);
+
+            vsink = (SimLaw.Sink_A*newVel(1).^2 + SimLaw.Sink_B*newVel(1) + SimLaw.Sink_C)...
                     / sqrt(cos(obj.bankAngle));
             vspeed = -vsink + thermalStrength;
 
             %% Get Pos
-            newPos(1:2) = obj.position(1:2) + newVel(1)*forwardUnit*dt;
-            newPos(3) = obj.position(3) + vspeed*dt;
-            obj.heading = obj.heading + newVel(2)*dt;
+            newPos(1:2) = obj.position(1:2) + newVel(1)*forwardUnit(1:2)'*SimLaw.dt;
+            newPos(3) = obj.position(3) + vspeed*SimLaw.dt;
+            obj.heading = obj.heading + newVel(2)*SimLaw.dt;
 
             obj.velocity = newVel;
             obj.position = newPos;
