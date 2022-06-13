@@ -35,10 +35,12 @@ CEKF_ADAPT = [];
 %% data selection
 % each of these for loops specififes which data you want to load to see
 i = 1;
-for estimator = [0,1,2,3] %[0,1,2] 
+estimator_methods = [0,1,2];%[0,1,2,3] 
+num_esimators = size(estimator_methods);
+for estimator = estimator_methods
     for enviorment = 0
         for boids_rules = [0,1,2]
-            for num_agents = [5,10,25] %[5,10,25,50]
+            for num_agents = [5,10,25,50] %[5,10,25,50]
                            
                 %% file name generator
                 switch estimator
@@ -197,199 +199,202 @@ MAX_PATH  = max(ALL_PATH);
 
 %% plotting===============================================================
 %% covariance ------------------------------------------------------
-
+figure()
 % DR
-  figure(); 
-  X = [SIZE(DR_GOAL)-.5; SIZE(DR_STATIC); SIZE(DR_ADAPT)+.5];
+  subplot(1,3,1); 
+  X = [SIZE(DR_GOAL)-.5; SIZE(DR_STATIC); SIZE(DR_ADAPT)+.5]./100;
   Y_mean = [MEAN_COVAR(DR_GOAL);MEAN_COVAR(DR_STATIC);MEAN_COVAR(DR_ADAPT)];
   Y_neg = Y_mean - [MIN_COVAR(DR_GOAL); MIN_COVAR(DR_STATIC);MIN_COVAR(DR_ADAPT)];
   Y_pos = [MAX_COVAR(DR_GOAL); MAX_COVAR(DR_STATIC);MAX_COVAR(DR_ADAPT)] - Y_mean;
   errorbar(X',Y_mean',Y_neg',Y_pos', 'x-');
   legend(["goal following","static rules","adaptive rules"]);
   title("Covariance with dead reckoning");
-  xlabel("number of agents");
-  ylabel("Covariance Norm [m^2]");
+  xlabel("robot density [robots/m^2]");
+  ylabel("Covariance Norm [m]");
 
  % CI
-  figure(); 
-  X = [SIZE(CI_GOAL)-.5; SIZE(CI_STATIC); SIZE(CI_ADAPT)+.5];
+  subplot(1,3,2); 
+  X = [SIZE(CI_GOAL)-.5; SIZE(CI_STATIC); SIZE(CI_ADAPT)+.5]./100;
   Y_mean = [MEAN_COVAR(CI_GOAL);MEAN_COVAR(CI_STATIC);MEAN_COVAR(CI_ADAPT)];
   Y_neg = Y_mean - [MIN_COVAR(CI_GOAL); MIN_COVAR(CI_STATIC);MIN_COVAR(CI_ADAPT)];
   Y_pos = [MAX_COVAR(CI_GOAL); MAX_COVAR(CI_STATIC);MAX_COVAR(CI_ADAPT)] - Y_mean;
   errorbar(X',Y_mean',Y_neg',Y_pos', 'o-');
   legend(["goal following","static rules","adaptive rules"]);
   title("Covariance with Covariance Intersection");
-  xlabel("number of agents");
-  ylabel("Covariance Norm [m^2]");
+  xlabel("robot density [robots/m^2]");
+  ylabel("Covariance Norm [m]");
 
  % DEKF
- figure(); 
-  X = [SIZE(DEKF_GOAL)-.5; SIZE(DEKF_STATIC); SIZE(DEKF_ADAPT)+.5];
+ subplot(1,3,3);
+  X = [SIZE(DEKF_GOAL)-.5; SIZE(DEKF_STATIC); SIZE(DEKF_ADAPT)+.5]./100;
   Y_mean = [MEAN_COVAR(DEKF_GOAL);MEAN_COVAR(DEKF_STATIC);MEAN_COVAR(DEKF_ADAPT)];
   Y_neg = Y_mean - [MIN_COVAR(DEKF_GOAL); MIN_COVAR(DEKF_STATIC);MIN_COVAR(DEKF_ADAPT)];
   Y_pos = [MAX_COVAR(DEKF_GOAL); MAX_COVAR(DEKF_STATIC);MAX_COVAR(DEKF_ADAPT)] - Y_mean;
   errorbar(X',Y_mean',Y_neg',Y_pos', 's-');
   legend(["goal following","static rules","adaptive rules"]);
   title("Covariance with Decentralized EKF");
-  xlabel("number of agents");
-  ylabel("Covariance Norm [m^2]");
+  xlabel("robot density [robots/m^2]");
+  ylabel("Covariance Norm [m]");
 
- % CEKF
- figure(); 
-  X = [SIZE(CEKF_GOAL)-.5; SIZE(CEKF_STATIC); SIZE(CEKF_ADAPT)+.5];
-  Y_mean = [MEAN_COVAR(CEKF_GOAL);MEAN_COVAR(CEKF_STATIC);MEAN_COVAR(CEKF_ADAPT)];
-  Y_neg = Y_mean - [MIN_COVAR(CEKF_GOAL); MIN_COVAR(CEKF_STATIC);MIN_COVAR(CEKF_ADAPT)];
-  Y_pos = [MAX_COVAR(CEKF_GOAL); MAX_COVAR(CEKF_STATIC);MAX_COVAR(CEKF_ADAPT)] - Y_mean;
-  errorbar(X',Y_mean',Y_neg',Y_pos', '^-');
-  legend(["goal following","static rules","adaptive rules"]);
-  title("Covariance with Centralized EKF");
-  xlabel("number of agents");
-  ylabel("Covariance Norm [m^2]");
+%  % CEKF
+%  subplot(1,4,4); 
+%   X = [SIZE(CEKF_GOAL)-.5; SIZE(CEKF_STATIC); SIZE(CEKF_ADAPT)+.5]./100;
+%   Y_mean = [MEAN_COVAR(CEKF_GOAL);MEAN_COVAR(CEKF_STATIC);MEAN_COVAR(CEKF_ADAPT)];
+%   Y_neg = Y_mean - [MIN_COVAR(CEKF_GOAL); MIN_COVAR(CEKF_STATIC);MIN_COVAR(CEKF_ADAPT)];
+%   Y_pos = [MAX_COVAR(CEKF_GOAL); MAX_COVAR(CEKF_STATIC);MAX_COVAR(CEKF_ADAPT)] - Y_mean;
+%   errorbar(X',Y_mean',Y_neg',Y_pos', '^-');
+%   legend(["goal following","static rules","adaptive rules"]);
+%   title("Covariance with Centralized EKF");
+%   xlabel("robot density [robots/m^2]");
+%   ylabel("Covariance Norm [m]");
 
  %% MEAN ERROR ------------------------------------------------------
- figure(); 
-  X = [SIZE(DR_GOAL)-.5; SIZE(DR_STATIC); SIZE(DR_ADAPT)+.5];
+ figure()
+ subplot(1,3,1); 
+  X = [SIZE(DR_GOAL)-.5; SIZE(DR_STATIC); SIZE(DR_ADAPT)+.5]./100;
   Y_mean = [MEAN_ERROR(DR_GOAL);MEAN_ERROR(DR_STATIC);MEAN_ERROR(DR_ADAPT)];
   Y_neg = Y_mean - [MIN_ERROR(DR_GOAL); MIN_ERROR(DR_STATIC);MIN_ERROR(DR_ADAPT)];
   Y_pos = [MAX_ERROR(DR_GOAL); MAX_ERROR(DR_STATIC);MAX_ERROR(DR_ADAPT)] - Y_mean;
   errorbar(X',Y_mean',Y_neg',Y_pos', 'x-');
   legend(["goal following","static rules","adaptive rules"]);
   title("Mean Error with dead reckoning");
-  xlabel("number of agents");
+  xlabel("robot density [robots/m^2]");
   ylabel("Mean Error [m]");
 
  % CI
-  figure(); 
-  X = [SIZE(CI_GOAL)-.5; SIZE(CI_STATIC); SIZE(CI_ADAPT)+.5];
+  subplot(1,3,2); 
+  X = [SIZE(CI_GOAL)-.5; SIZE(CI_STATIC); SIZE(CI_ADAPT)+.5]./100;
   Y_mean = [MEAN_ERROR(CI_GOAL);MEAN_ERROR(CI_STATIC);MEAN_ERROR(CI_ADAPT)];
   Y_neg = Y_mean - [MIN_ERROR(CI_GOAL); MIN_ERROR(CI_STATIC);MIN_ERROR(CI_ADAPT)];
   Y_pos = [MAX_ERROR(CI_GOAL); MAX_ERROR(CI_STATIC);MAX_ERROR(CI_ADAPT)] - Y_mean;
   errorbar(X',Y_mean',Y_neg',Y_pos', 'o-');
   legend(["goal following","static rules","adaptive rules"]);
   title("Mean Error with Covariance Intersection");
-  xlabel("number of agents");
+  xlabel("robot density [robots/m^2]");
   ylabel("Mean Error [m]");
 
  % DEKF
- figure(); 
-  X = [SIZE(DEKF_GOAL)-.5; SIZE(DEKF_STATIC); SIZE(DEKF_ADAPT)+.5];
+ subplot(1,3,3);  
+  X = [SIZE(DEKF_GOAL)-.5; SIZE(DEKF_STATIC); SIZE(DEKF_ADAPT)+.5]./100;
   Y_mean = [MEAN_ERROR(DEKF_GOAL);MEAN_ERROR(DEKF_STATIC);MEAN_ERROR(DEKF_ADAPT)];
   Y_neg = Y_mean - [MIN_ERROR(DEKF_GOAL); MIN_ERROR(DEKF_STATIC);MIN_ERROR(DEKF_ADAPT)];
   Y_pos = [MAX_ERROR(DEKF_GOAL); MAX_ERROR(DEKF_STATIC);MAX_ERROR(DEKF_ADAPT)] - Y_mean;
   errorbar(X',Y_mean',Y_neg',Y_pos', 's-');
   legend(["goal following","static rules","adaptive rules"]);
   title("Mean Error with Decentralized EKF");
-  xlabel("number of agents");
+  xlabel("robot density [robots/m^2]");
   ylabel("Mean Error [m]");
 
- % CEKF
- figure(); 
-  X = [SIZE(CEKF_GOAL)-.5; SIZE(CEKF_STATIC); SIZE(CEKF_ADAPT)+.5];
-  Y_mean = [MEAN_ERROR(CEKF_GOAL);MEAN_ERROR(CEKF_STATIC);MEAN_ERROR(CEKF_ADAPT)];
-  Y_neg = Y_mean - [MIN_ERROR(CEKF_GOAL); MIN_ERROR(CEKF_STATIC);MIN_ERROR(CEKF_ADAPT)];
-  Y_pos = [MAX_ERROR(CEKF_GOAL); MAX_ERROR(CEKF_STATIC);MAX_ERROR(CEKF_ADAPT)] - Y_mean;
-  errorbar(X',Y_mean',Y_neg',Y_pos', '^-');
-  legend(["goal following","static rules","adaptive rules"]);
-  title("Mean Error with Centralized EKF");
-  xlabel("number of agents");
-  ylabel("Mean Error [m]");
+%  % CEKF
+%  subplot(1,4,4); 
+%   X = [SIZE(CEKF_GOAL)-.5; SIZE(CEKF_STATIC); SIZE(CEKF_ADAPT)+.5]./100;
+%   Y_mean = [MEAN_ERROR(CEKF_GOAL);MEAN_ERROR(CEKF_STATIC);MEAN_ERROR(CEKF_ADAPT)];
+%   Y_neg = Y_mean - [MIN_ERROR(CEKF_GOAL); MIN_ERROR(CEKF_STATIC);MIN_ERROR(CEKF_ADAPT)];
+%   Y_pos = [MAX_ERROR(CEKF_GOAL); MAX_ERROR(CEKF_STATIC);MAX_ERROR(CEKF_ADAPT)] - Y_mean;
+%   errorbar(X',Y_mean',Y_neg',Y_pos', '^-');
+%   legend(["goal following","static rules","adaptive rules"]);
+%   title("Mean Error with Centralized EKF");
+%   xlabel("robot density [robots/m^2]");
+%   ylabel("Mean Error [m]");
 
 %% path Deviation------------------------------------------------------
-  figure(); 
-  X = [SIZE(DR_GOAL)-.5; SIZE(DR_STATIC); SIZE(DR_ADAPT)+.5];
+  figure()
+subplot(1,3,1); 
+  X = [SIZE(DR_GOAL)-.5; SIZE(DR_STATIC); SIZE(DR_ADAPT)+.5]./100;
   Y_mean = [MEAN_PATH(DR_GOAL);MEAN_PATH(DR_STATIC);MEAN_PATH(DR_ADAPT)];
   Y_neg = Y_mean - [MIN_PATH(DR_GOAL); MIN_PATH(DR_STATIC);MIN_PATH(DR_ADAPT)];
   Y_pos = [MAX_PATH(DR_GOAL); MAX_PATH(DR_STATIC);MAX_PATH(DR_ADAPT)] - Y_mean;
   errorbar(X',Y_mean',Y_neg',Y_pos', 'x-');
   legend(["goal following","static rules","adaptive rules"]);
   title("Path Deviation with dead reckoning");
-  xlabel("number of agents");
+  xlabel("robot density [robots/m^2]");
   ylabel("Path Deviation [m]");
 
  % CI
-  figure(); 
-  X = [SIZE(CI_GOAL)-.5; SIZE(CI_STATIC); SIZE(CI_ADAPT)+.5];
+  subplot(1,3,2);  
+  X = [SIZE(CI_GOAL)-.5; SIZE(CI_STATIC); SIZE(CI_ADAPT)+.5]./100;
   Y_mean = [MEAN_PATH(CI_GOAL);MEAN_PATH(CI_STATIC);MEAN_PATH(CI_ADAPT)];
   Y_neg = Y_mean - [MIN_PATH(CI_GOAL); MIN_PATH(CI_STATIC);MIN_PATH(CI_ADAPT)];
   Y_pos = [MAX_PATH(CI_GOAL); MAX_PATH(CI_STATIC);MAX_PATH(CI_ADAPT)] - Y_mean;
   errorbar(X',Y_mean',Y_neg',Y_pos', 'o-');
   legend(["goal following","static rules","adaptive rules"]);
   title("Path Deviation with Covariance Intersection");
-  xlabel("number of agents");
+  xlabel("robot density [robots/m^2]");
   ylabel("Path Deviation [m]");
 
  % DEKF
- figure(); 
-  X = [SIZE(DEKF_GOAL)-.5; SIZE(DEKF_STATIC); SIZE(DEKF_ADAPT)+.5];
+ subplot(1,3,3);  
+  X = [SIZE(DEKF_GOAL)-.5; SIZE(DEKF_STATIC); SIZE(DEKF_ADAPT)+.5]./100;
   Y_mean = [MEAN_PATH(DEKF_GOAL);MEAN_PATH(DEKF_STATIC);MEAN_PATH(DEKF_ADAPT)];
   Y_neg = Y_mean - [MIN_PATH(DEKF_GOAL); MIN_PATH(DEKF_STATIC);MIN_PATH(DEKF_ADAPT)];
   Y_pos = [MAX_PATH(DEKF_GOAL); MAX_PATH(DEKF_STATIC);MAX_PATH(DEKF_ADAPT)] - Y_mean;
   errorbar(X',Y_mean',Y_neg',Y_pos', 's-');
   legend(["goal following","static rules","adaptive rules"]);
   title("Path Deviation with Decentralized EKF");
-  xlabel("number of agents");
+  xlabel("robot density [robots/m^2]");
   ylabel("Path Deviation [m]");
 
- % CEKF
- figure(); 
-  X = [SIZE(CEKF_GOAL)-.5; SIZE(CEKF_STATIC); SIZE(CEKF_ADAPT)+.5];
-  Y_mean = [MEAN_PATH(CEKF_GOAL);MEAN_PATH(CEKF_STATIC);MEAN_PATH(CEKF_ADAPT)];
-  Y_neg = Y_mean - [MIN_PATH(CEKF_GOAL); MIN_PATH(CEKF_STATIC);MIN_PATH(CEKF_ADAPT)];
-  Y_pos = [MAX_PATH(CEKF_GOAL); MAX_PATH(CEKF_STATIC);MAX_PATH(CEKF_ADAPT)] - Y_mean;
-  errorbar(X',Y_mean',Y_neg',Y_pos', '^-');
-  legend(["goal following","static rules","adaptive rules"]);
-  title("Path Deviation with Centralized EKF");
-  xlabel("number of agents");
-  ylabel("Path Deviation [m]");
+%  % CEKF
+%  subplot(1,4,4);  
+%   X = [SIZE(CEKF_GOAL)-.5; SIZE(CEKF_STATIC); SIZE(CEKF_ADAPT)+.5]./100;
+%   Y_mean = [MEAN_PATH(CEKF_GOAL);MEAN_PATH(CEKF_STATIC);MEAN_PATH(CEKF_ADAPT)];
+%   Y_neg = Y_mean - [MIN_PATH(CEKF_GOAL); MIN_PATH(CEKF_STATIC);MIN_PATH(CEKF_ADAPT)];
+%   Y_pos = [MAX_PATH(CEKF_GOAL); MAX_PATH(CEKF_STATIC);MAX_PATH(CEKF_ADAPT)] - Y_mean;
+%   errorbar(X',Y_mean',Y_neg',Y_pos', '^-');
+%   legend(["goal following","static rules","adaptive rules"]);
+%   title("Path Deviation with Centralized EKF");
+%   xlabel("robot density [robots/m^2]");
+%   ylabel("Path Deviation [m]");
 
 %% Goals Reached ------------------------------------------------------
- figure(); 
-  X = [SIZE(DR_GOAL)-.5; SIZE(DR_STATIC); SIZE(DR_ADAPT)+.5];
+figure()
+subplot(1,3,1);  
+  X = [SIZE(DR_GOAL)-.5; SIZE(DR_STATIC); SIZE(DR_ADAPT)+.5]./100;
   Y_mean = [MEAN_GOALS(DR_GOAL);MEAN_GOALS(DR_STATIC);MEAN_GOALS(DR_ADAPT)];
   Y_neg = Y_mean - [MIN_GOALS(DR_GOAL); MIN_GOALS(DR_STATIC);MIN_GOALS(DR_ADAPT)];
   Y_pos = [MAX_GOALS(DR_GOAL); MAX_GOALS(DR_STATIC);MAX_GOALS(DR_ADAPT)] - Y_mean;
   errorbar(X',Y_mean',Y_neg',Y_pos', 'x-');
   legend(["goal following","static rules","adaptive rules"]);
   title("Goals Reached with dead reckoning");
-  xlabel("number of agents");
+  xlabel("robot density [robots/m^2]");
   ylabel("number of goals reached");
   
 
  % CI
-  figure(); 
-  X = [SIZE(CI_GOAL)-.5; SIZE(CI_STATIC); SIZE(CI_ADAPT)+.5];
+  subplot(1,3,2); 
+  X = [SIZE(CI_GOAL)-.5; SIZE(CI_STATIC); SIZE(CI_ADAPT)+.5]./100;
   Y_mean = [MEAN_GOALS(CI_GOAL);MEAN_GOALS(CI_STATIC);MEAN_GOALS(CI_ADAPT)];
   Y_neg = Y_mean - [MIN_GOALS(CI_GOAL); MIN_GOALS(CI_STATIC);MIN_GOALS(CI_ADAPT)];
   Y_pos = [MAX_GOALS(CI_GOAL); MAX_GOALS(CI_STATIC);MAX_GOALS(CI_ADAPT)] - Y_mean;
   errorbar(X',Y_mean',Y_neg',Y_pos', 'o-');
   legend(["goal following","static rules","adaptive rules"]);
   title("Goals Reached with Covariance Intersection");
-  xlabel("number of agents");
+  xlabel("robot density [robots/m^2]");
   ylabel("number of goals reached");
 
  % DEKF
- figure(); 
-  X = [SIZE(DEKF_GOAL)-.5; SIZE(DEKF_STATIC); SIZE(DEKF_ADAPT)+.5];
+subplot(1,3,3); 
+  X = [SIZE(DEKF_GOAL)-.5; SIZE(DEKF_STATIC); SIZE(DEKF_ADAPT)+.5]./100;
   Y_mean = [MEAN_GOALS(DEKF_GOAL);MEAN_GOALS(DEKF_STATIC);MEAN_GOALS(DEKF_ADAPT)];
   Y_neg = Y_mean - [MIN_GOALS(DEKF_GOAL); MIN_GOALS(DEKF_STATIC);MIN_GOALS(DEKF_ADAPT)];
   Y_pos = [MAX_GOALS(DEKF_GOAL); MAX_GOALS(DEKF_STATIC);MAX_GOALS(DEKF_ADAPT)] - Y_mean;
   errorbar(X',Y_mean',Y_neg',Y_pos', 's-');
   legend(["goal following","static rules","adaptive rules"]);
   title("Goals Reached with Decentralized EKF");
-  xlabel("number of agents");
+  xlabel("robot density [robots/m^2]");
   ylabel("number of goals reached");
 
  % CEKF
- figure(); 
-  X = [SIZE(CEKF_GOAL)-.5; SIZE(CEKF_STATIC); SIZE(CEKF_ADAPT)+.5];
-  Y_mean = [MEAN_GOALS(CEKF_GOAL);MEAN_GOALS(CEKF_STATIC);MEAN_GOALS(CEKF_ADAPT)];
-  Y_neg = Y_mean - [MIN_GOALS(CEKF_GOAL); MIN_GOALS(CEKF_STATIC);MIN_GOALS(CEKF_ADAPT)];
-  Y_pos = [MAX_GOALS(CEKF_GOAL); MAX_GOALS(CEKF_STATIC);MAX_GOALS(CEKF_ADAPT)] - Y_mean;
-  errorbar(X',Y_mean',Y_neg',Y_pos', '^-');
-  legend(["goal following","static rules","adaptive rules"]);
-  title("Goals Reached  with Centralized EKF");
-  xlabel("number of agents");
-  ylabel("number of goals reached");
+%  subplot(1,4,4);  
+%   X = [SIZE(CEKF_GOAL)-.5; SIZE(CEKF_STATIC); SIZE(CEKF_ADAPT)+.5]./100;
+%   Y_mean = [MEAN_GOALS(CEKF_GOAL);MEAN_GOALS(CEKF_STATIC);MEAN_GOALS(CEKF_ADAPT)];
+%   Y_neg = Y_mean - [MIN_GOALS(CEKF_GOAL); MIN_GOALS(CEKF_STATIC);MIN_GOALS(CEKF_ADAPT)];
+%   Y_pos = [MAX_GOALS(CEKF_GOAL); MAX_GOALS(CEKF_STATIC);MAX_GOALS(CEKF_ADAPT)] - Y_mean;
+%   errorbar(X',Y_mean',Y_neg',Y_pos', '^-');
+%   legend(["goal following","static rules","adaptive rules"]);
+%   title("Goals Reached  with Centralized EKF");
+%   xlabel("robot density [robots/m^2]");
+%   ylabel("number of goals reached");
 
 
 %% -------------------------------------- RELATIVE PLOTS -------------------
