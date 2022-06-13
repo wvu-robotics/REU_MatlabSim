@@ -44,7 +44,7 @@ true_gains = [k_coh, k_align, k_sep, k_inertia]
 controllers = [bo.Boids(*true_gains) for i in range(params.num_agents)]
 agentPositions, agentVels = sim.runSim(controllers,params)
 
-export.export(export.ExportType.MP4,"SVRInitial",agentPositions,params=params,vision_mode=False)
+export.export(export.ExportType.GIF,"SVRInitial",agentPositions,agentVels,params=params,vision_mode=False)
 
 # print("Agent positions:")
 # print(agentPositions)
@@ -67,11 +67,11 @@ posVelSlices = []
 #run tons more short sims
 shortSimParams = copy.deepcopy(params)
 print("Running short sims")
-shortSimParams.overall_time = 5
+shortSimParams.overall_time = 2
 # shortSimParams.enclosure_size = 2*params.enclosure_size
 # shortSimParams.init_pos_max = params.enclosure_size/2
 
-extra_sims = 100
+extra_sims = 3
 for extra_sim in tqdm(range(extra_sims)):
     agentPositions, agentVels = sim.runSim(controllers,shortSimParams)
     posVelSlices.extend([posVelSlice(agentPositions[i],agentVels[i],agentVels[i+1]) for i in range(len(agentPositions)-1)])
@@ -142,19 +142,19 @@ x = []
 y = []
 
 for slice in agentSlices:
-    x.append(np.array([slice.cohesion[0],slice.alignment[0],slice.separation[0],slice.last_vel[0]]))
+    x.append(np.array([slice.cohesion[0],slice.alignment[0],slice.separation[0]]))
     y.append(np.array(slice.output_vel[0]))
-    x.append(np.array([slice.cohesion[1],slice.alignment[1],slice.separation[1],slice.last_vel[1]]))
+    x.append(np.array([slice.cohesion[1],slice.alignment[1],slice.separation[1]]))
     y.append(np.array(slice.output_vel[1]))
 
-x_train, x_test, y_train, y_test = train_test_split(x, y, random_state=1, test_size=0.3)
+x_train, x_test, y_train, y_test = train_test_split(x[:10], y[:10], random_state=1, test_size=0.3)
 
 # svr_rbf = SVR(kernel='rbf', gamma=0.1)
 # svr_linear = SVR(kernel='linear')
-# svr_poly = SVR(kernel='poly')
+svr_poly = SVR(kernel='poly',gamma='auto',degree=3,tol=0.1)
 # svr_sig = SVR(kernel='sigmoid')
 
-xgb_model = xgb.XGBRegressor(learning_rate=0.0001, n_estimators=1000)
+# xgb_model = xgb.XGBRegressor(learning_rate=0.0001, n_estimators=1000)
 
 def evaluate_model(name,model, x_train, y_train, x_test, y_test):
     print(name)
@@ -169,8 +169,9 @@ def evaluate_model(name,model, x_train, y_train, x_test, y_test):
     print('Execution time: {0:.2f} seconds.'.format(time.time() - start))
     # print(name + '($R^2={:.3f}$)'.format(r_2), np.array(y_test), y_pred)
 
-evaluate_model("XGB",xgb_model,x_train,y_train,x_test,y_test)
+# evaluate_model("XGB",xgb_model,x_train,y_train,x_test,y_test)
+evaluate_model("SVR_poly",svr_poly,x_train,y_train,x_test,y_test)
 
-controllers_imitated = [SVRBoids(xgb_model) for i in range(params.num_agents)]
+controllers_imitated = [SVRBoids.SVRBoids(svr_poly) for i in range(params.num_agents)]
 agentPositions_imitated, agentVels_imitated = sim.runSim(controllers_imitated,params)
-export.export(export.ExportType.GIF,"SVRImitated",agentPositions_imitated,params=params,vision_mode=False)
+export.export(export.ExportType.GIF,"SVRImitated",agentPositions_imitated,agentVels_imitated,params=params,vision_mode=False)

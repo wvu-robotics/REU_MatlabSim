@@ -2,6 +2,8 @@ import numpy as np
 import sim
 import media_export as export
 import copy
+import os 
+
 
 from sklearn.linear_model import LinearRegression as lr
 from tqdm import tqdm
@@ -45,7 +47,10 @@ controllers = [bo.Boids(*true_gains) for i in range(params.num_agents)]
 print("First sim and export")
 agentPositions, agentVels = sim.runSim(controllers,params,progress_bar=True)
 
-export.export(export.ExportType.GIF,"Initial",agentPositions,params=params,vision_mode=False,progress_bar=True)
+if not os.path.exists("linearBoidsOutput"):
+    os.makedirs("linearBoidsOutput")
+
+export.export(export.ExportType.GIF,"linearBoidsOutput/Initial",agentPositions,agentVels,params=params,vision_mode=False,progress_bar=True)
 
 
 
@@ -75,6 +80,8 @@ extra_sims = 100
 for extra_sim in tqdm(range(extra_sims)):
     agentPositions, agentVels = sim.runSim(controllers,shortSimParams)
     posVelSlices.extend([posVelSlice(agentPositions[i],agentVels[i],agentVels[i+1]) for i in range(len(agentPositions)-1)])
+    if extra_sim % 10 == 0:
+        export.export(export.ExportType.GIF,"linearBoidsOutput/ShortSim"+str(extra_sim),agentPositions,agentVels,params=shortSimParams)
 
 # print("PosVelSlices:")
 # print(posVelSlices)
@@ -184,7 +191,7 @@ for controller in controllers_imitated:
 #start at exactly the same place
 print("Running final visual")
 agentPositions_imitated, agentVels_imitated = sim.runSim(controllers_imitated,params,initial_positions=agentPositions[0],initial_velocities=agentVels[0],progress_bar=True)
-export.export(export.ExportType.GIF,"Imitated",agentPositions_imitated,controllers=controllers_imitated,params=params,vision_mode=False,progress_bar=True)
+export.export(export.ExportType.GIF,"linearBoidsOutput/Imitated",agentPositions_imitated,agentVels_imitated,controllers=controllers_imitated,params=params,vision_mode=False,progress_bar=True)
 
 
 # now create some hybrid visualizations
@@ -200,4 +207,5 @@ for controller in imitated_agents:
 all_controllers = original_agents + imitated_agents
 
 agentPositions_hybrid, agentVels_hybrid = sim.runSim(all_controllers,params,initial_positions=agentPositions[0],initial_velocities=agentVels[0],progress_bar=True)
-export.export(export.ExportType.GIF,"Hybrid",agentPositions_hybrid,controllers=all_controllers,params=params,vision_mode=False,progress_bar=True)
+export.export(export.ExportType.GIF,"linearBoidsOutput/Hybrid",agentPositions_hybrid,agentVels_hybrid,controllers=all_controllers,params=params,vision_mode=False,progress_bar=True)
+

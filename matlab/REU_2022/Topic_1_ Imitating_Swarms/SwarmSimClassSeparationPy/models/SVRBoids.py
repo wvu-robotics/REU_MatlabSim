@@ -16,8 +16,9 @@ class agentSlice:
 
 #need to review paper, this is not working as expected, might need to add walls
 class SVRBoids(GenericSwarmController.GenericSwarmController):
-    def __init__(self, SVR_Model):
+    def __init__(self, SVR_Model, inertia=1):
         self.SVR_Model = SVR_Model
+        self.intertia = inertia
 
     def vel(self,agentPositions,agentVels,pos,v):
         if(len(agentPositions) == 0):
@@ -46,11 +47,12 @@ class SVRBoids(GenericSwarmController.GenericSwarmController):
             if dist != 0:
                 separation_out += -1*unit_diff*(1/(dist**6))
 
-        x = [centroidPos-pos,centroidVel,separation_out]
+        x = np.array([(centroidPos-pos),centroidVel,separation_out])
+        x = x.transpose()
 
         v_gain += self.SVR_Model.predict(x)
 
-        v_out = v_gain
+        v_out = v_gain + v*self.intertia
         # print(agentSlice(centroidPos-pos,centroidVel,separation_out,v,v_out))
         return v_out
 

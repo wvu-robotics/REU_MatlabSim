@@ -13,7 +13,7 @@ from models import Dance
 params = sim.SimParams(
     num_agents=10, 
     dt=0.1, 
-    overall_time = 1, 
+    overall_time = .3, 
     enclosure_size = 10, 
     init_pos_max= 3, #if None, then defaults to enclosure_size
     agent_max_vel=5,
@@ -35,7 +35,7 @@ print("Sim finished -- Generating media")
 media_type = export.ExportType.GIF
 
 exportStart = timer()
-export.export(media_type,"bench",agentPositions,params=params,vision_mode=False,progress_bar=True)
+export.export(media_type,"bench",agentPositions,agentVels,params=params,vision_mode=False,progress_bar=True)
 exportDone = timer()
 
 print("Media generated")

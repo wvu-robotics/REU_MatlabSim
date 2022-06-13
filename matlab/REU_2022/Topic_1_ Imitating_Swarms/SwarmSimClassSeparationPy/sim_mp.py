@@ -32,7 +32,9 @@ def updateSubSlice(indices,controllers,posSlice,velSlice,nextPos,nextVels,params
     maxAngleDeviation = params.agent_max_turn_rate*params.dt
     maxVelChange = params.agent_max_accel*params.dt
 
-    # print("All agents: ",indices)
+    # print("Indices: ",indices)
+    # print("Next Pos: ",nextPos)
+    # print("Next Vels: ",nextVels)
 
     for i in range(len(controllers)):
         # print("Agent:",indices[i])
@@ -131,9 +133,11 @@ def updateSubSlice(indices,controllers,posSlice,velSlice,nextPos,nextVels,params
             vel_new *= (params.agent_max_vel/np.linalg.norm(vel_new))
         
         #ISSUES WITH WRITING
-        print(vel_new)
+        print("New Vel",vel_new)
         nextVels[i] = vel_new
+        print("Next Vel",nextVels[i])
         nextPos[i] = agentPos  + agentVel*params.dt
+        print("Next Pos",nextPos[i])
 
 #closed function to run whole sim and spit out vels and positions
 def runSim(controllers=[],params=SimParams(),initial_positions=None,initial_velocities=None,pools=4,progress_bar=False):
@@ -161,8 +165,8 @@ def runSim(controllers=[],params=SimParams(),initial_positions=None,initial_velo
     
     #run full simulation
     for step in (tqdm(range(0,steps)) if progress_bar else range(0,steps)):
-        print("Step: ",step)
-        # print("Positions: ",agentPositions[step])
+        # print("Step: ",step)
+        # print("Positions:(before assignement) ",agentPositions)
         # print("Vels: ",agentVels[step])
         pool = Pool(processes=pools)
         #run slices asyncrhonously
@@ -173,7 +177,8 @@ def runSim(controllers=[],params=SimParams(),initial_positions=None,initial_velo
             end = min((i+1)*batchSize,params.num_agents)
             pool.apply_async(updateSubSlice,
                 args=(range(start,end),controllers,agentPositions[step],agentVels[step],
-                    agentPositions[step,start:end],agentVels[step,start:end],params))
+                    agentPositions[step+1][start:end],agentVels[step+1][start:end],params))
+        # print("Positions:(after assignement) ",agentPositions)
 
         # pool.map(updateSubSlice,range(0,params.num_agents))
         pool.close() # might be better to reuse pool, but it's hard
