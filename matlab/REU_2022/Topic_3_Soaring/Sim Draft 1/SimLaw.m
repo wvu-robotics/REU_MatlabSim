@@ -43,6 +43,7 @@ classdef SimLaw
         %Visuals
         agentShape_triangle = [-0.5,0.5,-0.5; -0.375,0,0.375]
         agentShape_plane = [-0.5,-0.3,0,0.1,0.2,0.3,0.5,0.3,0.2,0.1,0,-0.3,-0.5;-0.2,-0.1,-0.1,-0.5,-0.5,-0.1,0,0.1,0.5,0.5,0.1,0.1,0.2]
+        renderScale = [5;5]; %[scaleX, scaleY];
     end
     
     methods (Static)

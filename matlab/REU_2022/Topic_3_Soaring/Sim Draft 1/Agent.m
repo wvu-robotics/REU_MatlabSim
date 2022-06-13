@@ -6,6 +6,7 @@ classdef Agent < handle
         bankAngle = 0.0                 %rad
         velocity = [0.0, 0.0]           %m/s, rad/s, [forward,omega]
         patchObj = NaN
+        
     end
     
     methods
@@ -104,11 +105,12 @@ classdef Agent < handle
         % function 2
         function render(obj)
             rotationMatrix = [cos(obj.heading), -sin(obj.heading); sin(obj.heading), cos(obj.heading)];
-            rotatedShape = rotationMatrix * SimLaw.agentShape_plane; %[x;y] matrix
+            shape = SimLaw.agentShape_plane .* SimLaw.renderScale;
+            rotatedShape = rotationMatrix * shape; %[x;y] matrix
             rotatedShape = rotatedShape'; %Convert to [x,y];
             globalShape = rotatedShape + obj.position(1:2); %[x,y] matrix
             
-            if(isnan(obj.patchObj))
+            if(class(obj.patchObj) == "double")
                 obj.patchObj = patch('FaceColor','k');
             end
             obj.patchObj.XData = globalShape(:,1);

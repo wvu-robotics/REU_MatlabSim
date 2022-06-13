@@ -33,6 +33,9 @@ video.FrameRate = 1/SimLaw.dt;
 open(video);
 
 simFig = figure('Visible','on');
+xlim(SimLaw.mapSize);
+ylim(SimLaw.mapSize);
+daspect([1 1 1])
 
 %% Create instance of simulation
 swarm = Swarm();
@@ -52,7 +55,7 @@ for step = 1:steps
     pause(0.0001);
     
     % Step simulation
-    swarm.stepSimulation()
+    swarm.stepSimulation();
     
     % Find and print elapsed time
     c2 = clock;
