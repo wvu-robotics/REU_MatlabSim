@@ -4,19 +4,23 @@ classdef agent
         home
         position
         velocity
+        angle_rate
+        max_delta_angle
+        dt
         range
         show_range
         Ks
         Ka
         Kc
         path
-        dt
         max_speed
         min_speed
         acceleration
-        max_force
+        max_acceleration
         neighbors_data
         neighbors
+        mapsize
+        
         
 
     end
@@ -25,19 +29,21 @@ classdef agent
         function obj=agent(x,y,Ks,Ka,Kc,ID)
             obj.ID=ID;
             %INITIALIZE
-            angle = (2*pi).*rand;
+            angle = (2*pi).*rand();
+
             obj.velocity = [cos(angle), sin(angle)];
                      
-            obj.position = [x, y];
+            obj.position = [x, y,angle];
                         
             obj.path = [x, y];
-            
+
+            obj.angle_rate=0;
+
             %parameters
-            obj.max_speed =0.5;
+            obj.max_speed =4;
             obj.min_speed=0.1;
-            obj.max_force=1.5;
-            obj.acceleration=[0 0];
-            
+            obj.max_acceleration=4*obj.dt;
+            obj.max_delta_angle=1.5*pi()*obj.dt;          
 
             obj.Ks = Ks;
             obj.Ka = Ka;
@@ -45,17 +51,8 @@ classdef agent
 
         end 
 
-        function obj=apply_force(obj,separation_force,cohesion_force,align_force)
-            
-            home_force=obj.seek(obj.home);
-            
-            force=separation_force+cohesion_force+align_force+20*home_force;
-            obj.acceleration=obj.acceleration+force;
-            
-        end
-
-        function obj = swarm(obj,boids)
-            
+        function velocity_update=velocity_update(obj,boids)
+            inertia=obj.move(boids);
             sep = obj.separate(boids);
             ali = obj.align(boids);
             coh = obj.cohesion(boids);
@@ -64,39 +61,96 @@ classdef agent
             ali = ali.*obj.Ka;
             coh = coh.*obj.Kc;
             
-            obj=obj.apply_force(sep,coh,ali);
-        end
-
-        function obj=bounds(obj,map)
-            xmin=map(1);
-            xmax=map(2);
-            ymin=map(3);
-            ymax=map(4);
-
-            if obj.position(1) < xmin || obj.position(2) < ymin
-                obj.velocity= 200*(obj.seek(obj.home)); %replace obj velocity for steer and add to force application
-            end
-            if obj.position(1)>xmax || obj.position(2) > ymax
-               obj.velocity= -200*(obj.seek(obj.home));
-            end
+            velocity_update=obj.velocity+sep+coh+ali+2*inertia;
             
         end
 
-        function obj=update(obj)
-
-%             new_theta = obj.position_d(3) + obj.yaw_rate_m*obj.dt;
-%             obj.velocity_d = obj.vel_m*[cos(new_theta), sin(new_theta)];
-%             obj.position_d = [obj.position_d(1:2) + obj.velocity_d*obj.dt, new_theta];
-
-            obj.velocity=obj.velocity+obj.acceleration;
-            obj.velocity = obj.velocity./norm(obj.velocity).*obj.max_speed;
-            obj.position = obj.position + obj.velocity;
-            obj.path=[obj.path;obj.position];
-            obj.acceleration = [0 0];
+        function obj=bounds(obj)
+                    
+            if obj.position(1) > obj.mapsize || obj.position(1) < -obj.mapsize
+                if obj.velocity(1)< 0  && obj.position(1)< -obj.mapsize
+                    obj.position(1)=obj.position(1) + 2*obj.mapsize;
+                elseif obj.velocity(1)> 0  && obj.position(1)> obj.mapsize
+                    obj.position(1)=obj.position(1) - 2*obj.mapsize;
+                end
+            
+            end
+            if obj.position(2) > obj.mapsize || obj.position(2) < -obj.mapsize
+                if obj.velocity(2)< 0  && obj.position(2)< -obj.mapsize
+                    obj.position(2)=obj.position(2) + 2*obj.mapsize;
+                elseif obj.velocity(2)> 0  && obj.position(2)> obj.mapsize
+                    obj.position(2)=obj.position(2) - 2*obj.mapsize;
+                end
+            
+            end                    
         end
-        
+
+        function obj=update(obj,boids)
+            obj=obj.bounds();
+            velocity_update=obj.velocity_update(boids);
+
+            if norm(velocity_update)>0 && norm(obj.velocity)>0
+                theta=atan2(obj.velocity(2),obj.velocity(1));
+                new_theta=atan2(velocity_update(2),velocity_update(1));
+                theta_error=angdiff(new_theta,theta);
+%                 theta_error=new_theta-theta;
+                if abs(theta_error) > obj.max_delta_angle
+                    v=obj.velocity/norm(obj.velocity);
+                    v=v*norm(velocity_update);
+                    if theta_error > 0 % for 0 to pi (positive angle)
+                        v=[v*cos(obj.max_delta_angle) -v*sin(obj.max_delta_angle)]; %[dvx -dvy]
+                    elseif theta_error < 0 % for 0 to -pi (negative angle)
+                        v=[v*cos(obj.max_delta_angle) v*sin(obj.max_delta_angle)]; %[dvx dvy]
+                    end 
+                    
+                    velocity_update=v;
+                end
+            end
+
+            if norm(velocity_update)-norm(obj.velocity) > obj.max_acceleration
+                if norm(velocity_update)==0
+                    velocity_update=obj.velocity+(obj.max_acceleration*obj.velocity/norm(obj.velocity));
+                else
+                    velocity_update=velocity_update*((obj.max_acceleration+obj.velocity)/norm(velocity_update));
+                end
+            elseif norm(velocity_update)-norm(obj.velocity) > -obj.max_acceleration
+                if norm(velocity_update)==0
+                    velocity_update=obj.velocity-(obj.max_acceleration*obj.velocity/norm(obj.velocity));
+                else
+                    velocity_update=velocity_update*((-obj.max_acceleration+obj.velocity)/norm(velocity_update));
+                end
+            end
+
+            if norm(velocity_update)>obj.max_speed
+                velocity_update=velocity_update*(obj.max_speed/norm(velocity_update));
+            end
+
+            obj.velocity=velocity_update;
+            obj.position(1:2)=obj.position(1:2)+obj.velocity*obj.dt;
+            obj.path=[obj.path;obj.position(1:2)];           
+                        
+        end
+        function [agent_states]=get_agents_states(obj,boids)
+%follows the format:   agent_states=[dist2agent x y vx vy] for each agent within r
+            neighbor_range = obj.range;
+            agent_states=[];
+            agent_positions = zeros(length(boids),2);
+            agent_velocities = zeros(length(boids),2);
+            for i=1:1:length(boids)
+                agent_positions(i,:) = boids(i).position(1:2);
+                agent_velocities(i,:) = boids(i).velocity;
+            end
+            distance2agents = pdist([obj.position(1:2); agent_positions]);
+            distance2agents = distance2agents(1:length(boids));
+            for i=1:1:length(boids)
+                if distance2agents(i)>0 && distance2agents(i) < neighbor_range
+                    agent_states=[distance2agents(i),agent_positions(i,:),agent_velocities(i,:)];
+                end
+            end
+
+        end
         function [steer] = seek(obj, target)
-            desired = target - obj.position;
+            desired = target - obj.position(1:2);
             desired = norm(desired);
             desired = desired*obj.max_speed;
             
@@ -104,90 +158,40 @@ classdef agent
             steer = steer./norm(steer).*obj.max_force;
         end
         function [steer] = separate(obj, boids)
-            desired_separation = obj.range;
-            steer = [0,0];
-            count = 0;
-            agent_positions = zeros(2,length(boids));
-            for i=1:1:length(boids)
-                agent_positions(:,i) = boids(i).position(1:2);
-            end
-            distance2agents = pdist([obj.position(1:2); agent_positions']); %compute distance to neighbourds
-            distance2agents = distance2agents(1:length(boids));
-%             obj.test=distance2agents;
-            for i=1:1:length(boids)
-                if distance2agents(i) > 0 && distance2agents(i) <  desired_separation
-                    delta = obj.position(1:2) - boids(i).position(1:2);
-                    delta = delta./norm(delta);
-                    delta = delta./distance2agents(i);
-                    steer = steer + delta;
-                    count = count+1;
-                end
-                
-                if count > 0
-                    steer = steer./count;
-                end
-                
-                if norm(steer) > 0
-                    steer = steer./norm(steer).*obj.max_speed;
-                    steer = steer - obj.velocity;
-                    steer = steer./norm(steer).*obj.max_force;
-                end
+            steer = [0 0];
+            agents_states=obj.get_agents_states(boids);
+            if ~isempty(agents_states)
+                position_diff = obj.position(1:2) - agents_states(:,2:3);
+                norm_diff=position_diff./agents_states(:,1);
+                steer = sum(-norm_diff.*(1/agents_states(:,1).^2));
             end
         end
         function steer = align(obj, boids)
-            neighbor_dist = obj.range; %explore other constants
-            sum = [0 0];
-            count = 0;
+%             neighbor_range = obj.range; %explore other constant
             steer = [0 0];
-            
-            agent_positions = zeros(2,length(boids));
-            for i=1:1:length(boids)
-                agent_positions(:,i) = boids(i).position(1:2);
-            end
-            distance2agents = pdist([obj.position(1:2); agent_positions']);
-            distance2agents = distance2agents(1:length(boids));
-            
-            for i=1:1:length(boids)
-                if distance2agents(i)>0 && distance2agents(i) < neighbor_dist
-                    sum=sum+boids(i).position(1:2);
-                    count=count+1;
-                end
+            agents_states=obj.get_agents_states(boids);
+            if ~isempty(agents_states)
+                velocity_sum=sum(agents_states(:,4:5))./length(agents_states(:,1));
+                steer=velocity_sum;
             end
             
-            if count > 0
-                sum=sum./count;
-                sum=sum./norm(sum).*obj.max_speed;
-                steer=sum-obj.velocity;
-                steer=steer./norm(steer).*obj.max_force;
-            end
         end
         function steer = cohesion(obj, boids)
-            neighbor_dist = obj.range;
-            sum = [0 0];
-            count = 0;
+%             neighbor_range = obj.range;
             steer = [0 0];
-            
-            agent_positions = zeros(2,length(boids));
-            for i=1:1:length(boids)
-                agent_positions(:,i) = boids(i).position(1:2);
+            agents_states=obj.get_agents_states(boids);
+            if ~isempty(agents_states)
+                position_sum=sum(agents_states(2:3))./length(agents_states(:,1));
+                steer=position_sum;
             end
-            distance2agents = pdist([obj.position(1:2); agent_positions']);
-            distance2agents = distance2agents(1:length(boids));
-            
-            for i=1:1:length(boids)
-                if distance2agents(i)>0 && distance2agents(i) < neighbor_dist
-                    sum=sum+boids(i).position(1:2);
-                    count=count+1;
-                end
-            end
-            
-            if count > 0
-                sum=sum./count;
-%                 sum=sum./norm(sum).*obj.max_speed;
-%                 steer=sum-obj.velocity;
-%                 steer=steer./norm(steer).*obj.max_force;
-                steer = obj.seek(sum);
-            end
+        end
+        function steer = move(obj,boids)
+            %keep moving in the direction if there are no agents close
+            steer = [0 0];
+            agents_states=obj.get_agents_states(boids);
+            if isempty(agents_states)
+                steer=obj.velocity;
+            end   
         end
         function obj = get_neighbors(obj,AGENTS)
             
@@ -214,8 +218,8 @@ classdef agent
             obj.neighbors = neighborsID;
             
         end
-        function show_swarm(AGENTS,range,show_range,map)
-            
+        function show_swarm(AGENTS,range,show_range)
+            x=AGENTS.mapsize;
             N_agents = length(AGENTS);
             clf();
             for r = 1:N_agents
@@ -231,8 +235,8 @@ classdef agent
             end
             % Map limits
             title("Swarm simulation");
-            axis(map)
-            pause(.0001);
+            axis([-x x -x x])
+            pause(.001);
             
         end
 
@@ -242,7 +246,6 @@ classdef agent
               
 
 end
-
 
 
 

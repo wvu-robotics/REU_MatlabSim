@@ -1,12 +1,13 @@
 import numpy as np
 import cmath
+from tqdm import tqdm #might eventually make a param for this to ship, but later
 
 class SimParams:
     def __init__(self,
     num_agents=10,
     dt=0.1,overall_time = 15,
     enclosure_size =10, init_pos_max= None,
-    agent_max_vel=5,agent_max_accel=1,agent_max_turn_rate=np.inf,
+    agent_max_vel=5,init_vel_max = None,agent_max_accel=1,agent_max_turn_rate=np.inf,
     neighbor_radius=2,periodic_boundary=False):
         self.num_agents = num_agents
         self.dt = dt
@@ -17,13 +18,17 @@ class SimParams:
         else:
             self.init_pos_max = init_pos_max
         self.agent_max_vel = agent_max_vel
+        if init_vel_max is None:
+            self.init_vel_max = agent_max_vel
+        else:
+            self.init_vel_max = init_vel_max
         self.agent_max_accel = agent_max_accel
         self.agent_max_turn_rate = agent_max_turn_rate
         self.neighbor_radius = neighbor_radius
         self.periodic_boundary = periodic_boundary
 
 #closed function to run whole sim and spit out vels and positions
-def runSim(controllers=[],params=SimParams(),initial_positions=None,initial_velocities=None):
+def runSim(controllers=[],params=SimParams(),initial_positions=None,initial_velocities=None,progress_bar=False):
     steps = int(params.overall_time/params.dt)
     maxAngleDeviation = params.agent_max_turn_rate*params.dt
     maxVelChange = params.agent_max_accel*params.dt
@@ -42,13 +47,13 @@ def runSim(controllers=[],params=SimParams(),initial_positions=None,initial_velo
 
     if initial_velocities is None:
         for agentVel in agentVels[0]:
-            agentVel[0] = np.random.uniform(-params.agent_max_vel,params.agent_max_vel)
-            agentVel[1] = np.random.uniform(-params.agent_max_vel,params.agent_max_vel)
+            agentVel[0] = np.random.uniform(-params.init_vel_max,params.init_vel_max)
+            agentVel[1] = np.random.uniform(-params.init_vel_max,params.init_vel_max)
     else:
         agentVels[0] = initial_velocities
     
     #run full simulation
-    for step in range(0,steps):
+    for step in (tqdm(range(0,steps)) if progress_bar else range(0,steps)):
         for agent in range(0,params.num_agents):
             agentPos = agentPositions[step,agent]
             agentVel = agentVels[step,agent]
@@ -95,8 +100,6 @@ def runSim(controllers=[],params=SimParams(),initial_positions=None,initial_velo
                     elif agentVel[1] > 0 and agentPos[1] > params.enclosure_size:
                         agentPos[1] += -2 * params.enclosure_size
 
-            agentPos = agentPositions[step,agent]
-            agentVel = agentVels[step,agent]
             vel_new = controllers[agent].vel(relevantPositions,relevantVels,agentPos,agentVel)
 
             #Implement agent motion constraints
@@ -144,7 +147,6 @@ def runSim(controllers=[],params=SimParams(),initial_positions=None,initial_velo
             #max vel
             if np.linalg.norm(vel_new) > params.agent_max_vel:
                 vel_new *= (params.agent_max_vel/np.linalg.norm(vel_new))
-
 
             agentVels[step+1,agent] = vel_new
             agentPositions[step+1,agent] = vel_new*params.dt+agentPos

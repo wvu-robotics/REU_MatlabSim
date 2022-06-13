@@ -6,3 +6,6 @@ class GenericSwarmController:
     @abstractmethod
     def vel(self,agentPositions,agentVels,pos,v):
         pass
+
+    def setColor(self,color):
+        self.color = color

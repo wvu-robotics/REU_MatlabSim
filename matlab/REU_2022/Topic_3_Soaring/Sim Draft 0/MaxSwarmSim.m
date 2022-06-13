@@ -1,12 +1,7 @@
-close all
-clear
-clc
+close all; clear; clc
 
 %% Initialize Parameters
-% Units mi/ft lb min + kt
-% 1 kt = 1.151 mph
-% 1 mi = 5280 ft
-% xy in mi, alti in ft
+% Units m kg min
 % Simulation runs at exactly 60x real time.
 overallTime = 5; % min
 dt = .05; % min
@@ -14,17 +9,19 @@ steps = overallTime/dt;
 numAgents = 100;
 
 simParams = [
-    20,     ... maxForwardAccel
-    2*pi,   ... maxAlpha
-    1.6,    ... maxForwardVel
-    1.1,    ... minForwardVel
-    2*pi/3, ... maxOmega
-    5,      ... separation
-    1.5,    ... cohesion
-    3,      ... alignment
-    10,     ... separationWall
-    1.5,    ... neighborRadius
-    162];   ... sinkRate (taken from FAA Glider handbook)
+    20,         ... maxForwardAccel m/s/s
+    2*pi,       ... maxAlpha        rad/s/s
+    13,         ... maxForwardVel   m/s
+    8,          ... minForwardVel   m/s
+    2*pi/3,     ... maxOmega        rad/s
+    5,          ... separation      ..
+    1.5,        ... cohesion        ..
+    3,          ... alignment       ..
+    10,         ... separationWall  ..
+    1500,       ... neighborRadius  m
+    -0.01843,   ... sinkRate Coeff A
+    0.3782,     ... sinkRate Coeff B
+    -2.3748];   ... sinkRate Coeff C
 
 thermal = [
     0,      ... X position
@@ -259,9 +256,7 @@ end
 %Assume positions = 3 x numAgents matrix
 function renderBoids(telemetry,numAgents,Ceiling,agentScale,thermal)
     %Define relative boid shape = x-values...; y-values...
-    boidShape = agentScale.*[-.5, .5, -.5; -.5, 0, .5];
-    boidShape(1,:) = boidShape(1,:) * 0.4;
-    boidShape(2,:) = boidShape(2,:) * 0.3;
+    boidShape = agentScale.*[-.4, .4, -.4; -.3, 0, .3];
     normAltitude = abs(telemetry(4,:)./Ceiling.*0.6);
     boidColor = hsv2rgb([normAltitude',ones(1,numAgents)',ones(1,numAgents)']);
     rectangle('Position',[-thermal(3)/2,-thermal(3)/2,thermal(3),thermal(3)],'Curvature',1,'FaceColor',[1,.5,.5]);

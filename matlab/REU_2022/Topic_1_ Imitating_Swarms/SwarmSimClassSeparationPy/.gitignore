@@ -2,3 +2,4 @@ images/*
 frames/*
 *.gif
 *.mp4
+__pycache__/*
