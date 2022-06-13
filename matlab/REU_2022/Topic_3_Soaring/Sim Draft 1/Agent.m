@@ -97,7 +97,7 @@ classdef Agent < handle
 
             vsink = (SimLaw.Sink_A*newVel(1).^2 + SimLaw.Sink_B*newVel(1) + SimLaw.Sink_C)...
                     / sqrt(cos(obj.bankAngle));
-            vspeed = -vsink + thermalStrength;
+            vspeed = vsink + thermalStrength;
 
             %% Get Pos
             newPos(1:2) = obj.position(1:2) + newVel(1)*forwardUnit(1:2)'*SimLaw.dt;

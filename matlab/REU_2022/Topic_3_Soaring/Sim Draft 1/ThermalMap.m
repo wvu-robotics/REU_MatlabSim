@@ -32,15 +32,15 @@ classdef ThermalMap < handle
             % determine distance to all thermals
             distTherm = zeros(1,numThermals);
             for i = 1:numThermals
-                distTherm(i) = norm(position - thermal(1).position);
+                distTherm(i) = norm(position - thermal(i).position);
             end
 
             % check which thermal we are in. Returns one number or empty.
-            inTh = find(distTherm <= thermal.radius);
+            inTh = find(distTherm <= thermal(i).radius);
             
             % currently assumes strength is the same at all altitudes
-            strength = thermal.strength*exp(-(3*distTherm(inTh)/thermal.radius)^2)*...
-                                          (1-(3*distTherm(inTh)/thermal.radius)^2);s
+            strength = thermal(i).strength*exp(-(3*distTherm(inTh)/thermal(i).radius)^2)*...
+                                             (1-(3*distTherm(inTh)/thermal(i).radius)^2);
         end
 
         % Ensure thermals don't overlap
