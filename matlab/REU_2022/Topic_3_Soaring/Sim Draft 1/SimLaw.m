@@ -24,8 +24,8 @@ classdef SimLaw
         forwardSpeedMin = 5     %m/s
         forwardSpeedMax = 18    %m/s
         forwardInertia = 10
-        bankMin = -11*pi/12           %rad/s
-        bankMax = 11*pi/12            %rad/s
+        bankMin = -5*pi/12           %rad
+        bankMax = 5*pi/12            %rad
         bankInertia = 1
         fov = 2*pi              %rad
         Sink_A = -0.01843
