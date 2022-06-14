@@ -6,6 +6,7 @@ classdef Swarm < handle
     end
     
     methods
+        % Generation Function
         function obj = Swarm()
             %% Generate agents
             numAgents = SimLaw.numAgents;   %Get total number of agents
@@ -30,6 +31,7 @@ classdef Swarm < handle
             obj.thermalMap = ThermalMap();
         end
         
+        % Save Function
         function obj = saveAgentData(obj)
             numAgents = SimLaw.numAgents;
             for i=1:numAgents
@@ -37,41 +39,45 @@ classdef Swarm < handle
             end
         end
         
+        % Step Function
         function obj = stepSimulation(obj)
             numAgents = SimLaw.numAgents;   %Get total number of agents
             for i=1:numAgents
-                currentAgent = obj.agents(i);
-                
-                %Find local agents for currentAgent
-                numLocalAgents = 0;
-                localAgentIndices = -1 * ones(1,numAgents);
-                for j=1:numAgents
-                    if(j==i)
-                        continue
+                if obj.agents(i).isAlive
+                    currentAgent = obj.agents(i);
+                    
+                    %Find local agents for currentAgent
+                    numLocalAgents = 0;
+                    localAgentIndices = -1 * ones(1,numAgents);
+                    for j=1:numAgents
+                        if(j==i) || (~obj.agents(j).isAlive)
+                            continue
+                        end
+                        otherAgent = obj.agents(j);
+                        dist = norm(currentAgent.position - otherAgent.position);
+                        if i == 1
+                            %fprintf("Agent %g (%g,%g,%g) to %g (%g,%g,%g), dist: %g\n",i,currentAgent.position(1),currentAgent.position(2),currentAgent.position(3),j,otherAgent.position(1),otherAgent.position(2),otherAgent.position(3),dist);
+                        end
+                        %fprintf("Agent %g Angle: %g\n", i, currentAgent.bankAngle/2/pi*180);
+                        if(dist < SimLaw.neighborRadius)
+                            numLocalAgents = numLocalAgents + 1;
+                            localAgentIndices(numLocalAgents) = j;
+                        end
                     end
-                    otherAgent = obj.agents(j);
-                    dist = norm(currentAgent.position - otherAgent.position);
-                    if i == 1
-                        %fprintf("Agent %g (%g,%g,%g) to %g (%g,%g,%g), dist: %g\n",i,currentAgent.position(1),currentAgent.position(2),currentAgent.position(3),j,otherAgent.position(1),otherAgent.position(2),otherAgent.position(3),dist);
-                    end
-                    %fprintf("Agent %g Angle: %g\n", i, currentAgent.bankAngle/2/pi*180);
-                    if(dist < SimLaw.neighborRadius)
-                        numLocalAgents = numLocalAgents + 1;
-                        localAgentIndices(numLocalAgents) = j;
-                    end
+                    clear localAgents
+                    localAgents(1:numLocalAgents) = obj.agents(localAgentIndices(1:numLocalAgents));
+                    
+                    %Find thermal strength from ThermalMap
+                    %thermalStrength = thermalMap.getStrength(currentAgent.position);
+                    thermalStrength = 0;
+                    
+                    %Update currentAgent
+                    agentControl_Update(currentAgent,localAgents,thermalStrength,[0,0,0]);
                 end
-                clear localAgents
-                localAgents(1:numLocalAgents) = obj.agents(localAgentIndices(1:numLocalAgents));
-                
-                %Find thermal strength from ThermalMap
-                %thermalStrength = thermalMap.getStrength(currentAgent.position);
-                thermalStrength = 5;
-                
-                %Update currentAgent
-                agentControl_Update(currentAgent,localAgents,thermalStrength,[0,0,0]);
             end
         end
         
+        % Render
         function obj = renderAgents(obj)
             for i=1:SimLaw.numAgents
                 obj.agents(i).render();

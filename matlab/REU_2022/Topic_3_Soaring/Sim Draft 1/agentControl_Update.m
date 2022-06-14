@@ -103,7 +103,10 @@ function agentControl_Update(currentAgent,localAgents,thermalStrength, target)
     if newPos(3) > SimLaw.agentCeiling
         newPos(3) = SimLaw.agentCeiling;
     elseif newPos(3) < SimLaw.agentFloor % not Giga-Jank
-        newPos (3) = SimLaw.agentFloor; % Tera-Jank
+        newPos(3) = SimLaw.agentFloor; % Tera-Jank
+    end
+    if newPos(3) <= 0
+        currentAgent.isAlive = false;
     end
     currentAgent.heading = currentAgent.heading + newVel(2)*SimLaw.dt;
 
