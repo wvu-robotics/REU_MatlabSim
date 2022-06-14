@@ -58,6 +58,10 @@ for step = 1:steps
     swarm.saveAgentData();
     swarm.stepSimulation();
     
+    % Print number of Living Agents
+    Living = nnz([swarm.agents.isAlive]);
+    fprintf("%g Agents, ", Living);
+
     % Find and print elapsed time
     c2 = clock;
     elapsedTime = c2(6)-c1(6);

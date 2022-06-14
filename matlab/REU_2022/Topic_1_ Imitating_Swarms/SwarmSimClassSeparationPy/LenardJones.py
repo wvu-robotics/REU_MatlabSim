@@ -1,12 +1,7 @@
 import numpy as np
 import GenericSwarmController
 
-class LennardJones(GenericSwarmController.GenericSwarmController):
-    def __init__(self,sigma,epsilon):
-        self.sigma = float(sigma)
-        self.epsilon = float(epsilon)
-
-
+class LennardJones(GenericSwarmController.GenericSwarmController):    
     def vel(self,agentPositions,agentVels,pos,v):
         v_gain = np.zeros(2)
 
@@ -19,8 +14,8 @@ class LennardJones(GenericSwarmController.GenericSwarmController):
             #non linearities
 
             #lennard-jones, actually works
-            epsilon = self.epsilon
-            sigma = self.sigma
+            epsilon = 100000 
+            sigma = 5
             out = epsilon*(((sigma/dist)**12)+(-2*((sigma/dist)**6)))
 
             if out != 0:

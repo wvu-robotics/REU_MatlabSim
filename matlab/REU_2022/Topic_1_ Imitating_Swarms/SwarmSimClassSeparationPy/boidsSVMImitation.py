@@ -19,22 +19,23 @@ import sys
 sys.setrecursionlimit(2147483647)
 
 params = sim.SimParams(
-    num_agents=10,
-    dt=0.1,
-    overall_time = 8,
+    num_agents=40,
+    dt=0.05,
+    overall_time = 15,
     enclosure_size = 10,
-    init_pos_max= 5, #if None, then defaults to enclosure_size
-    agent_max_vel=3,
-    agent_max_accel=2,
-    agent_max_turn_rate=1.5*np.pi,
+    init_pos_max= None, #if None, then defaults to enclosure_size
+    agent_max_vel=5,
+    init_vel_max = 2,
+    agent_max_accel=2.1,
+    agent_max_turn_rate=2*np.pi,
     neighbor_radius=3,
     periodic_boundary=False
     )
 
 #constants to imitate
 k_coh = 3
-k_align = 1
-k_sep = 0.4
+k_align = 5
+k_sep = 0.1
 k_inertia = 1
 
 true_gains = [k_coh, k_align, k_sep, k_inertia]
@@ -134,6 +135,26 @@ for slice in posVelSlices:
 
         agentSlices.append(agentSlice(posCentroid-agentPos,velCentroid,separation,np.zeros(2),agentVelDifference))
 
+#sanity check, this should have 0 loss, anything else is either noise or bad measurements
+true_loss = 0
+for slice in agentSlices:
+    gains_ex = true_gains[:3]
+    args = np.array([slice.cohesion,slice.alignment,slice.separation])
+    # print("Args",args)
+    # print("Gains",gains_ex)
+    vel_pred = np.dot(args.transpose(),gains_ex)
+    # print("Pred",vel_pred)
+    # need to add scaling
+    if(np.linalg.norm(vel_pred) > params.agent_max_vel):
+        vel_pred = vel_pred/np.linalg.norm(vel_pred)*params.agent_max_vel
+    # print("Pred scaled",vel_pred)
+    # print("output",slice.output_vel)
+
+    err = vel_pred - slice.output_vel
+    #print("err",err)
+    true_loss += np.linalg.norm(err)
+true_loss/=len(agentSlices)
+print("True loss(data deviation from original on average):",true_loss)
 
 
 print("Ignored ",(len(posVelSlices)*params.num_agents)-len(agentSlices),"/",len(posVelSlices)*params.num_agents," slices")
@@ -141,18 +162,36 @@ print("Ignored ",(len(posVelSlices)*params.num_agents)-len(agentSlices),"/",len(
 x = []
 y = []
 
+np.random.shuffle(agentSlices)
 for slice in agentSlices:
-    x.append(np.array([slice.cohesion[0],slice.alignment[0],slice.separation[0]]))
-    y.append(np.array(slice.output_vel[0]))
-    x.append(np.array([slice.cohesion[1],slice.alignment[1],slice.separation[1]]))
-    y.append(np.array(slice.output_vel[1]))
+    x.append(np.array([slice.cohesion[0],slice.alignment[0],slice.separation[0],slice.cohesion[1],slice.alignment[1],slice.separation[1]]))
+    y.append(slice.output_vel)
 
-x_train, x_test, y_train, y_test = train_test_split(x[:10], y[:10], random_state=1, test_size=0.3)
+x = np.array(x)
+y = np.array(y).transpose()
+
+# print(x)
+# print(y.shape)
+
+
+#clipping a lot of data here, might do smart subsampling
+#train 2 SVRs for the purpose, one for x, one for y
+x_train0, x_test0, y_train0, y_test0 = train_test_split(x[:20], y[0,:20], random_state=1, test_size=0.3)
+x_train1, x_test1, y_train1, y_test1 = train_test_split(x[:20], y[1,:20], random_state=1, test_size=0.3)
+
+
 
 # svr_rbf = SVR(kernel='rbf', gamma=0.1)
 # svr_linear = SVR(kernel='linear')
-svr_poly = SVR(kernel='poly',gamma='auto',degree=3,tol=0.1)
-# svr_sig = SVR(kernel='sigmoid')
+# svr_poly0 = SVR(kernel='poly',gamma='auto',degree=3,tol=0.1)
+# svr_poly1 = SVR(kernel='poly',gamma='auto',degree=3,tol=0.1)
+
+svr_sig0 = SVR(kernel='sigmoid')
+svr_sig1 = SVR(kernel='sigmoid')
+
+svr_rbf0 = SVR(kernel='rbf')
+svr_rbf1 = SVR(kernel='rbf')
+
 
 # xgb_model = xgb.XGBRegressor(learning_rate=0.0001, n_estimators=1000)
 
@@ -167,11 +206,23 @@ def evaluate_model(name,model, x_train, y_train, x_test, y_test):
     r_2 = model.score(x_test, y_test)
     print('R^2 test', r_2)
     print('Execution time: {0:.2f} seconds.'.format(time.time() - start))
+    return r_2
     # print(name + '($R^2={:.3f}$)'.format(r_2), np.array(y_test), y_pred)
 
 # evaluate_model("XGB",xgb_model,x_train,y_train,x_test,y_test)
-evaluate_model("SVR_poly",svr_poly,x_train,y_train,x_test,y_test)
+# evaluate_model("SVR_poly0",svr_poly0,x_train0,y_train0,x_test0,y_test0)
+# evaluate_model("SVR_poly1",svr_poly1,x_train1,y_train1,x_test1,y_test1)
+evaluate_model("SVR_sig0",svr_sig0,x_train0,y_train0,x_test0,y_test0)
+evaluate_model("SVR_sig1",svr_sig1,x_train1,y_train1,x_test1,y_test1)
+evaluate_model("SVR_rbf0",svr_rbf0,x_train0,y_train0,x_test0,y_test0)
+evaluate_model("SVR_rbf1",svr_rbf1,x_train1,y_train1,x_test1,y_test1)
 
-controllers_imitated = [SVRBoids.SVRBoids(svr_poly) for i in range(params.num_agents)]
+# evaluate_model("SVR_rbf",svr_rbf,x_train,y_train,x_test,y_test)
+# evaluate_model("SVR_linear",svr_linear,x_train,y_train,x_test,y_test)
+# evaluate_model("SVR_sigmoid",svr_sig,x_train,y_train,x_test,y_test)
+
+controllers_imitated = [SVRBoids.SVRBoids(svr_rbf0,svr_rbf1) for i in range(params.num_agents)]
+for controller in controllers_imitated:
+    controller.setColor('black')
 agentPositions_imitated, agentVels_imitated = sim.runSim(controllers_imitated,params)
-export.export(export.ExportType.GIF,"SVRImitated",agentPositions_imitated,agentVels_imitated,params=params,vision_mode=False)
+export.export(export.ExportType.GIF,"SVRImitated",agentPositions_imitated,agentVels_imitated,controllers=controllers_imitated,params=params,vision_mode=False)

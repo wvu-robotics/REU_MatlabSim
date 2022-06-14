@@ -13,8 +13,8 @@ classdef ThermalMap < handle
 
             for i = 1:SimLaw.numThermals
                 % Randomize the thermal's properties
-                thermalMap.thermals(i).position(1) = Utility.randIR(SimLaw.mapSize(1),SimLaw.mapSize(2));
-                thermalMap.thermals(i).position(2) = Utility.randIR(SimLaw.mapSize(1),SimLaw.mapSize(2));
+                thermalMap.thermals(i).position(1) = round(Utility.randIR(SimLaw.mapSize(1) + 20,SimLaw.mapSize(2) - 20));
+                thermalMap.thermals(i).position(2) = round(Utility.randIR(SimLaw.mapSize(1) + 20,SimLaw.mapSize(2) - 20));
                         
                 % Randomly decide if the velocity is negative or positive
                 randFactor = randi([0 1],1,2);
@@ -22,26 +22,29 @@ classdef ThermalMap < handle
                 thermalMap.thermals(i).velocity(1) = Utility.randIR(SimLaw.thermalSpeedMin,SimLaw.thermalSpeedMax)*randFactor(1);
                 thermalMap.thermals(i).velocity(2) = Utility.randIR(SimLaw.thermalSpeedMin,SimLaw.thermalSpeedMax)*randFactor(2);
                         
-                thermalMap.thermals(i).radius = Utility.randIR(SimLaw.thermalRadiusMin,SimLaw.thermalRadiusMax);
-                thermalMap.thermals(i).maxStrength = round(Utility.randIR(SimLaw.thermalStrengthMin,SimLaw.thermalStrengthMax));
+                thermalMap.thermals(i).radius = round(Utility.randIR(SimLaw.thermalRadiusMin,SimLaw.thermalRadiusMax));
+                thermalMap.thermals(i).maxStrength = round(Utility.randIR(SimLaw.thermalStrengthMin + 1,SimLaw.thermalStrengthMax));
                 thermalMap.thermals(i).curStrength = round(Utility.randIR(1, thermalMap.thermals(i).maxStrength));
             end
         end
 
         % Calculate updraft strength at a given point
-        function strength = getStrength(thermalMap, position)
+        function strength = getStrength(thermalMap, position, i)
             % determine distance to all thermals
-            distTherm = zeros(1,SimLaw.numThermals);
-            for i = 1:SimLaw.numThermals
-                distTherm(i) = norm(position - thermalMap.thermals(i).position);
-            end
-
-            % check which thermal we are in. Returns one number or empty.
-            inTh = find(distTherm <= thermalMap.thermals(i).radius);
-            
-            % currently assumes strength is the same at all altitudes
-            strength = thermalMap.thermals(i).strength*exp(-(3*distTherm(inTh)/thermalMap.thermals(i).radius)^2)*...
-                                             (1-(3*distTherm(inTh)/thermalMap.thermals(i).radius)^2);
+            %strength = 0;
+           % for i = 1:SimLaw.numThermals
+                radius = thermalMap.thermals(i).radius;
+                %distTherm = norm((position / 5) - 100 - thermalMap.thermals(i).position);
+                distTherm = norm(thermalMap.thermals(i).position - position);
+         
+                % If the point is inside the thermal, calculate its strength
+               % if distTherm(i) <= thermalMap.thermals(i).radius
+                    % currently assumes strength is the same at all altitudes
+                    x = exp(-(distTherm/radius)^2);
+                    y = (1-(distTherm/radius)^2);
+                    strength = thermalMap.thermals(i).curStrength.*x.*y;
+               % end
+           % end
         end
 
         % Ensure thermals don't overlap

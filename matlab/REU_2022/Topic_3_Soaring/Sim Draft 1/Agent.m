@@ -7,7 +7,7 @@ classdef Agent < handle
         velocity = [0.0, 0.0]           %m/s, rad/s, [forward,omega]
         patchObj = NaN
         patchArr = NaN
-
+        isAlive  = true
         accelDir = 0.0;
         
         savedPosition = [0.0, 0.0, 0.0]
@@ -18,16 +18,21 @@ classdef Agent < handle
     methods
         function obj = render(obj)
             rotationMatrix = [cos(obj.heading), -sin(obj.heading); sin(obj.heading), cos(obj.heading)];
-            AccelMatrix    = [cos(obj.accelDir), -sin(obj.accelDir); sin(obj.accelDir), cos(obj.accelDir)];
+            %AccelMatrix    = [cos(obj.accelDir), -sin(obj.accelDir); sin(obj.accelDir), cos(obj.accelDir)];
             shape = SimLaw.agentShape_plane .* SimLaw.renderScale;
-            arrow = SimLaw.Arrow .* SimLaw.renderScale;
+            %arrow = SimLaw.Arrow .* SimLaw.renderScale;
             rotatedShape = rotationMatrix * shape; %[x;y] matrix
             rotatedShape = rotatedShape'; %Convert to [x,y];
-            rotatedArrow = AccelMatrix * arrow;
-            rotatedArrow = rotatedArrow';
+            %rotatedArrow = AccelMatrix * arrow;
+            %rotatedArrow = rotatedArrow';
             globalShape = rotatedShape + obj.position(1:2); %[x,y] matrix
-            globalArrow = rotatedArrow + obj.position(1:2);
+            %globalArrow = rotatedArrow + obj.position(1:2);
             scaledAlti = 0.8*((obj.position(3)-SimLaw.agentFloor)/(SimLaw.agentCeiling - SimLaw.agentFloor));
+            if scaledAlti < 0
+                scaledAlti = 0;
+            elseif scaledAlti > 0.8
+                scaledAlti = 0.8;
+            end
             color = hsv2rgb([scaledAlti,1,1]);
             %fprintf("hue: %g\n",color(1));
             
@@ -38,6 +43,9 @@ classdef Agent < handle
             obj.patchObj.FaceColor = color;
             obj.patchObj.XData = globalShape(:,1);
             obj.patchObj.YData = globalShape(:,2);
+            if ~obj.isAlive
+                obj.patchObj.Visible = 'off';
+            end
             %obj.patchArr.XData = globalArrow(:,1);
             %obj.patchArr.YData = globalArrow(:,2);
         end

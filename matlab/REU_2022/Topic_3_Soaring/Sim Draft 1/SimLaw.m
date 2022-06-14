@@ -5,18 +5,18 @@ classdef SimLaw
         dt = 0.1        %s
         totalTime = 60  %s
         mapSize = [-100,100]   %m, bounds of square map
-        numAgents = 50  %agents
+        numAgents = 100  %agents
         numThermals = 4 %thermals
         
         % Initial conditions
         agentSpawnPosRange = [-70,-70; 70,70];     %m, [xMin,yMin;xMax,yMax]
-        agentSpawnAltiRange = [80,90];             %m, [Min,Max]
+        agentSpawnAltiRange = [5,50];             %m, [Min,Max]
         agentSpawnVelRange = [8,0;13,0];           %m/s,rad/s [forwardMin,omegaMin;forwardMax,omegaMax];
         g = 9.81;                                  % m/s/s
         
         % Rule constraints
         separation = 5.0
-        cohesion = 0.03
+        cohesion = 0.015
         alignment = 5
         migration = 1e-12
         
@@ -40,7 +40,7 @@ classdef SimLaw
         thermalSpeedMax = 50    % m/s
         thermalRadiusMin = 5    % m
         thermalRadiusMax = 20   % m
-        thermalStrengthMin = 3  % m/s, peak updraft speed
+        thermalStrengthMin = 0  % m/s, peak updraft speed
         thermalStrengthMax = 10 % m/s, peak updraft speed
         thermalFadeRate = 1     % m/s, rate at which thermals fade in or out 
         thermalPlateauTime = 5  % steps at a max or min strength

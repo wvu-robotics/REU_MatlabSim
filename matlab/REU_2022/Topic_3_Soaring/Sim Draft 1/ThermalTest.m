@@ -4,7 +4,7 @@ clear
 clc
 
 %% Set up parameters
-overallTime = 30; % s
+overallTime = 20; % s
 dt = .05; % s 
 steps = overallTime/dt; 
 
@@ -12,6 +12,7 @@ steps = overallTime/dt;
 thermalPixels = 1000;
 mapX = linspace(SimLaw.mapSize(1),SimLaw.mapSize(2),thermalPixels);
 mapY = linspace(SimLaw.mapSize(1),SimLaw.mapSize(2),thermalPixels);
+mapDiff = (SimLaw.mapSize(2)-SimLaw.mapSize(1))/(thermalPixels-1);
 
 % Initialize thermals as a matrix of Thermals
 thermalMap = ThermalMap();
@@ -33,7 +34,7 @@ for step = 1:steps
     ylim(SimLaw.mapSize);
     daspect([1 1 1]);
     colorbar;
-    cbLimits = [0,2];
+    cbLimits = [0,SimLaw.thermalStrengthMax];
     set(gca,'clim',cbLimits);
     
     %% Render thermals
@@ -41,20 +42,35 @@ for step = 1:steps
     % Iterate through thermals
     for thermalIndex = 1:SimLaw.numThermals
         thermalPos = thermalMap.thermals(thermalIndex).position;
+        thermalRad = thermalMap.thermals(thermalIndex).radius;
+        % Square bounds in pixels around the thermal center: left, right, lower, upper
+        % There are 5 pixels per unit
+        thermalSquare = (SimLaw.mapSize(2) + [thermalPos(1) - thermalRad, thermalPos(1) + thermalRad, thermalPos(2) - thermalRad, thermalPos(2) + thermalRad]);
+        
+        thermalSquareMin = [thermalPos(1)-thermalRad,thermalPos(2)-thermalRad];
+        thermalSquareMax = [thermalPos(1)+thermalRad,thermalPos(2)+thermalRad];
+        
+        mapPosMin = [round((thermalSquareMin(1)-SimLaw.mapSize(1))/mapDiff),round((thermalSquareMin(2)-SimLaw.mapSize(1))/mapDiff)];
+        mapPosMax = [round((thermalSquareMax(1)-SimLaw.mapSize(1))/mapDiff),round((thermalSquareMax(2)-SimLaw.mapSize(1))/mapDiff)];
+        
+        %fprintf("ThermalPos (%g,%g) and radius (%g): mapPosMin (%g,%g), mapPosMax (%g,%g)\n",thermalPos(1),thermalPos(2),thermalRad,mapPosMin(1),mapPosMin(2),mapPosMax(1),mapPosMax(2));
+        
         % Create temporary empty matrix to hold distances from this thermal
-        distancesFromThermal = zeros(thermalPixels);
-        for row = 1:thermalPixels
-            for column = 1:thermalPixels
+        tempThermalMap = zeros(thermalPixels);
+        % Iterate through the pixels in the thermal square
+        for row = mapPosMin(2):mapPosMax(2)
+            for column = mapPosMin(1):mapPosMax(1)
                 % At each position in the matrix, find the corresponding map
                 % position and calculate its distance from this thermal
-                mapPos = [mapX(column),mapY(row)];
-                diffPos = thermalPos - mapPos;
-                distancesFromThermal(row,column) = norm(diffPos);
+%                mapPos = [mapX(column),mapY(row)];
+%                diffPos = thermalPos - mapPos;
+%                distancesFromThermal(row,column) = norm(diffPos);
+               tempThermalMap(row, column) = thermalMap.getStrength([mapY(column),mapX(row)], thermalIndex);
             end
         end
         % Use normal distribution to generate thermal (normpdf)
-        distancesFromThermal = distancesFromThermal/thermalMap.thermals(thermalIndex).radius;
-        tempThermalMap = normpdf(distancesFromThermal)/normpdf(0);
+%         distancesFromThermal = distancesFromThermal/thermalMap.thermals(thermalIndex).radius;
+%         tempThermalMap = normpdf(distancesFromThermal)/normpdf(0);
         finalThermalMap = finalThermalMap + tempThermalMap;
     end
 
