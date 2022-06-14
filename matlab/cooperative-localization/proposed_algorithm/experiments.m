@@ -1,4 +1,4 @@
-function [cost, avg_mean_error, avg_covar, avg_path_deviation, avg_goals_reached, avg_false_goals_reached] = experiments(estimator,boids_rules,enviorment,headless,num_agents)
+function [cost, avg_mean_error, avg_covar, avg_path_deviation, avg_goals_reached, avg_false_goals_reached] = experiments(estimator,boids_rules,enviorment,headless,num_agents,gains)
 %% EXPERIMENTS runs the simulation while changing parameters for simulation results
 %   ====================================================================
 %   estimator :     [int]   0 = dead reckoning
@@ -26,9 +26,9 @@ function [cost, avg_mean_error, avg_covar, avg_path_deviation, avg_goals_reached
 %% Simulation Parameters
 simu.N=num_agents;           % number of Robots
 range = 1;           % robot detection range [m]
-e_max = 2;          % maximum mean localization error [m]
+e_max = 2;           % maximum mean localization error [m]
 cov_max = 5;         % maximum covariance norm [m^2]
-goal_tolarance = .1; % maximum tolarance for reaching the goal or not [m]
+goal_tolarance = .15; % maximum tolarance for reaching the goal or not [m]
 simu.estimator = estimator;  
 simu.dt = .5; % time step size [sec]
 simu.simulationTime=100;   %flight duration [sec] 100
@@ -84,24 +84,33 @@ total_false_goals_reached = 0; % number of goals the agents though they reached 
     ROBOTS(idx).sigmaRange = simu.sigmaRange;
     ROBOTS(idx).sigmaHeading = simu.sigmaHeading;
     ROBOTS(idx).dt = simu.dt;
- end
+ 
  
  %give the robots home and goal location and esimator
-for r = 1:simu.N
-    ROBOTS(r).home = [0,0]; % the home is at XY [0,0]
-    ROBOTS(r).goal = [4*rand(1,1)+1, 4*rand(1,1)+1]; %give them a random goal
-    ROBOTS(r).found_goal = 0; %specify that they have not found their goal
-    ROBOTS(r).estimator = simu.estimator;  %give the robot their esimator
-    ROBOTS(r).goal_tolarance = goal_tolarance;
+
+    ROBOTS(idx).home = [0,0]; % the home is at XY [0,0]
+    ROBOTS(idx).goal = [4*rand(1,1)+1, 4*rand(1,1)+1]; %give them a random goal
+    ROBOTS(idx).found_goal = 0; %specify that they have not found their goal
+    ROBOTS(idx).estimator = simu.estimator;  %give the robot their esimator
+    ROBOTS(idx).goal_tolarance = goal_tolarance;
     
     % if boids_rules = goal only set a high gain for goals and nothing else
     if boids_rules == 0
-        ROBOTS(r).Kg = 1000;
-        ROBOTS(r).Ka = 0;
-        ROBOTS(r).Ks = 0;
-        ROBOTS(r).Kc = 0;
-        ROBOTS(r).Kh = 0;
-        ROBOTS(r).Kv = 1;  % keep the velocity gain at 1 (not doing landmarks)
+        ROBOTS(idx).Kg = 1000;
+        ROBOTS(idx).Ka = 0;
+        ROBOTS(idx).Ks = 0;
+        ROBOTS(idx).Kc = 0;
+        ROBOTS(idx).Kh = 0;
+        ROBOTS(idx).Kv = 1;  % keep the velocity gain at 1 (not doing landmarks)
+    elseif boids_rules == 1
+        
+        ROBOTS(idx).Ka = gains(1);
+        ROBOTS(idx).Ks = gains(2);
+        ROBOTS(idx).Kc = gains(3);
+        ROBOTS(idx).Kh = gains(4);
+        ROBOTS(idx).Kg = gains(5);
+        ROBOTS(idx).Kv = 1;
+    
     end
 end
 
@@ -139,6 +148,7 @@ while simu.accumulatedTime < simu.simulationTime
    
    %% perception------------------------------------
    for r = 1:simu.N 
+       
         % get prediction of my location from the other robots
         % state = [X;Y,Yaw] and covar = [3x3]
         [states, covars] = ROBOTS(r).get_locations(ROBOTS); % uses X, P, and Lidar (CURRENT)

@@ -11,6 +11,8 @@ gains = [.61102,9.9236,9.6478,3.2343,9.9235]; %bayesian optimized static gains
 Ka = gains(1); % alignment gain
 Ks = gains(2); % seperation gain
 Kc = gains(3); % cohesion gain
+Kh = gains(4); % home gain
+Kg = gains(5); % goal gain
 
 for i=1:numBots
    %give them a random start location
@@ -25,6 +27,8 @@ for i=1:numBots
    ROBOTS(i).P{i,i} = ROBOTS(i).covariance_e; %set the centralized covarinace matrix
    ROBOTS(i).ID = i;    %give the robot an ID
    ROBOTS(i).max_speed = .5; %set the max speed of the robot
+   ROBOTS(i).Kh = Kh;
+   ROBOTS(i).Kg = Kg;
 end
 
 end
