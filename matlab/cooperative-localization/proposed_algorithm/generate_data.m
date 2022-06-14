@@ -33,8 +33,7 @@ headless = 1;
 %% run experiments
 
 %runs every permuation of the specified experiment parameters
-
-for num_agents = [5,10,25]    %[5,10,25,50] range of number of agent experiments
+for num_agents = [5,10,25,50]    %[5,10,25,50] range of number of agent experiments
     for enviorment = 0   % [0,1] enviroment type to use
         for boids_rules = [0,1,2]   %[0,1,2] boids rules to use
             for estimator = [0,1,2,3]  %[0,1,2,3] all estimators to use
@@ -90,7 +89,7 @@ for num_agents = [5,10,25]    %[5,10,25,50] range of number of agent experiments
                 FALSE_GOALS_REACHED = [];
                 
                 %% simulations
-                for s = 1:itterations
+                parfor s = 1:itterations
                     fprintf('simulation number, %i', s);
                     %run the experiment
                     [cost, avg_mean_error, avg_covar, avg_path_deviation, avg_goals_reached, avg_false_goals_reached] = ...
@@ -110,7 +109,7 @@ for num_agents = [5,10,25]    %[5,10,25,50] range of number of agent experiments
                 if save_data == 1
                     save(file_name,'COST','MEAN_ERROR', 'COVAR', 'PATH_DEVIATION', 'GOALS_REACHED','FALSE_GOALS_REACHED');
                 end
-                plot_distributions(COST,MEAN_ERROR,COVAR,PATH_DEVIATION,GOALS_REACHED,FALSE_GOALS_REACHED,file_name);7
+                plot_distributions(COST,MEAN_ERROR,COVAR,PATH_DEVIATION,GOALS_REACHED,FALSE_GOALS_REACHED,file_name);
                 
             end
         end

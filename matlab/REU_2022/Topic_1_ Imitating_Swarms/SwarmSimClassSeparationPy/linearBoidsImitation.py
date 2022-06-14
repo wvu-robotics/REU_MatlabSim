@@ -9,10 +9,11 @@ from sklearn.linear_model import LinearRegression as lr
 from tqdm import tqdm
 from dataclasses import dataclass #data class is like the python equivalent of a struct
 from models import Boids as bo
+from models import Dance
 
 params = sim.SimParams(
     num_agents=40, 
-    dt=0.05, 
+    dt=0.05,
     overall_time = 15, 
     enclosure_size = 10, 
     init_pos_max= None, #if None, then defaults to enclosure_size
@@ -74,14 +75,14 @@ shortSimParams = copy.deepcopy(params)
 print("Running short sims")
 shortSimParams.overall_time = 2
 shortSimParams.enclosure_size = 2*params.enclosure_size
-shortSimParams.init_pos_max = params.enclosure_size/2
+shortSimParams.init_pos_max = params.enclosure_size
 
-extra_sims = 100
+extra_sims = 30
 for extra_sim in tqdm(range(extra_sims)):
     agentPositions, agentVels = sim.runSim(controllers,shortSimParams)
     posVelSlices.extend([posVelSlice(agentPositions[i],agentVels[i],agentVels[i+1]) for i in range(len(agentPositions)-1)])
-    if extra_sim % 10 == 0:
-        export.export(export.ExportType.GIF,"linearBoidsOutput/ShortSim"+str(extra_sim),agentPositions,agentVels,params=shortSimParams)
+   # if extra_sim % 10 == 0:
+    #    export.export(export.ExportType.GIF,"linearBoidsOutput/ShortSim"+str(extra_sim),agentPositions,agentVels,params=shortSimParams)
 
 # print("PosVelSlices:")
 # print(posVelSlices)

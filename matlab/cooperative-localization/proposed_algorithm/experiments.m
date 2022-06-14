@@ -26,8 +26,9 @@ function [cost, avg_mean_error, avg_covar, avg_path_deviation, avg_goals_reached
 %% Simulation Parameters
 simu.N=num_agents;           % number of Robots
 range = 1;           % robot detection range [m]
-e_max = .1;           % maximum mean localization error [m]
+e_max = 2;          % maximum mean localization error [m]
 cov_max = 5;         % maximum covariance norm [m^2]
+goal_tolarance = .1; % maximum tolarance for reaching the goal or not [m]
 simu.estimator = estimator;  
 simu.dt = .5; % time step size [sec]
 simu.simulationTime=100;   %flight duration [sec] 100
@@ -91,6 +92,7 @@ for r = 1:simu.N
     ROBOTS(r).goal = [4*rand(1,1)+1, 4*rand(1,1)+1]; %give them a random goal
     ROBOTS(r).found_goal = 0; %specify that they have not found their goal
     ROBOTS(r).estimator = simu.estimator;  %give the robot their esimator
+    ROBOTS(r).goal_tolarance = goal_tolarance;
     
     % if boids_rules = goal only set a high gain for goals and nothing else
     if boids_rules == 0
@@ -168,7 +170,7 @@ while simu.accumulatedTime < simu.simulationTime
         if ROBOTS(r).found_goal == 1
            
             %check to see if we actually reached the goal
-            if norm(ROBOTS(r).position_t(1:2) - ROBOTS(r).goal) < ROBOTS(r).detection_range + e_max
+            if norm(ROBOTS(r).position_t(1:2) - ROBOTS(r).goal) <  goal_tolarance
                 total_goals_reached = total_goals_reached + 1;
             else
                 total_false_goals_reached = total_false_goals_reached+1;
@@ -207,12 +209,12 @@ end
 %% results
 
 % find the average results across all time steps per robot
-avg_covar = total_covar/(simu.N*simu.i)
-avg_mean_error = total_mean_error/(simu.N*simu.i)
-avg_path_deviation = (total_dist_traveled-total_goal_dist)/(simu.N*simu.i)
-avg_goals_reached = total_goals_reached/simu.N
-avg_false_goals_reached = total_false_goals_reached/simu.N
-avg_total_goal_dist = (total_goal_dist)/(simu.N*simu.i)
+avg_covar = total_covar/(simu.N*simu.i);
+avg_mean_error = total_mean_error/(simu.N*simu.i);
+avg_path_deviation = (total_dist_traveled-total_goal_dist)/(simu.N*simu.i);
+avg_goals_reached = total_goals_reached/simu.N;
+avg_false_goals_reached = total_false_goals_reached/simu.N;
+avg_total_goal_dist = (total_goal_dist)/(simu.N*simu.i);
 
 % TODO add in the false goals reached if needed
 

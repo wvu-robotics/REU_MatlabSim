@@ -45,6 +45,7 @@ classdef Robot
         %                lower cell holds covariances of the measurements
         
         detection_range % [double] detection range of the robot
+        goal_tolarance  % [double] how close the robot needs to reach the goal to count it
         sigmaVelocity   % [double] wheel velocity variance
         biasVelocity    % [double] wheel velocity bias
         sigmaYawRate    % [double] wheel yaw rate variance
@@ -174,13 +175,17 @@ classdef Robot
              
              obj.Ka = (rho/rho_max)^2 + dr/dh ...
                       + relu(dlarray((e_m-e_max))).extractdata/e_max; 
+
              obj.Kc = cov_e/cov_max + (e_m/e_max)^2 ... 
                       + sigmoid(dlarray(dg/dr)).extractdata * dh/Lw;
+
              obj.Ks = relu(dlarray((cov_e-cov_max))).extractdata/cov_max...
                       + e_max/(e_m+1) + sigmoid(dlarray(dr/dh)).extractdata ...
                       +dg/Lw;
+
              obj.Kh = cov_e/cov_max + (e_m/e_max)^2 ...
                       + sigmoid(dlarray(dg/dr)).extractdata*((Lw-dh)/Lw);
+             
              obj.Kg = (e_max/(e_m+1))^2 + (cov_max -cov_e)/cov_max ...
                       +sigmoid(dlarray(dh/dr)).extractdata*dr/dg;
             
@@ -531,7 +536,7 @@ classdef Robot
                 obj.acceleration = [0 0];
                 
                 % check if we reached a goal or not
-                if norm(obj.position_e(1:2) - obj.goal) < obj.detection_range
+                if norm(obj.position_e(1:2) - obj.goal) < obj.goal_tolarance
                     obj.found_goal = 1;
                 end
                 
@@ -804,17 +809,17 @@ classdef Robot
                     
                     hey = abs(Xp - obj.position_t);
                     
-                    if hey > 1
-                        disp('---------------------------------------------------------------')
-                        disp(i)
-                        disp('True i')
-                        disp(obj.position_t)
-                        disp('A priori Estimation i')
-                        disp(Xi)
-                        disp('A posteriori Estimation i')
-                        disp(Xip)
-                        disp('---------------------------------------------------------------') 
-                    end
+%                     if hey > 1
+%                         disp('---------------------------------------------------------------')
+%                         disp(i)
+%                         disp('True i')
+%                         disp(obj.position_t)
+%                         disp('A priori Estimation i')
+%                         disp(Xi)
+%                         disp('A posteriori Estimation i')
+%                         disp(Xip)
+%                         disp('---------------------------------------------------------------') 
+%                     end
                     
                     %%% --------------------- CHECK WRONG MEASUREMENTS -------------------- %%%
                     %%% ------------------------------------------------------------------- %%%
@@ -823,29 +828,29 @@ classdef Robot
                     error_x_j = Xj(1) - Xjp(1);
                     error_y_j = Xj(2) - Xjp(2);
                     check = 1; % Set limit to display message cause there might be a wrong update
-                    if error_x_i > check || error_y_i > check || error_x_j > check || error_y_j > check
-                        disp('---------------------------------------------------------------')
-                        disp(i)
-                        disp('True i')
-                        disp(obj.position_t)
-                        disp('A priori Estimation i')
-                        disp(Xi)
-                        disp('A posteriori Estimation i')
-                        disp(Xip)
-                        disp('---------------------------------------------------------------')
-                        disp(j)
-                        disp('A priori Estimation j')
-                        disp(Xj)
-                        disp('A posteriori Estimation j')
-                        disp(Xjp)
-                        disp('---------------------------------------------------------------')
-                        disp('Measurement')
-                        disp(Yr)
-                        disp('Estimation')
-                        disp(h')
-                        disp('Checked')
-                        disp('---------------------------------------------------------------')
-                    end
+%                     if error_x_i > check || error_y_i > check || error_x_j > check || error_y_j > check
+%                         disp('---------------------------------------------------------------')
+%                         disp(i)
+%                         disp('True i')
+%                         disp(obj.position_t)
+%                         disp('A priori Estimation i')
+%                         disp(Xi)
+%                         disp('A posteriori Estimation i')
+%                         disp(Xip)
+%                         disp('---------------------------------------------------------------')
+%                         disp(j)
+%                         disp('A priori Estimation j')
+%                         disp(Xj)
+%                         disp('A posteriori Estimation j')
+%                         disp(Xjp)
+%                         disp('---------------------------------------------------------------')
+%                         disp('Measurement')
+%                         disp(Yr)
+%                         disp('Estimation')
+%                         disp(h')
+%                         disp('Checked')
+%                         disp('---------------------------------------------------------------')
+%                     end
                     %%% ------------------------------------------------------------------- %%%
                          
                     Pp = (I - K * H) * Px; % A posteriori estimation for the combined covariance matrix
@@ -890,13 +895,13 @@ classdef Robot
                         obj.P(j,:) = Pjp; % Update Covariance and correlated values for robot j
                     else
                         % Don´t Update
-                        disp("EXCEEDED ERROR THRESHOLD!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                        disp(Error);
-                        disp(cov_error);
+%                         disp("EXCEEDED ERROR THRESHOLD!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+%                         disp(Error);
+%                         disp(cov_error);
                     end   
                 end     
             end
-            pause(.000001);
+%             pause(.000001);
         end
         
         %% BEACON FUNCTIONS -----------------------------------------------
@@ -989,7 +994,7 @@ classdef Robot
                 end
                 %plot estimated position and color-------------------------------------------
                if any(eig(ROBOTS(r).covariance_e(1:2,1:2)) <=0)
-                    disp('invalid covariance')
+                    %disp('invalid covariance')
                else
                 error_ellipse(ROBOTS(r).covariance_e(1:2,1:2), [ROBOTS(r).position_e(1), ROBOTS(r).position_e(2)],'conf',.5)
                end
