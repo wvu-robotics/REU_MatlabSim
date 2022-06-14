@@ -1,6 +1,5 @@
-from ctypes import alignment
 import numpy as np
-import GenericSwarmController
+import models.GenericSwarmController as GenericSwarmController
 
 
 #need to review paper, this is not working as expected, might need to add walls

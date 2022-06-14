@@ -1,11 +1,10 @@
-import GenericSwarmController
+import models.GenericSwarmController as GenericSwarmController
 import pydtmc
 from pydtmc import MarkovChain 
 import numpy as np
 import plotly.express as px
 import pandas as pd
 from enum import Enum
-from ctypes import alignment
 
 class States(Enum):
     Forward = 0

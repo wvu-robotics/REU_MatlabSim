@@ -1,4 +1,4 @@
-import GenericSwarmController
+import models.GenericSwarmController as GenericSwarmController
 import numpy as np
 
 class Dance(GenericSwarmController.GenericSwarmController):
