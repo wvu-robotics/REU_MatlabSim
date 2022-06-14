@@ -28,6 +28,11 @@ classdef Agent < handle
             globalShape = rotatedShape + obj.position(1:2); %[x,y] matrix
             %globalArrow = rotatedArrow + obj.position(1:2);
             scaledAlti = 0.8*((obj.position(3)-SimLaw.agentFloor)/(SimLaw.agentCeiling - SimLaw.agentFloor));
+            if scaledAlti < 0
+                scaledAlti = 0;
+            elseif scaledAlti > 0.8
+                scaledAlti = 0.8;
+            end
             color = hsv2rgb([scaledAlti,1,1]);
             %fprintf("hue: %g\n",color(1));
             
