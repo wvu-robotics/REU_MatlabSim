@@ -34,7 +34,8 @@ classdef ThermalMap < handle
             %strength = 0;
            % for i = 1:SimLaw.numThermals
                 radius = thermalMap.thermals(i).radius;
-                distTherm = norm((position / 5) - 100 - thermalMap.thermals(i).position);
+                %distTherm = norm((position / 5) - 100 - thermalMap.thermals(i).position);
+                distTherm = norm(thermalMap.thermals(i).position - position);
          
                 % If the point is inside the thermal, calculate its strength
                % if distTherm(i) <= thermalMap.thermals(i).radius

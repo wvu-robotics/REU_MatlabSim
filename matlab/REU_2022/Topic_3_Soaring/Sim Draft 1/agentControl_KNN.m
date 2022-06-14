@@ -1,10 +1,25 @@
 function agentControl_KNN(currentAgent, localAgents, thermalStrength, target)
+%{
+thermalStrength = 10
+mapSize = [-200,200]
+numAgents = 20
+separation = 15.0
+cohesion = 0.06
+waggle = 50
+forwardSpeedMin = 15
+forwardSpeedMax = 30
+renderScale = [5;5];
+
+
+%}
+
+
     numLocalAgents = size(localAgents,2);
     if(numLocalAgents > 0)
         %% Get Centroid
         % Centroid: 2D, scaled linearly by distance
         centroid = [0,0,0];
-        distances2D = zeros(1,numLocalAgents);
+        distances2D = 1E6 * ones(1,numLocalAgents);
         centroidWeight = 0;
         for i = 1:numLocalAgents
             if localAgents(i).savedPosition(3) <= 0
@@ -14,7 +29,8 @@ function agentControl_KNN(currentAgent, localAgents, thermalStrength, target)
             diffLocalAgent(3) = 0;
             distLocalAgent = norm(diffLocalAgent);
             distances2D(i) = distLocalAgent;
-            weight = distLocalAgent/SimLaw.neighborRadius;
+            scaledDist = distLocalAgent/SimLaw.neighborRadius;
+            weight = scaledDist;
             centroid = centroid + weight*localAgents(i).savedPosition;
             centroidWeight = centroidWeight + weight;
         end
@@ -31,7 +47,7 @@ function agentControl_KNN(currentAgent, localAgents, thermalStrength, target)
             centroidUnit   = diffCentroid / distToCentroid;
         end
 
-        % Separation & Alignment: K-nearest neighbors(KNN)
+        % Find k-nearest neighbors(KNN)
         k = 10;
         if(numLocalAgents < k)
             NNIndices = 1:numLocalAgents;
@@ -42,31 +58,29 @@ function agentControl_KNN(currentAgent, localAgents, thermalStrength, target)
             numNN = k;
         end
         
+        % Separation and alignment
+        separationVector = [0,0,0];
+        alignmentVector = [0,0,0];
+        
         for i=1:numNN
-            NNIndex = NNIndices;
+            NNIndex = NNIndices(i);
             NNAgent = localAgents(NNIndex);
-            diffNNAgent = NNAgent.position - currentAgent.position;
+            diffNNAgent = NNAgent.savedPosition - currentAgent.position;
             diffNNAgent(3) = 0;
             distNNAgent = norm(diffNNAgent);
             distNNAgentScaled = distNNAgent/SimLaw.neighborRadius;
             diffUnitNNAgent = diffNNAgent/distNNAgent;
+            NNAgentHeading = NNAgent.savedHeading;
             
+            velUnitNNAgent = [cos(NNAgentHeading),sin(NNAgentHeading),0];
             
+            weight = 1/distNNAgentScaled^2;
+            separationVector = separationVector - weight*diffUnitNNAgent;
+            alignmentVector = alignmentVector + weight*velUnitNNAgent;
         end
         
-        nearest = find(distances2D == min(distances2D));
-        if ~isempty(nearest)
-            nearest        = nearest(1);
-            diffNearest    = localAgents(nearest).savedPosition - currentAgent.position;
-            diffNearest(3) = 0;
-            distToNearest  = norm(diffNearest);
-            nearestUnit    = diffNearest / distToNearest;
-            nearestVelUnit = [cos(localAgents(nearest).savedHeading), sin(localAgents(nearest).savedHeading), 0];
-        else
-            distToNearest  = 1;
-            nearestUnit    = [0,0,0];
-            nearestVelUnit = [0,0,0];
-        end
+        separationVector = separationVector / numNN;
+        alignmentVector = alignmentVector / numNN;
 
         % Migration
         diffTarget     = target - currentAgent.position;
@@ -74,16 +88,24 @@ function agentControl_KNN(currentAgent, localAgents, thermalStrength, target)
         distToTarget   = norm(diffTarget);
         targetUnit     = diffTarget / distToTarget;
 
+        % Waggle
+        forwardUnit = [cos(currentAgent.heading), sin(currentAgent.heading), 0];
+        upUnit = [0,0,1];
+        sideUnit = cross(upUnit,forwardUnit);
+        waggleSign = 2 * round(rand()) - 1;
+        
         %% Get Accel
-        accelMag_cohesion   = SimLaw.cohesion   *      distToCentroid^2; %Positive, to go TOWARDS the other
-        accelMag_separation = SimLaw.separation *   -1/distToNearest^2; %Negative, to go AWAY from the other
-        accelMag_alignment  = SimLaw.alignment  *    1/distToNearest^2;
-        accelMag_migration  = SimLaw.migration  *      distToTarget^6;
+        accelMag_cohesion   = SimLaw.cohesion * distToCentroid^2;
+        accelMag_separation = SimLaw.separation;
+        accelMag_alignment  = SimLaw.alignment;
+        accelMag_migration  = SimLaw.migration * distToTarget^6;
+        accelMag_waggle     = SimLaw.waggle * waggleSign;
 
-        newAccel = accelMag_separation * nearestUnit + ...
+        newAccel = accelMag_separation * separationVector + ...
                    accelMag_cohesion   * centroidUnit + ...
-                   accelMag_alignment  * nearestVelUnit + ...
-                   accelMag_migration  * targetUnit; % nets accel vector to add on to current accel
+                   accelMag_alignment  * alignmentVector + ...
+                   accelMag_migration  * targetUnit + ... % nets accel vector to add on to current accel
+                   accelMag_waggle     * sideUnit;
 
         newAccel(3) = 0; % removes z component
         currentAgent.accelDir = atan2(newAccel(2), newAccel(1));
@@ -91,7 +113,7 @@ function agentControl_KNN(currentAgent, localAgents, thermalStrength, target)
         newAccel = [0,0,0];
     end
 
-    forwardUnit      = [cos(currentAgent.heading);sin(currentAgent.heading);0];
+    forwardUnit = [cos(currentAgent.heading), sin(currentAgent.heading), 0];
     newAccel_forward = dot(newAccel,forwardUnit);
     if(norm(newAccel) - norm(newAccel_forward) < 1E-6)
         newAccel_circ = 0;
@@ -127,15 +149,21 @@ function agentControl_KNN(currentAgent, localAgents, thermalStrength, target)
     vspeed = vsink + thermalStrength;
 
     %% Get Pos
-    newPos(1:2) = currentAgent.position(1:2) + newVel(1)*forwardUnit(1:2)'*SimLaw.dt;
+    newPos(1:2) = currentAgent.position(1:2) + newVel(1)*forwardUnit(1:2)*SimLaw.dt;
     newPos(3) = currentAgent.position(3) + vspeed*SimLaw.dt;
     if newPos(3) > SimLaw.agentCeiling
         newPos(3) = SimLaw.agentCeiling;
     elseif newPos(3) < SimLaw.agentFloor % not Giga-Jank
         newPos (3) = SimLaw.agentFloor; % Tera-Jank
     end
+    if newPos(3) <= 0
+        currentAgent.isAlive = false;
+    end
     currentAgent.heading = currentAgent.heading + newVel(2)*SimLaw.dt;
 
     currentAgent.velocity = newVel;
     currentAgent.position = newPos;
+    if(isnan(newPos(3)))
+        fprintf("NAN\n");
+    end
 end
