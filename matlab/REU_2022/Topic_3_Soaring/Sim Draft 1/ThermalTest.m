@@ -44,7 +44,7 @@ for step = 1:steps
         thermalRad = thermalMap.thermals(thermalIndex).radius;
         % Square bounds in pixels around the thermal center: left, right, lower, upper
         % There are 5 pixels per unit
-        thermalSquare = 5 * [thermalPos(1) - thermalRad, thermalPos(1) + thermalRad, thermalPos(2) - thermalRad, thermalPos(2) + thermalRad];
+        thermalSquare = (SimLaw.mapSize(2) + [thermalPos(1) - thermalRad, thermalPos(1) + thermalRad, thermalPos(2) - thermalRad, thermalPos(2) + thermalRad]);
 
         % Create temporary empty matrix to hold distances from this thermal
         tempThermalMap = zeros(thermalPixels);
@@ -53,15 +53,15 @@ for step = 1:steps
             for column = thermalSquare(1):thermalSquare(2)
                 % At each position in the matrix, find the corresponding map
                 % position and calculate its distance from this thermal
-%               mapPos = [mapX(column),mapY(row)];
-%               diffPos = thermalPos - mapPos;
-%               distancesFromThermal(row,column) = norm(diffPos);
-                tempThermalMap(row, column) = thermalMap.getStrength([row column]);
+%                mapPos = [mapX(column),mapY(row)];
+%                diffPos = thermalPos - mapPos;
+%                distancesFromThermal(row,column) = norm(diffPos);
+               tempThermalMap(row, column) = thermalMap.getStrength([row column], thermalIndex);
             end
         end
         % Use normal distribution to generate thermal (normpdf)
-        %distancesFromThermal = distancesFromThermal/thermalMap.thermals(thermalIndex).radius;
-        %tempThermalMap = normpdf(distancesFromThermal)/normpdf(0);
+%         distancesFromThermal = distancesFromThermal/thermalMap.thermals(thermalIndex).radius;
+%         tempThermalMap = normpdf(distancesFromThermal)/normpdf(0);
         finalThermalMap = finalThermalMap + tempThermalMap;
     end
 
