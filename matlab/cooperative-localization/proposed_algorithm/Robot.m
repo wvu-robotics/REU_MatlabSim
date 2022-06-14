@@ -110,7 +110,7 @@ classdef Robot
             
             % initalize boids parameters-------------------------------------------
             obj.max_speed = .5;          % [m/s]
-            obj.min_speed = .1;         % [m/s]
+            obj.min_speed = .01;         % [m/s]
             obj.max_yaw_rate = 1;      % [rad/s]
             obj.max_force = 5;%0.1;
             obj.acceleration = [0 0];
@@ -173,21 +173,43 @@ classdef Robot
              tb = obj.time_as_beacon;
              t_max = obj.max_beacon_time;
              
-             obj.Ka = (rho/rho_max)^2 + dr/dh ...
-                      + relu(dlarray((e_m-e_max))).extractdata/e_max; 
+             rho_norm = rho/rho_max;
+             cov_norm = cov_e/cov_max;
+             e_norm = e_m/e_max;
+             dg_norm = dg/Lw;
+             dh_norm = dh/Lw + .00001;
 
-             obj.Kc = cov_e/cov_max + (e_m/e_max)^2 ... 
-                      + sigmoid(dlarray(dg/dr)).extractdata * dh/Lw;
+              obj.Ka = rho_norm^2 + 1/dh_norm + relu(dlarray(e_norm - 1)).extractdata;
+              obj.Kc = cov_norm + e_norm^2 + sigmoid(dlarray(dg_norm)).extractdata * dh_norm;
+              obj.Ks = relu(dlarray(1 - cov_norm)).extractdata + 1/e_norm + 1/dg_norm + sigmoid(dlarray(1/dh_norm)).extractdata;
+              obj.Kh = cov_norm + e_norm^2 + sigmoid(dlarray(dg_norm)).extractdata * (1- dh_norm);
+              obj.Kg = (1-cov_norm) + e_norm^-2 + sigmoid(dlarray(dh_norm)).extractdata * (1/dg_norm);
 
-             obj.Ks = relu(dlarray((cov_e-cov_max))).extractdata/cov_max...
-                      + e_max/(e_m+1) + sigmoid(dlarray(dr/dh)).extractdata ...
-                      +dg/Lw;
+              if obj.Ka > 10; obj.Ka = 10; end
+              if obj.Kc > 10; obj.Kc = 10; end
+              if obj.Ks > 10; obj.Ks = 10; end
+              if obj.Kh > 10; obj.Kh = 10; end
+              if obj.Kg > 10; obj.Kg = 10; end
 
-             obj.Kh = cov_e/cov_max + (e_m/e_max)^2 ...
-                      + sigmoid(dlarray(dg/dr)).extractdata*((Lw-dh)/Lw);
-             
-             obj.Kg = (e_max/(e_m+1))^2 + (cov_max -cov_e)/cov_max ...
-                      +sigmoid(dlarray(dh/dr)).extractdata*dr/dg;
+%              obj.Ka = (rho/rho_max)^2 + dr/dh ...
+%                       + relu(dlarray((e_m-e_max))).extractdata/e_max; 
+% 
+%              obj.Kc = cov_e/cov_max + (e_m/e_max)^2 ... 
+%                       + sigmoid(dlarray(dg/dr)).extractdata * dh/Lw;
+% 
+%              obj.Ks = relu(dlarray((cov_e-cov_max))).extractdata/cov_max...
+%                       + e_max/(e_m+1) + sigmoid(dlarray(dr/dh)).extractdata ...
+%                       +dg/Lw;
+% 
+%              obj.Kh = cov_e/cov_max + (e_m/e_max)^2 ...
+%                       + sigmoid(dlarray(dg/dr)).extractdata*((Lw-dh)/Lw);
+% 
+%              obj.Kg = (e_max/(e_m+1))^2 + (cov_max -cov_e)/cov_max ...
+%                       +sigmoid(dlarray(dh/dr)).extractdata*dr/dg;
+
+
+
+
             
 %              temp = ((cov_max-cov_e)/cov_max)*((e_max-e_m)/e_max)...
 %                     + obj.is_beacon*(tb-t_max)/t_max;
@@ -249,7 +271,7 @@ classdef Robot
             desired = desired*obj.max_speed;
             
             steer = desired-obj.velocity_e;
-            steer = steer.*obj.max_force/norm(steer);
+            steer = obj.max_force * steer./norm(steer);
         end
         
         function [steer] = seperate(obj,boids)

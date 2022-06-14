@@ -40,7 +40,7 @@ num_esimators = size(estimator_methods);
 for estimator = estimator_methods
     for enviorment = 0
         for boids_rules = [0,1,2]
-            for num_agents = [5,10,25,50] %[5,10,25,50]
+            for num_agents = [5,10,25] %[5,10,25,50]
                            
                 %% file name generator
                 switch estimator
