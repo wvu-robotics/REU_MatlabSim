@@ -40,7 +40,7 @@ classdef SimLaw
         thermalSpeedMax = 50    % m/s
         thermalRadiusMin = 5    % m
         thermalRadiusMax = 20   % m
-        thermalStrengthMin = 3  % m/s, peak updraft speed
+        thermalStrengthMin = 0  % m/s, peak updraft speed
         thermalStrengthMax = 10 % m/s, peak updraft speed
         thermalFadeRate = 1     % m/s, rate at which thermals fade in or out 
         thermalPlateauTime = 5  % steps at a max or min strength

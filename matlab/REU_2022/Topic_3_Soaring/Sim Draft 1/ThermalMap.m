@@ -23,7 +23,7 @@ classdef ThermalMap < handle
                 thermalMap.thermals(i).velocity(2) = Utility.randIR(SimLaw.thermalSpeedMin,SimLaw.thermalSpeedMax)*randFactor(2);
                         
                 thermalMap.thermals(i).radius = Utility.randIR(SimLaw.thermalRadiusMin,SimLaw.thermalRadiusMax);
-                thermalMap.thermals(i).maxStrength = round(Utility.randIR(SimLaw.thermalStrengthMin,SimLaw.thermalStrengthMax));
+                thermalMap.thermals(i).maxStrength = round(Utility.randIR(SimLaw.thermalStrengthMin + 1,SimLaw.thermalStrengthMax));
                 thermalMap.thermals(i).curStrength = round(Utility.randIR(1, thermalMap.thermals(i).maxStrength));
             end
         end
@@ -32,16 +32,19 @@ classdef ThermalMap < handle
         function strength = getStrength(thermalMap, position)
             % determine distance to all thermals
             distTherm = zeros(1,SimLaw.numThermals);
+            strength = 0;
             for i = 1:SimLaw.numThermals
                 distTherm(i) = norm(position - thermalMap.thermals(i).position);
-            end
-
-            % check which thermal we are in. Returns one number or empty.
-            inTh = find(distTherm <= thermalMap.thermals(i).radius);
             
-            % currently assumes strength is the same at all altitudes
-            strength = thermalMap.thermals(i).strength*exp(-(3*distTherm(inTh)/thermalMap.thermals(i).radius)^2)*...
-                                             (1-(3*distTherm(inTh)/thermalMap.thermals(i).radius)^2);
+                % If the point is inside the thermal, calculate its
+                % strength
+                if distTherm(i) <= thermalMap.thermals(i).radius
+                    % currently assumes strength is the same at all altitudes
+                    x = exp(-(3*distTherm(i)/thermalMap.thermals(i).radius)^2);
+                    y = (1-(3*distTherm(i)/thermalMap.thermals(i).radius).^2);
+                    strength = strength + thermalMap.thermals(i).curStrength.*x.*y;
+                end
+            end
         end
 
         % Ensure thermals don't overlap
