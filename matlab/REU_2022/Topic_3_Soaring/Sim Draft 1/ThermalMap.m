@@ -82,5 +82,26 @@ classdef ThermalMap < handle
             end
         end
 
+        function [] = checkBounds(thermalMap, thermalIndex) 
+            % Check the left and right bounds of the map: if the thermal hits
+            % one, move it in the opposite direction
+            thermalList = thermalMap.thermals;
+            if(thermalList(thermalIndex).position(1) >= SimLaw.thermalBounds(2))
+                thermalList(thermalIndex).position(1) = 2*SimLaw.thermalBounds(2) - thermalList(thermalIndex).position(1);
+                thermalList(thermalIndex).velocity(1) = -thermalList(thermalIndex).velocity(1);
+            elseif(thermalList(thermalIndex).position(1) <= SimLaw.thermalBounds(1))
+                thermalList(thermalIndex).position(1) = 2*SimLaw.thermalBounds(1) - thermalList(thermalIndex).position(1);
+                thermalList(thermalIndex).velocity(1) = -thermalList(thermalIndex).velocity(1);
+            end
+            
+            % Check the upper and lower bounds of the map
+            if(thermalList(thermalIndex).position(2) >= SimLaw.thermalBounds(2))
+                thermalList(thermalIndex).position(2) = 2*SimLaw.thermalBounds(2) - thermalList(thermalIndex).position(2);
+                thermalList(thermalIndex).velocity(2) = -thermalList(thermalIndex).velocity(2);
+            elseif(thermalList(thermalIndex).position(2) <= SimLaw.thermalBounds(1))
+                thermalList(thermalIndex).position(2) = 2*SimLaw.thermalBounds(1) - thermalList(thermalIndex).position(2);
+                thermalList(thermalIndex).velocity(2) = -thermalList(thermalIndex).velocity(2);
+            end
+        end
     end
 end

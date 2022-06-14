@@ -96,24 +96,7 @@ for step = 1:steps
         thermalList(thermalIndex).position(1) = thermalList(thermalIndex).position(1) + 2 * thermalList(thermalIndex).velocity(1)*dt;
         thermalList(thermalIndex).position(2) = thermalList(thermalIndex).position(2) + 2 * thermalList(thermalIndex).velocity(2)*dt;
         
-        % Check the left and right bounds of the map: if the thermal hits
-        % one, move it in the opposite direction
-        if(thermalList(thermalIndex).position(1) >= SimLaw.mapSize(2))
-            thermalList(thermalIndex).position(1) = 2*SimLaw.mapSize(2) - thermalList(thermalIndex).position(1);
-            thermalList(thermalIndex).velocity(1) = -thermalList(thermalIndex).velocity(1);
-        elseif(thermalList(thermalIndex).position(1) <= SimLaw.mapSize(1))
-            thermalList(thermalIndex).position(1) = 2*SimLaw.mapSize(1) - thermalList(thermalIndex).position(1);
-            thermalList(thermalIndex).velocity(1) = -thermalList(thermalIndex).velocity(1);
-        end
-        
-        % Check the upper and lower bounds of the map
-        if(thermalList(thermalIndex).position(2) >= SimLaw.mapSize(2))
-            thermalList(thermalIndex).position(2) = 2*SimLaw.mapSize(2) - thermalList(thermalIndex).position(2);
-            thermalList(thermalIndex).velocity(2) = -thermalList(thermalIndex).velocity(2);
-        elseif(thermalList(thermalIndex).position(2) <= SimLaw.mapSize(1))
-            thermalList(thermalIndex).position(2) = 2*SimLaw.mapSize(1) - thermalList(thermalIndex).position(2);
-            thermalList(thermalIndex).velocity(2) = -thermalList(thermalIndex).velocity(2);
-        end
+        thermalMap.checkBounds(thermalIndex);
     end
     
 end
