@@ -16,6 +16,7 @@ rootFolder = "Output Media";
 dateFormat = "mm-dd-yy";
 timeFormat = "HH-MM-SS";
 videoPrefix = "TestVideo";
+%videoPrefix = sprintf('[dt %g, T %g, x%g] ',simLaw.dt, simLaw.totalTime, simLaw.fpsMult);
 
 % Get current date/time
 date = datestr(now,dateFormat);
@@ -23,6 +24,10 @@ time = datestr(now,timeFormat);
 
 % Create folder/video names
 dateFolder = sprintf('%s/%s',rootFolder,date);
+
+
+%videoSuffix = sprintf('S=%1.0E, C=%1.0E, A=%1.0E, M=%1.0E', simLaw.separation, simLaw.cohesion, simLaw.alignment, simLaw.migration);
+%videoName = sprintf('%s/%s %s.avi',dateFolder,videoPrefix,videoSuffix);
 videoName = sprintf('%s/%s %s.avi',dateFolder,videoPrefix,time);
 
 % Create folders if they don't exist
