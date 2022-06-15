@@ -51,6 +51,10 @@ daspect([1 1 1])
 
 %% Create instance of simulation
 swarm = Swarm(simLaw);
+theta = linspace(0,2*pi,50);
+patchX = 50*cos(theta)-100;
+patchY = 50*sin(theta)+100;
+patchObj = patch('XData',patchX,'YData',patchY,'FaceColor','red','FaceAlpha',0.8);
 
 %% Run simulation
 steps = simLaw.totalTime/simLaw.dt;
@@ -73,6 +77,8 @@ for step = 1:steps
     % Print number of Living Agents
     Living = nnz([swarm.agents.isAlive]);
     fprintf("%g Agents, ", Living);
+    stringLiving = sprintf("%g Agents Alive",Living);
+    title(stringLiving);
 
     % Find and print elapsed time
     c2 = clock;

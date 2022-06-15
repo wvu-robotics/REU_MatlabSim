@@ -40,7 +40,12 @@ function agentControl_KNN(currentAgent, localAgents, thermalStrength, target, SL
             distLocalAgent = norm(diffLocalAgent);
             distances2D(i) = distLocalAgent;
             scaledDist = distLocalAgent/SL.neighborRadius;
-            weight = scaledDist * (SL.cohesionHeightMult * max(0,(diffHeight+3)/SL.neighborRadius) + 1);
+            heightOffset = -3;
+            if(diffHeight > heightOffset)
+                weight = scaledDist * (SL.cohesionHeightMult*(diffHeight-heightOffset)/SL.neighborRadius + 1);
+            else
+                weight = 0;
+            end
             centroid = centroid + weight*localAgents(i).savedPosition;
             centroidWeight = centroidWeight + weight;
         end
@@ -48,15 +53,19 @@ function agentControl_KNN(currentAgent, localAgents, thermalStrength, target, SL
 
         %% Get Vectors
         % Cohesion
-        diffCentroid = centroid - currentAgent.position;
-        diffCentroid(3) = 0;
-        distToCentroid = norm(diffCentroid);
-        if distToCentroid == 0
-            centroidUnit = [0,0,0];
-        else
-            centroidUnit   = diffCentroid / distToCentroid;
+        if(centroidWeight ~= 0)
+            diffCentroid = centroid - currentAgent.position;
+            diffCentroid(3) = 0;
+            distToCentroid = norm(diffCentroid);
+            if distToCentroid == 0
+                centroidUnit = [0,0,0];
+            else
+                centroidUnit = diffCentroid / distToCentroid;
+            end
+            
+            accelMag_cohesion   = SL.cohesion * distToCentroid^2;
         end
-
+        
         % Find k-nearest neighbors(KNN)
         k = 10;
         if(numLocalAgents < k)
@@ -76,6 +85,7 @@ function agentControl_KNN(currentAgent, localAgents, thermalStrength, target, SL
             NNIndex = NNIndices(i);
             NNAgent = localAgents(NNIndex);
             diffNNAgent = NNAgent.savedPosition - currentAgent.position;
+            diffNNHeight = diffNNAgent(3);
             diffNNAgent(3) = 0;
             distNNAgent = norm(diffNNAgent);
             distNNAgentScaled = distNNAgent/SL.neighborRadius;
@@ -84,16 +94,19 @@ function agentControl_KNN(currentAgent, localAgents, thermalStrength, target, SL
             
             velUnitNNAgent = [cos(NNAgentHeading),sin(NNAgentHeading),0];
             
-            weightSquared = 1/distNNAgentScaled^2 - 1;
-            weightConstant = 1;
-            separationVector = separationVector - weightSquared*diffUnitNNAgent;
-            alignmentVector = alignmentVector + weightConstant*velUnitNNAgent;
+            weightSep = 1/distNNAgentScaled^2 - 1;
+            weightAlign = 1;
+            if(norm(diffNNHeight) > SL.separationHeightGap)
+                weightSep = 0;
+                weightAlign = 0;
+            end
+            separationVector = separationVector - weightSep*diffUnitNNAgent;
+            alignmentVector = alignmentVector + weightAlign*velUnitNNAgent;
         end
         
         separationVector = separationVector / numNN;
         alignmentVector = alignmentVector / numNN;
         
-        accelMag_cohesion   = SL.cohesion * distToCentroid^2;
         accelMag_separation = SL.separation;
         accelMag_alignment  = SL.alignment;
     end
