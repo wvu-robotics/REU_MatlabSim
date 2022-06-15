@@ -59,8 +59,19 @@ function agentControl_Update(currentAgent,localAgents,thermalStrength, target, s
         newAccel(3) = 0; % removes z component
         currentAgent.accelDir = atan2(newAccel(2), newAccel(1));
     else
-        newAccel = [0,0,0];
+        % Migration
+        diffTarget     = target - currentAgent.position;
+        diffTarget(3)  = 0;
+        distToTarget   = norm(diffTarget);
+        targetUnit     = diffTarget / distToTarget;
+        accelMag_migration  = simLaw.migration  *      distToTarget^6;
+        newAccel = accelMag_migration  * targetUnit; % nets accel vector to add on to current accel
+
+        newAccel(3) = 0; % removes z component
+        currentAgent.accelDir = atan2(newAccel(2), newAccel(1));
     end
+
+
 
     forwardUnit      = [cos(currentAgent.heading);sin(currentAgent.heading);0];
     newAccel_forward = dot(newAccel,forwardUnit);
