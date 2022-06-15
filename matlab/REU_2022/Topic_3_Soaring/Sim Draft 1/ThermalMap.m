@@ -46,8 +46,8 @@ classdef ThermalMap < handle
                 % If the point is inside the thermal, calculate its strength
                % if distTherm(i) <= thermalMap.thermals(i).radius
                     % currently assumes strength is the same at all altitudes
-                    x = exp(-(distTherm/radius)^2);
-                    y = (1-(distTherm/radius)^2);
+                    x = exp(-(3*distTherm/radius)^2);
+                    y = (1-(3*distTherm/radius)^2);
                     strength = thermalMap.thermals(i).curStrength.*x.*y;
                % end
            % end

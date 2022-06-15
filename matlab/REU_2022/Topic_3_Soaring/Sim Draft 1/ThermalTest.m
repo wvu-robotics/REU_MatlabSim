@@ -38,7 +38,12 @@ for step = 1:steps
     ylim(SL.mapSize);
     daspect([1 1 1]);
     colorbar;
-    cbLimits = [0,SL.thermalStrengthMax];
+    cbLimits = [-1,SL.thermalStrengthMax];
+    %colors = [6 42 127; 11 84 254; 41 76 247; 71 67 239; 102 59 231; 132 50 223; 162 41 216; 192 32 208; 222 24 200; 252 15 192; 255 192 203] / 255;
+    colors = [6 42 127; 41 76 247; 102 59 231; 162 41 216; 222 24 200; 255 192 203] / 255;
+    x = [0:thermalPixels/(length(colors)-1):thermalPixels];
+    map = interp1(x/1000,colors,linspace(0,1,1000));
+    colormap(map);
     set(gca,'clim',cbLimits);
     
     %% Render thermals
