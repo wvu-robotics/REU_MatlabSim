@@ -3,6 +3,10 @@ close all
 clear
 clc
 
+%% Load sim law
+addpath("Code of Laws");
+SL = ThermalTestLaw();
+
 %% Set up parameters
 overallTime = 20; % s
 dt = .05; % s 
@@ -10,12 +14,12 @@ steps = overallTime/dt;
 
 % Initialize background of map
 thermalPixels = 1000;
-mapX = linspace(SimLaw.mapSize(1),SimLaw.mapSize(2),thermalPixels);
-mapY = linspace(SimLaw.mapSize(1),SimLaw.mapSize(2),thermalPixels);
-mapDiff = (SimLaw.mapSize(2)-SimLaw.mapSize(1))/(thermalPixels-1);
+mapX = linspace(SL.mapSize(1),SL.mapSize(2),thermalPixels);
+mapY = linspace(SL.mapSize(1),SL.mapSize(2),thermalPixels);
+mapDiff = (SL.mapSize(2)-SL.mapSize(1))/(thermalPixels-1);
 
 % Initialize thermals as a matrix of Thermals
-thermalMap = ThermalMap();
+thermalMap = ThermalMap(SL);
 
 %% Set up video and figure
 video = VideoWriter('thermals1.avi');
@@ -30,28 +34,28 @@ for step = 1:steps
     fprintf("Frame %g/%g\n",step,steps);
     clf
     hold on
-    xlim(SimLaw.mapSize);
-    ylim(SimLaw.mapSize);
+    xlim(SL.mapSize);
+    ylim(SL.mapSize);
     daspect([1 1 1]);
     colorbar;
-    cbLimits = [0,SimLaw.thermalStrengthMax];
+    cbLimits = [0,SL.thermalStrengthMax];
     set(gca,'clim',cbLimits);
     
     %% Render thermals
     finalThermalMap = zeros(thermalPixels);
     % Iterate through thermals
-    for thermalIndex = 1:SimLaw.numThermals
+    for thermalIndex = 1:SL.numThermals
         thermalPos = thermalMap.thermals(thermalIndex).position;
         thermalRad = thermalMap.thermals(thermalIndex).radius;
         % Square bounds in pixels around the thermal center: left, right, lower, upper
         % There are 5 pixels per unit
-        thermalSquare = (SimLaw.mapSize(2) + [thermalPos(1) - thermalRad, thermalPos(1) + thermalRad, thermalPos(2) - thermalRad, thermalPos(2) + thermalRad]);
+        thermalSquare = (SL.mapSize(2) + [thermalPos(1) - thermalRad, thermalPos(1) + thermalRad, thermalPos(2) - thermalRad, thermalPos(2) + thermalRad]);
         
         thermalSquareMin = [thermalPos(1)-thermalRad,thermalPos(2)-thermalRad];
         thermalSquareMax = [thermalPos(1)+thermalRad,thermalPos(2)+thermalRad];
         
-        mapPosMin = [round((thermalSquareMin(1)-SimLaw.mapSize(1))/mapDiff),round((thermalSquareMin(2)-SimLaw.mapSize(1))/mapDiff)];
-        mapPosMax = [round((thermalSquareMax(1)-SimLaw.mapSize(1))/mapDiff),round((thermalSquareMax(2)-SimLaw.mapSize(1))/mapDiff)];
+        mapPosMin = [round((thermalSquareMin(1)-SL.mapSize(1))/mapDiff),round((thermalSquareMin(2)-SL.mapSize(1))/mapDiff)];
+        mapPosMax = [round((thermalSquareMax(1)-SL.mapSize(1))/mapDiff),round((thermalSquareMax(2)-SL.mapSize(1))/mapDiff)];
         
         %fprintf("ThermalPos (%g,%g) and radius (%g): mapPosMin (%g,%g), mapPosMax (%g,%g)\n",thermalPos(1),thermalPos(2),thermalRad,mapPosMin(1),mapPosMin(2),mapPosMax(1),mapPosMax(2));
         
@@ -76,7 +80,7 @@ for step = 1:steps
         finalThermalMap = finalThermalMap + tempThermalMap;
     end
 
-    thermalMapImg = imagesc(finalThermalMap,'XData',SimLaw.mapSize,'YData',SimLaw.mapSize);
+    thermalMapImg = imagesc(finalThermalMap,'XData',SL.mapSize,'YData',SL.mapSize);
     thermalMapImg.AlphaData = 1;
     hold off
     
@@ -86,7 +90,7 @@ for step = 1:steps
     pause(0.0001);
     
     %% Step physics
-    for thermalIndex = 1:SimLaw.numThermals
+    for thermalIndex = 1:SL.numThermals
         thermalMap.adjustThermalPositions();
         thermalMap.fadeThermals();
         thermalList = thermalMap.thermals;
