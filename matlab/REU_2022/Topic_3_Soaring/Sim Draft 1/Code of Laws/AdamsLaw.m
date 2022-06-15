@@ -2,15 +2,15 @@ classdef AdamsLaw
     properties
         %% Variables to save
         % Simulation constraints
-        dt = 0.1;        %s
-        totalTime = 60;  %s
+        dt = 0.02;        %s
+        totalTime = 120;  %s
         fpsMult = 1;
         mapSize = [-200,200];   %m, bounds of square map
-        numAgents = 20;  %agents
+        numAgents = 50;  %agents
         numThermals = 4; %thermals
 
         % Initial conditions
-        agentSpawnPosRange = [-70,-70; 70,70];     %m, [xMin,yMin;xMax,yMax]
+        agentSpawnPosRange = [-150,-150; 150,150];     %m, [xMin,yMin;xMax,yMax]
         agentSpawnAltiRange = [5,50];             %m, [Min,Max]
         agentSpawnVelRange = [8,0;13,0];           %m/s,rad/s [forwardMin,omegaMin;forwardMax,omegaMax];
         g = 9.81;                                  % m/s/s
@@ -18,12 +18,13 @@ classdef AdamsLaw
         % Rule constraints
         separation = 60.0;
         cohesion = 0.06;
+        cohesionHeightMult = 5;
         alignment = 30;
-        migration = 2e-12;
+        migration = 0*2e-12;
         waggle = 5;
 
         % Agent constraints
-        neighborRadius = 50;     %m
+        neighborRadius = 80;     %m
         agentCeiling   = 100;    %m
         agentFloor     = 0;      %m
         forwardSpeedMin = 15;     %m/s
@@ -64,8 +65,9 @@ classdef AdamsLaw
             position = agent.position;
             radius = 50;
             peakStrength = 50;
+            thermalPos = [100,100];
             
-            dist = norm(position(1:2));
+            dist = norm(position(1:2)-thermalPos);
             closeStrength = peakStrength*(1-(dist/radius)^2);
             strength = max(0,closeStrength);
         end
