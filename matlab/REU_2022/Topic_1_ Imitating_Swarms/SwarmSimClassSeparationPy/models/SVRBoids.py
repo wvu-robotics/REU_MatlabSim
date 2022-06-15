@@ -1,5 +1,5 @@
 import numpy as np
-import GenericSwarmController
+import models.GenericSwarmController as GenericSwarmController
 from dataclasses import dataclass
 
 #inserting this dummy class here for debugging and printing purposes
