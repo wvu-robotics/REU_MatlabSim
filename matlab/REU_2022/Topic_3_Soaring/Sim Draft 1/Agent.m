@@ -12,6 +12,9 @@ classdef Agent < handle
         isAlive  = true
         accelDir = 0.0;
         
+        lastWaggle = 0;
+        waggleSign = 0;
+        
         savedPosition = [0.0, 0.0, 0.0]
         savedVelocity = [0.0, 0.0]
         savedHeading = 0.0

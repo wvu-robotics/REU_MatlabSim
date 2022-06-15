@@ -1,16 +1,28 @@
-function agentControl_KNN(currentAgent, localAgents, thermalStrength, target, simLaw)
-%{
-thermalStrength = 10
-mapSize = [-200,200]
-numAgents = 20
-separation = 15.0
-cohesion = 0.06
-waggle = 50
-forwardSpeedMin = 15
-forwardSpeedMax = 30
-renderScale = [5;5];
-%}
+function agentControl_KNN(currentAgent, localAgents, thermalStrength, target, SL)
+    %{
+    thermalStrength = 10
+    mapSize = [-200,200]
+    numAgents = 20
+    separation = 15.0
+    cohesion = 0.06
+    waggle = 50
+    forwardSpeedMin = 15
+    forwardSpeedMax = 30
+    renderScale = [5;5];
+    %}
 
+    accelMag_separation = 0;
+    accelMag_cohesion = 0;
+    accelMag_alignment = 0;
+    accelMag_migration = 0;
+    accelMag_waggle = 0;
+    
+    separationVector = [0,0,0];
+    centroidUnit = [0,0,0];
+    alignmentVector = [0,0,0];
+    targetUnit = [0,0,0];
+    sideUnit = [0,0,0];
+    
     numLocalAgents = size(localAgents,2);
     if(numLocalAgents > 0)
         %% Get Centroid
@@ -26,7 +38,7 @@ renderScale = [5;5];
             diffLocalAgent(3) = 0;
             distLocalAgent = norm(diffLocalAgent);
             distances2D(i) = distLocalAgent;
-            scaledDist = distLocalAgent/simLaw.neighborRadius;
+            scaledDist = distLocalAgent/SL.neighborRadius;
             weight = scaledDist;
             centroid = centroid + weight*localAgents(i).savedPosition;
             centroidWeight = centroidWeight + weight;
@@ -65,50 +77,57 @@ renderScale = [5;5];
             diffNNAgent = NNAgent.savedPosition - currentAgent.position;
             diffNNAgent(3) = 0;
             distNNAgent = norm(diffNNAgent);
-            distNNAgentScaled = distNNAgent/simLaw.neighborRadius;
+            distNNAgentScaled = distNNAgent/SL.neighborRadius;
             diffUnitNNAgent = diffNNAgent/distNNAgent;
             NNAgentHeading = NNAgent.savedHeading;
             
             velUnitNNAgent = [cos(NNAgentHeading),sin(NNAgentHeading),0];
             
-            weight = 1/distNNAgentScaled^2;
-            separationVector = separationVector - weight*diffUnitNNAgent;
-            alignmentVector = alignmentVector + weight*velUnitNNAgent;
+            weightSquared = 1/distNNAgentScaled^2 - 1;
+            weightConstant = 1;
+            separationVector = separationVector - weightSquared*diffUnitNNAgent;
+            alignmentVector = alignmentVector + weightConstant*velUnitNNAgent;
         end
         
         separationVector = separationVector / numNN;
         alignmentVector = alignmentVector / numNN;
-
-        % Migration
-        diffTarget     = target - currentAgent.position;
-        diffTarget(3)  = 0;
-        distToTarget   = norm(diffTarget);
-        targetUnit     = diffTarget / distToTarget;
-
-        % Waggle
-        forwardUnit = [cos(currentAgent.heading), sin(currentAgent.heading), 0];
-        upUnit = [0,0,1];
-        sideUnit = cross(upUnit,forwardUnit);
-        waggleSign = 2 * round(rand()) - 1;
         
-        %% Get Accel
-        accelMag_cohesion   = simLaw.cohesion * distToCentroid^2;
-        accelMag_separation = simLaw.separation;
-        accelMag_alignment  = simLaw.alignment;
-        accelMag_migration  = simLaw.migration * distToTarget^6;
-        accelMag_waggle     = simLaw.waggle * waggleSign;
-
-        newAccel = accelMag_separation * separationVector + ...
-                   accelMag_cohesion   * centroidUnit + ...
-                   accelMag_alignment  * alignmentVector + ...
-                   accelMag_migration  * targetUnit + ... % nets accel vector to add on to current accel
-                   accelMag_waggle     * sideUnit;
-
-        newAccel(3) = 0; % removes z component
-        currentAgent.accelDir = atan2(newAccel(2), newAccel(1));
-    else
-        newAccel = [0,0,0];
+        accelMag_cohesion   = SL.cohesion * distToCentroid^2;
+        accelMag_separation = SL.separation;
+        accelMag_alignment  = SL.alignment;
     end
+   
+    % Migration
+    diffTarget = target - currentAgent.position;
+    diffTarget(3) = 0;
+    distToTarget = norm(diffTarget);
+    targetUnit = diffTarget / distToTarget;
+
+    % Waggle
+    forwardUnit = [cos(currentAgent.heading), sin(currentAgent.heading), 0];
+    upUnit = [0,0,1];
+    sideUnit = cross(upUnit,forwardUnit);
+    if(currentAgent.lastWaggle <= 0)
+        currentAgent.waggleSign = 2 * round(rand()) - 1;
+        currentAgent.lastWaggle = Utility.randIR(0.3,0.5); %s
+    end
+    currentAgent.lastWaggle = currentAgent.lastWaggle - SL.dt;
+    
+    accelMag_migration  = SL.migration * distToTarget^6;
+    accelMag_waggle     = SL.waggle * currentAgent.waggleSign;
+    
+    
+    %% Get Accel
+    newAccel = accelMag_separation * separationVector + ...
+               accelMag_cohesion   * centroidUnit + ...
+               accelMag_alignment  * alignmentVector + ...
+               accelMag_migration  * targetUnit + ... % nets accel vector to add on to current accel
+               accelMag_waggle     * sideUnit;
+
+    newAccel(3) = 0; % removes z component
+    currentAgent.accelDir = atan2(newAccel(2), newAccel(1));
+    
+    
 
     forwardUnit = [cos(currentAgent.heading), sin(currentAgent.heading), 0];
     newAccel_forward = dot(newAccel,forwardUnit);
@@ -123,40 +142,40 @@ renderScale = [5;5];
     newAccel = [newAccel_forward; newAccel_circ];
 
     %% Get Vel
-    newVel(1) = currentAgent.velocity(1) + newAccel(1)*simLaw.dt;
-    if(newVel(1) > simLaw.forwardSpeedMax)
-        newVel(1) = simLaw.forwardSpeedMax;
-    elseif(newVel(1) < simLaw.forwardSpeedMin)
-        newVel(1) = simLaw.forwardSpeedMin;
+    newVel(1) = currentAgent.velocity(1) + newAccel(1)*SL.dt;
+    if(newVel(1) > SL.forwardSpeedMax)
+        newVel(1) = SL.forwardSpeedMax;
+    elseif(newVel(1) < SL.forwardSpeedMin)
+        newVel(1) = SL.forwardSpeedMin;
     end
     % a = omega * v
-    currentAgent.bankAngle = atan(newAccel(2)/simLaw.g);
+    currentAgent.bankAngle = atan(newAccel(2)/SL.g);
 
-    if(currentAgent.bankAngle > simLaw.bankMax)
-        currentAgent.bankAngle = simLaw.bankMax;
+    if(currentAgent.bankAngle > SL.bankMax)
+        currentAgent.bankAngle = SL.bankMax;
     end
-    if(currentAgent.bankAngle < simLaw.bankMin)
-        currentAgent.bankAngle = simLaw.bankMin;
+    if(currentAgent.bankAngle < SL.bankMin)
+        currentAgent.bankAngle = SL.bankMin;
     end
-    newAccel(2) = tan(currentAgent.bankAngle)*simLaw.g;
+    newAccel(2) = tan(currentAgent.bankAngle)*SL.g;
     newVel(2) = newAccel(2)/newVel(1);
 
-    vsink = (simLaw.Sink_A*newVel(1).^2 + simLaw.Sink_B*newVel(1) + simLaw.Sink_C)...
+    vsink = (SL.Sink_A*newVel(1).^2 + SL.Sink_B*newVel(1) + SL.Sink_C)...
             / sqrt(cos(currentAgent.bankAngle));
     vspeed = vsink + thermalStrength;
 
     %% Get Pos
-    newPos(1:2) = currentAgent.position(1:2) + newVel(1)*forwardUnit(1:2)*simLaw.dt;
-    newPos(3) = currentAgent.position(3) + vspeed*simLaw.dt;
-    if newPos(3) > simLaw.agentCeiling
-        newPos(3) = simLaw.agentCeiling;
-    elseif newPos(3) < simLaw.agentFloor % not Giga-Jank
-        newPos (3) = simLaw.agentFloor; % Tera-Jank
+    newPos(1:2) = currentAgent.position(1:2) + newVel(1)*forwardUnit(1:2)*SL.dt;
+    newPos(3) = currentAgent.position(3) + vspeed*SL.dt;
+    if newPos(3) > SL.agentCeiling
+        newPos(3) = SL.agentCeiling;
+    elseif newPos(3) < SL.agentFloor % not Giga-Jank
+        newPos (3) = SL.agentFloor; % Tera-Jank
     end
     if newPos(3) <= 0
         currentAgent.isAlive = false;
     end
-    currentAgent.heading = currentAgent.heading + newVel(2)*simLaw.dt;
+    currentAgent.heading = currentAgent.heading + newVel(2)*SL.dt;
 
     currentAgent.velocity = newVel;
     currentAgent.position = newPos;

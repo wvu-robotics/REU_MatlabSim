@@ -9,7 +9,7 @@ addpath("Code of Laws");
 addpath("Agent Control Functions");
 
 %% Load simulation parameters
-simLaw = MaxsLaw();
+simLaw = AdamsLaw();
 
 %% setup output folder
 rootFolder = "Output Media";
