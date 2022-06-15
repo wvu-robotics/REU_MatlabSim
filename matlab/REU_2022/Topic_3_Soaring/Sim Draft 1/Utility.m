@@ -6,7 +6,7 @@ classdef Utility
             value = rand() * (high-low) + low;
         end
         
-        %% Calculates distance if within threshold.
+        %% Calculates distance if within threshold
         function [Verdict] = isNear(A1, A2, Threshold)
             % A NaN Threshold will tell isNear to ignore the threshold.
             if ~isnan(Threshold)

@@ -4,6 +4,9 @@ close all
 clear
 clc
 
+%% Load simulation parameters
+simLaw = load("Code of Laws/AdamsLaw.mat");
+
 %% setup output folder
 rootFolder = "Output Media";
 dateFormat = "mm-dd-yy";
@@ -29,19 +32,19 @@ end
 
 %% Setup video and figure
 video = VideoWriter(videoName);
-video.FrameRate = 1/SimLaw.dt;
+video.FrameRate = 1/simLaw.dt * simLaw.fpsMult;
 open(video);
 
 simFig = figure('Visible','on');
-xlim(SimLaw.mapSize);
-ylim(SimLaw.mapSize);
+xlim(simLaw.mapSize);
+ylim(simLaw.mapSize);
 daspect([1 1 1])
 
 %% Create instance of simulation
-swarm = Swarm();
+swarm = Swarm(simLaw);
 
 %% Run simulation
-steps = SimLaw.getSteps();
+steps = simLaw.totalTime/simLaw.dt;
 for step = 1:steps
     c1 = clock;
     fprintf("Frame %g/%g:  ",step,steps);
