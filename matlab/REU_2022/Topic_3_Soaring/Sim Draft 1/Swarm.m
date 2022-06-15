@@ -81,7 +81,11 @@ classdef Swarm < handle
                     
                     %Find thermal strength from ThermalMap
                     %thermalStrength = thermalMap.getStrength(currentAgent.position);
-                    thermalStrength = SL.tempThermalStrength;
+                    if(ismethod(SL,"getTempThermalStrength"))
+                        thermalStrength = SL.getTempThermalStrength(currentAgent);
+                    else
+                        thermalStrength = SL.tempThermalStrength;
+                    end
                     
                     %Update currentAgent
                     obj.agentControlFunc(currentAgent,localAgents,thermalStrength,[0,0,0], SL);

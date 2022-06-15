@@ -2,7 +2,7 @@ classdef AdamsLaw
     properties
         %% Variables to save
         % Simulation constraints
-        dt = 0.02;        %s
+        dt = 0.1;        %s
         totalTime = 60;  %s
         fpsMult = 1;
         mapSize = [-200,200];   %m, bounds of square map
@@ -57,6 +57,18 @@ classdef AdamsLaw
 
         % Functions to use
         agentControlFuncName = "agentControl_KNN";
+    end
+    
+    methods
+        function strength = getTempThermalStrength(~,agent)
+            position = agent.position;
+            radius = 50;
+            peakStrength = 50;
+            
+            dist = norm(position(1:2));
+            closeStrength = peakStrength*(1-(dist/radius)^2);
+            strength = max(0,closeStrength);
+        end
     end
 end
 
