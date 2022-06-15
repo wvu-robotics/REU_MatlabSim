@@ -61,8 +61,7 @@ Arrow = [2 1.5 1.5 0 0 1.5 1.5; 0 .5 .2 .2 -.2 -.2 -.5];
 showArrow = false;
 renderScale = [5;5]; %[scaleX; scaleY];
 
-
-%% Functions to use
+% Functions to use
 agentControlFuncName = "agentControl_KNN";
 
 %% Save variables

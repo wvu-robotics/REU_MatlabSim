@@ -4,8 +4,12 @@ close all
 clear
 clc
 
+%% Add search paths for sim laws and agent functions
+addpath("Code of Laws");
+addpath("Agent Control Functions");
+
 %% Load simulation parameters
-simLaw = load("Code of Laws/AdamsLaw.mat");
+simLaw = AdamsLaw();
 
 %% setup output folder
 rootFolder = "Output Media";
