@@ -19,8 +19,8 @@ classdef MaxsLaw
         separation = 1e6;
         cohesion = 1e-6;
         alignment = 1e6;
-        migration = 1e-18;
-        waggle = 50;
+        migration = 1e-21;
+        waggle = 0;
 
         % Agent constraints
         neighborRadius = 1000;     %m
@@ -52,7 +52,7 @@ classdef MaxsLaw
         agentShape_triangle = [-0.5,0.5,-0.5; -0.375,0,0.375];
         agentShape_plane = [-0.5,-0.3,0,0.1,0.2,0.3,0.5,0.3,0.2,0.1,0,-0.3,-0.5;-0.2,-0.1,-0.1,-0.5,-0.5,-0.1,0,0.1,0.5,0.5,0.1,0.1,0.2];
         Arrow = [2 1.5 1.5 0 0 1.5 1.5; 0 .5 .1 .1 -.1 -.1 -.5];
-        showArrow = false;
+        showArrow = true;
         renderScale = [300;300]; %[scaleX; scaleY];
 
         % Functions to use

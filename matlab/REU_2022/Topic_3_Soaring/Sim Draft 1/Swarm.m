@@ -38,7 +38,7 @@ classdef Swarm < handle
             end
             
             %% Generate thermal map
-            obj.thermalMap = ThermalMap();
+            %obj.thermalMap = ThermalMap();
         end
         
         % Save Function
