@@ -1,5 +1,5 @@
 import numpy as np
-import GenericSwarmController
+import models.GenericSwarmController as GenericSwarmController
 
 class LennardJones(GenericSwarmController.GenericSwarmController):    
     def vel(self,agentPositions,agentVels,pos,v):

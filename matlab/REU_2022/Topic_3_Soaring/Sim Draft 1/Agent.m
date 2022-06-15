@@ -1,6 +1,8 @@
 % Agent class
 classdef Agent < handle
     properties
+        simLaw
+        
         position = [0.0, 0.0, 0.0]      %m, [x,y,z]
         heading = 0.0                   %rad
         bankAngle = 0.0                 %rad
@@ -17,17 +19,18 @@ classdef Agent < handle
     
     methods
         function obj = render(obj)
+            SL = obj.simLaw;
             rotationMatrix = [cos(obj.heading), -sin(obj.heading); sin(obj.heading), cos(obj.heading)];
             %AccelMatrix    = [cos(obj.accelDir), -sin(obj.accelDir); sin(obj.accelDir), cos(obj.accelDir)];
-            shape = SimLaw.agentShape_plane .* SimLaw.renderScale;
-            %arrow = SimLaw.Arrow .* SimLaw.renderScale;
+            shape = SL.agentShape_plane .* SL.renderScale;
+            %arrow = SL.Arrow .* SL.renderScale;
             rotatedShape = rotationMatrix * shape; %[x;y] matrix
             rotatedShape = rotatedShape'; %Convert to [x,y];
             %rotatedArrow = AccelMatrix * arrow;
             %rotatedArrow = rotatedArrow';
             globalShape = rotatedShape + obj.position(1:2); %[x,y] matrix
             %globalArrow = rotatedArrow + obj.position(1:2);
-            scaledAlti = 0.8*((obj.position(3)-SimLaw.agentFloor)/(SimLaw.agentCeiling - SimLaw.agentFloor));
+            scaledAlti = 0.8*((obj.position(3)-SL.agentFloor)/(SL.agentCeiling - SL.agentFloor));
             if scaledAlti < 0
                 scaledAlti = 0;
             elseif scaledAlti > 0.8

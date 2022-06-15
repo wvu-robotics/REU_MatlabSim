@@ -1,10 +1,10 @@
 import numpy as np
-import sim_mp as sim
-import media_export as export
+import sim_tools.sim as sim
+import sim_tools.media_export as export
 from timeit import default_timer as timer
 
 #model imports
-from models import LenardJones as lj
+from models import LennardJones as lj
 from models import Boids as bo
 from models import PFSM
 from models import Dance

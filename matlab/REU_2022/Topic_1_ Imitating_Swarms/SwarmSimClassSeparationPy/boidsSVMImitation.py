@@ -1,6 +1,6 @@
 import numpy as np
-import sim
-import media_export as export
+import sim_tools.sim as sim
+import sim_tools.media_export as export
 import time
 import copy
 

@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 from PIL import Image
 import cv2
 import os
-import sim
+import sim_tools.sim as sim
 import enum
 import io
 from tqdm import tqdm

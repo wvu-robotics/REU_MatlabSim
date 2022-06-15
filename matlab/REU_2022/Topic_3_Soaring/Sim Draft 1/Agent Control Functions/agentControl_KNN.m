@@ -1,4 +1,4 @@
-function agentControl_KNN(currentAgent, localAgents, thermalStrength, target)
+function agentControl_KNN(currentAgent, localAgents, thermalStrength, target, simLaw)
 %{
 thermalStrength = 10
 mapSize = [-200,200]
@@ -9,10 +9,7 @@ waggle = 50
 forwardSpeedMin = 15
 forwardSpeedMax = 30
 renderScale = [5;5];
-
-
 %}
-
 
     numLocalAgents = size(localAgents,2);
     if(numLocalAgents > 0)
@@ -29,7 +26,7 @@ renderScale = [5;5];
             diffLocalAgent(3) = 0;
             distLocalAgent = norm(diffLocalAgent);
             distances2D(i) = distLocalAgent;
-            scaledDist = distLocalAgent/SimLaw.neighborRadius;
+            scaledDist = distLocalAgent/simLaw.neighborRadius;
             weight = scaledDist;
             centroid = centroid + weight*localAgents(i).savedPosition;
             centroidWeight = centroidWeight + weight;
@@ -68,7 +65,7 @@ renderScale = [5;5];
             diffNNAgent = NNAgent.savedPosition - currentAgent.position;
             diffNNAgent(3) = 0;
             distNNAgent = norm(diffNNAgent);
-            distNNAgentScaled = distNNAgent/SimLaw.neighborRadius;
+            distNNAgentScaled = distNNAgent/simLaw.neighborRadius;
             diffUnitNNAgent = diffNNAgent/distNNAgent;
             NNAgentHeading = NNAgent.savedHeading;
             
@@ -95,11 +92,11 @@ renderScale = [5;5];
         waggleSign = 2 * round(rand()) - 1;
         
         %% Get Accel
-        accelMag_cohesion   = SimLaw.cohesion * distToCentroid^2;
-        accelMag_separation = SimLaw.separation;
-        accelMag_alignment  = SimLaw.alignment;
-        accelMag_migration  = SimLaw.migration * distToTarget^6;
-        accelMag_waggle     = SimLaw.waggle * waggleSign;
+        accelMag_cohesion   = simLaw.cohesion * distToCentroid^2;
+        accelMag_separation = simLaw.separation;
+        accelMag_alignment  = simLaw.alignment;
+        accelMag_migration  = simLaw.migration * distToTarget^6;
+        accelMag_waggle     = simLaw.waggle * waggleSign;
 
         newAccel = accelMag_separation * separationVector + ...
                    accelMag_cohesion   * centroidUnit + ...
@@ -126,40 +123,40 @@ renderScale = [5;5];
     newAccel = [newAccel_forward; newAccel_circ];
 
     %% Get Vel
-    newVel(1) = currentAgent.velocity(1) + newAccel(1)*SimLaw.dt;
-    if(newVel(1) > SimLaw.forwardSpeedMax)
-        newVel(1) = SimLaw.forwardSpeedMax;
-    elseif(newVel(1) < SimLaw.forwardSpeedMin)
-        newVel(1) = SimLaw.forwardSpeedMin;
+    newVel(1) = currentAgent.velocity(1) + newAccel(1)*simLaw.dt;
+    if(newVel(1) > simLaw.forwardSpeedMax)
+        newVel(1) = simLaw.forwardSpeedMax;
+    elseif(newVel(1) < simLaw.forwardSpeedMin)
+        newVel(1) = simLaw.forwardSpeedMin;
     end
     % a = omega * v
-    currentAgent.bankAngle = atan(newAccel(2)/SimLaw.g);
+    currentAgent.bankAngle = atan(newAccel(2)/simLaw.g);
 
-    if(currentAgent.bankAngle > SimLaw.bankMax)
-        currentAgent.bankAngle = SimLaw.bankMax;
+    if(currentAgent.bankAngle > simLaw.bankMax)
+        currentAgent.bankAngle = simLaw.bankMax;
     end
-    if(currentAgent.bankAngle < SimLaw.bankMin)
-        currentAgent.bankAngle = SimLaw.bankMin;
+    if(currentAgent.bankAngle < simLaw.bankMin)
+        currentAgent.bankAngle = simLaw.bankMin;
     end
-    newAccel(2) = tan(currentAgent.bankAngle)*SimLaw.g;
+    newAccel(2) = tan(currentAgent.bankAngle)*simLaw.g;
     newVel(2) = newAccel(2)/newVel(1);
 
-    vsink = (SimLaw.Sink_A*newVel(1).^2 + SimLaw.Sink_B*newVel(1) + SimLaw.Sink_C)...
+    vsink = (simLaw.Sink_A*newVel(1).^2 + simLaw.Sink_B*newVel(1) + simLaw.Sink_C)...
             / sqrt(cos(currentAgent.bankAngle));
     vspeed = vsink + thermalStrength;
 
     %% Get Pos
-    newPos(1:2) = currentAgent.position(1:2) + newVel(1)*forwardUnit(1:2)*SimLaw.dt;
-    newPos(3) = currentAgent.position(3) + vspeed*SimLaw.dt;
-    if newPos(3) > SimLaw.agentCeiling
-        newPos(3) = SimLaw.agentCeiling;
-    elseif newPos(3) < SimLaw.agentFloor % not Giga-Jank
-        newPos (3) = SimLaw.agentFloor; % Tera-Jank
+    newPos(1:2) = currentAgent.position(1:2) + newVel(1)*forwardUnit(1:2)*simLaw.dt;
+    newPos(3) = currentAgent.position(3) + vspeed*simLaw.dt;
+    if newPos(3) > simLaw.agentCeiling
+        newPos(3) = simLaw.agentCeiling;
+    elseif newPos(3) < simLaw.agentFloor % not Giga-Jank
+        newPos (3) = simLaw.agentFloor; % Tera-Jank
     end
     if newPos(3) <= 0
         currentAgent.isAlive = false;
     end
-    currentAgent.heading = currentAgent.heading + newVel(2)*SimLaw.dt;
+    currentAgent.heading = currentAgent.heading + newVel(2)*simLaw.dt;
 
     currentAgent.velocity = newVel;
     currentAgent.position = newPos;

@@ -13,29 +13,45 @@ class agentSlice:
     #output
     output_vel: np.ndarray
 
+#currently Boids + Dance
+
 #need to review paper, this is not working as expected, might need to add walls
-class SVRBoids(GenericSwarmController.GenericSwarmController):
-    def __init__(self, model_x,model_y, inertia=1):
-        self.model_x = model_x
-        self.model_y = model_y
-
+class SuperSet(GenericSwarmController.GenericSwarmController):    
+    def __init__(self,align_gain,cohesion_gain,separation_gain,rotation_gain,inertia):
+        self.alignment_gain = align_gain
+        self.cohesion_gain = cohesion_gain
+        self.separation_gain = separation_gain
+        self.rotation_gain = rotation_gain
         self.inertia = inertia
-
+        
     def vel(self,agentPositions,agentVels,pos,v):
         if(len(agentPositions) == 0):
-            return v
+            return v*self.inertia
         v_gain = np.zeros(2)
-
+        
         centroidPos = np.zeros(2)
         for position in agentPositions:
             centroidPos += position
         centroidPos /= len(agentPositions)
 
+        #agents move sideways relative to centroid
+        relative_pos = np.zeros(2)
+        relative_pos = centroidPos-pos
+        k = relative_pos[1]
+        relative_pos[1] = relative_pos[0]
+        relative_pos[0] = -k
+        v_gain += self.rotation_gain*(relative_pos/np.linalg.norm(relative_pos))
+
+        v_gain += self.cohesion_gain*(centroidPos-pos)
+
+        #pretty sure I need some kind of 
         centroidVel = np.zeros(2)
         for vel in agentVels:
             centroidVel += vel
         centroidVel /= len(agentVels)
 
+
+        v_gain += self.alignment_gain*centroidVel
 
         #this is the force field approach, should eventually implement steer to avoid
         separation_out = np.zeros(2)
@@ -46,17 +62,13 @@ class SVRBoids(GenericSwarmController.GenericSwarmController):
                 continue
             unit_diff = diffPos / dist
             if dist != 0:
-                separation_out += -1*unit_diff*(1/(dist**6))
-
-        x = np.array([[(centroidPos-pos)[0],centroidVel[0],separation_out[0],(centroidPos-pos)[1],centroidVel[1],separation_out[1]]])
-        # x = x.transpose()
-
-        v_gain[0] = self.model_x.predict(x)
-        v_gain[1] = self.model_y.predict(x)
-
-        v_out = v_gain + v*self.inertia
+                separation_out += -1*unit_diff*(1/(dist**2))
+        
+        v_gain += separation_out*self.separation_gain
+        v_out = (v*self.inertia) + v_gain
         # print(agentSlice(centroidPos-pos,centroidVel,separation_out,v,v_out))
         return v_out
 
 
 
+        
