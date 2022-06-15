@@ -97,15 +97,15 @@ for step = 1:steps
     %% Step physics
     for thermalIndex = 1:SL.numThermals
         thermalMap.adjustThermalPositions();
-        thermalMap.fadeThermals();
+        thermalMap.fadeThermals(thermalIndex);
         thermalList = thermalMap.thermals;
 
         xPos = thermalList(thermalIndex).position(1);
         yPos = thermalList(thermalIndex).position(2);
 
         % Update the position of the thermal
-        thermalList(thermalIndex).position(1) = thermalList(thermalIndex).position(1) + 2 * thermalList(thermalIndex).velocity(1)*dt;
-        thermalList(thermalIndex).position(2) = thermalList(thermalIndex).position(2) + 2 * thermalList(thermalIndex).velocity(2)*dt;
+        thermalList(thermalIndex).position(1) = thermalList(thermalIndex).position(1) + thermalList(thermalIndex).velocity(1)*dt;
+        thermalList(thermalIndex).position(2) = thermalList(thermalIndex).position(2) + thermalList(thermalIndex).velocity(2)*dt;
         
         thermalMap.checkBounds(thermalIndex);
     end

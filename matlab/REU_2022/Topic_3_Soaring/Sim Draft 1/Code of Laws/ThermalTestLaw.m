@@ -37,13 +37,13 @@ classdef ThermalTestLaw
         % Thermal constraints
         thermalSpeedMin = 20        % m/s
         thermalSpeedMax = 50        % m/s
-        thermalRadiusMin = 10        % m
+        thermalRadiusMin = 10       % m
         thermalRadiusMax = 25       % m
-        thermalStrengthMin = 0      % m/s, peak updraft speed
+        thermalStrengthMin = 3      % m/s, peak updraft speed
         thermalStrengthMax = 10     % m/s, peak updraft speed
-        thermalFadeRate = 0.25         % m/s, rate at which thermals fade in or out 
-        thermalPlateauTime = 50      % steps at a max or min strength
-        thermalBounds = [-75 75];   % map bounds for the thermals 
+        thermalFadeRate = 0.25      % m/s, rate at which thermals fade in or out 
+        thermalMinPlateauTime = 10; % steps at the min strength
+        thermalMaxPlateauTime = 50  % steps at the max strength
 
         %Visuals
         agentShape_triangle = [-0.5,0.5,-0.5; -0.375,0,0.375]
