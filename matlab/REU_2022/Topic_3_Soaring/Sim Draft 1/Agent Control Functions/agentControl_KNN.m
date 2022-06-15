@@ -35,11 +35,12 @@ function agentControl_KNN(currentAgent, localAgents, thermalStrength, target, SL
                 continue;
             end
             diffLocalAgent = localAgents(i).savedPosition - currentAgent.position;
+            diffHeight = diffLocalAgent(3);
             diffLocalAgent(3) = 0;
             distLocalAgent = norm(diffLocalAgent);
             distances2D(i) = distLocalAgent;
             scaledDist = distLocalAgent/SL.neighborRadius;
-            weight = scaledDist;
+            weight = scaledDist * (SL.cohesionHeightMult * max(0,(diffHeight+3)/SL.neighborRadius) + 1);
             centroid = centroid + weight*localAgents(i).savedPosition;
             centroidWeight = centroidWeight + weight;
         end
