@@ -13,8 +13,8 @@ classdef ThermalMap < handle
 
             for i = 1:SimLaw.numThermals
                 % Randomize the thermal's properties
-                thermalMap.thermals(i).position(1) = round(Utility.randIR(SimLaw.mapSize(1) + 20,SimLaw.mapSize(2) - 20));
-                thermalMap.thermals(i).position(2) = round(Utility.randIR(SimLaw.mapSize(1) + 20,SimLaw.mapSize(2) - 20));
+                thermalMap.thermals(i).position(1) = round(Utility.randIR(SimLaw.mapSize(1) + SimLaw.thermalRadiusMax,SimLaw.mapSize(2) - SimLaw.thermalRadiusMax));
+                thermalMap.thermals(i).position(2) = round(Utility.randIR(SimLaw.mapSize(1) + SimLaw.thermalRadiusMax,SimLaw.mapSize(2) - SimLaw.thermalRadiusMax));
                         
                 % Randomly decide if the velocity is negative or positive
                 randFactor = randi([0 1],1,2);

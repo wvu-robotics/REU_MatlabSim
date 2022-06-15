@@ -38,13 +38,13 @@ classdef SimLaw
         % Thermal constraints
         thermalSpeedMin = 20        % m/s
         thermalSpeedMax = 50        % m/s
-        thermalRadiusMin = 20        % m
-        thermalRadiusMax = 50       % m
+        thermalRadiusMin = 10        % m
+        thermalRadiusMax = 25       % m
         thermalStrengthMin = 0      % m/s, peak updraft speed
         thermalStrengthMax = 10     % m/s, peak updraft speed
         thermalFadeRate = 0.25         % m/s, rate at which thermals fade in or out 
         thermalPlateauTime = 50      % steps at a max or min strength
-        thermalBounds = [-80 80];   % map bounds for the thermals 
+        thermalBounds = [-75 75];   % map bounds for the thermals 
 
         %Visuals
         agentShape_triangle = [-0.5,0.5,-0.5; -0.375,0,0.375]

@@ -65,7 +65,9 @@ for step = 1:steps
 %                mapPos = [mapX(column),mapY(row)];
 %                diffPos = thermalPos - mapPos;
 %                distancesFromThermal(row,column) = norm(diffPos);
-               tempThermalMap(row, column) = thermalMap.getStrength([mapY(column),mapX(row)], thermalIndex);
+                %if row <= thermalPixels && row > 0 
+                    tempThermalMap(row, column) = thermalMap.getStrength([mapY(column),mapX(row)], thermalIndex);
+               % end
             end
         end
         % Use normal distribution to generate thermal (normpdf)
