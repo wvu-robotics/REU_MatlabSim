@@ -1,6 +1,6 @@
 from random import random
 import numpy as np
-import sim
+from sim_tools import sim
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from dataclasses import dataclass #data class is like the python equivalent of a struct
