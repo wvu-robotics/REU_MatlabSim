@@ -14,12 +14,12 @@ from models import Boids as bo
 from models import Dance
 
 params = sim.SimParams(
-    num_agents=20,
-    dt=0.01,
-    overall_time = 5,
-    enclosure_size = 20,
-    init_pos_max = None, #if None, then defaults to enclosure_size
-    agent_max_vel=10,
+    num_agents=40, 
+    dt=0.05,
+    overall_time = 15, 
+    enclosure_size = 10, 
+    init_pos_max= None, #if None, then defaults to enclosure_size
+    agent_max_vel=7,
     init_vel_max = None,
     agent_max_accel=np.inf,
     agent_max_turn_rate=np.inf,
@@ -35,9 +35,9 @@ params = sim.SimParams(
 
 
 #constants to imitate
-k_coh = 1
-k_align = 1
-k_sep = 0.2
+k_coh = 3
+k_align = 5
+k_sep = 1
 k_inertia = 1
 
 true_gains = [k_coh, k_align, k_sep, k_inertia]
@@ -53,7 +53,7 @@ agentPositions, agentVels = sim.runSim(controllers,params,progress_bar=True)
 if not os.path.exists("linearBoidsOutput"):
     os.makedirs("linearBoidsOutput")
 
-export.export(export.ExportType.MP4,"linearBoidsOutput/Initial",agentPositions,agentVels,params=params,vision_mode=False,progress_bar=True)
+export.export(export.ExportType.GIF,"linearBoidsOutput/Initial",agentPositions,agentVels,params=params,vision_mode=False,progress_bar=True)
 
 
 
@@ -75,17 +75,22 @@ posVelSlices = []
 #run tons more short sims
 shortSimParams = copy.deepcopy(params)
 print("Running short sims")
-shortSimParams.num_agents = 20
-shortSimParams.overall_time = 1
+shortSimParams.overall_time = 2
 shortSimParams.enclosure_size = 2*params.enclosure_size
-shortSimParams.init_pos_max = 2*params.enclosure_size
+shortSimParams.init_pos_max = params.enclosure_size
 
-extra_sims = 20
+extra_sims = 30
 for extra_sim in tqdm(range(extra_sims)):
     agentPositions, agentVels = sim.runSim(controllers,shortSimParams)
-    posVelSlices.extend([posVelSlice(agentPositions[i],agentVels[i],agentVels[i+1]) for i in range(len(agentPositions)-1)])
-    if extra_sim % 10 == 0:
-        export.export(export.ExportType.MP4,"linearBoidsOutput/ShortSim"+str(extra_sim),agentPositions,agentVels,params=shortSimParams)
+
+    # calculate velocities from positions, first order
+    posVelSlices.extend(
+        [posVelSlice(agentPositions[i],(
+            agentPositions[i]-agentPositions[i-1])/params.dt,
+            (agentPositions[i+1]-agentPositions[i])/params.dt) 
+        for i in range(1,len(agentPositions)-1)])
+   # if extra_sim % 10 == 0:
+    #    export.export(export.ExportType.GIF,"linearBoidsOutput/ShortSim"+str(extra_sim),agentPositions,agentVels,params=shortSimParams)
 
 # print("PosVelSlices:")
 # print(posVelSlices)
@@ -148,14 +153,14 @@ for slice in tqdm(posVelSlices):
             
             dist = np.linalg.norm(otherPos-agentPos)
 
-            separation += ((otherPos-agentPos)/dist)*(-1/(dist**6))
+            separation += ((otherPos-agentPos)/dist)*-1*(1/(dist**2))
             otherVel = slice.vel[otherAgent]
             posCentroid += otherPos
             velCentroid += otherVel
             adjacent += 1
         
         #throw out data without interactions
-        if adjacent < 1 or adjacent > 3:
+        if adjacent < 1:
             continue
 
         posCentroid /= adjacent
@@ -170,12 +175,35 @@ print("Ignored ",(len(posVelSlices)*params.num_agents)-len(agentSlices),"/",len(
 x = []
 y = []
 
+true_loss = 0
+for slice in agentSlices:
+    gains_ex = true_gains[:3]
+    args = np.array([slice.cohesion,slice.alignment,slice.separation])
+    # print("Args",args)
+    # print("Gains",gains_ex)
+    vel_pred = np.dot(args.transpose(),gains_ex)
+    # print("Pred",vel_pred)
+    # need to add scaling
+    if(np.linalg.norm(vel_pred) > params.agent_max_vel):
+        vel_pred = vel_pred/np.linalg.norm(vel_pred)*params.agent_max_vel
+    # print("Pred scaled",vel_pred)
+    # print("output",slice.output_vel)
+
+    err = vel_pred - slice.output_vel
+    #print("err",err)
+    true_loss += np.linalg.norm(err)
+true_loss/=len(agentSlices)
+print("True loss(data deviation from original on average):",true_loss)
+
 #reshapes were being annoying, will rewrite better
 for slice in agentSlices:
     x.append(np.array([slice.cohesion[0],slice.alignment[0],slice.separation[0],slice.last_vel[0]]))
     y.append(np.array(slice.output_vel[0]))
     x.append(np.array([slice.cohesion[1],slice.alignment[1],slice.separation[1],slice.last_vel[1]]))
     y.append(np.array(slice.output_vel[1]))
+
+
+
 
 # print("True loss: ",true_loss)
 reg = lr().fit(x,y)
@@ -195,20 +223,12 @@ for controller in controllers_imitated:
 #start at exactly the same place
 print("Running final visual")
 agentPositions_imitated, agentVels_imitated = sim.runSim(controllers_imitated,params,initial_positions=agentPositions[0],initial_velocities=agentVels[0],progress_bar=True)
-export.export(export.ExportType.MP4,"linearBoidsOutput/Imitated",agentPositions_imitated,agentVels_imitated,controllers=controllers_imitated,params=params,vision_mode=False,progress_bar=True)
+export.export(export.ExportType.GIF,"linearBoidsOutput/Imitated",agentPositions_imitated,agentVels_imitated,controllers=controllers_imitated,params=params,vision_mode=False,progress_bar=True)
 
 
 # now create some hybrid visualizations
 print("Running hybrid visual")
-
-#some parameters for hybrid visualization
 mix_factor = 0.6
-params.num_agents = 100
-params.enclosure_size = 20
-params.overall_time = 20
-params.init_pos_max = params.enclosure_size
-params.agent_max_vel = 7
-
 original_agents = [bo.Boids(*true_gains) for i in range(int(params.num_agents*mix_factor))]
 for controller in original_agents:
     controller.setColor("rgb(99, 110, 250)")
@@ -218,6 +238,6 @@ for controller in imitated_agents:
 
 all_controllers = original_agents + imitated_agents
 
-agentPositions_hybrid, agentVels_hybrid = sim.runSim(all_controllers,params,progress_bar=True)
-export.export(export.ExportType.MP4,"linearBoidsOutput/Hybrid",agentPositions_hybrid,agentVels_hybrid,controllers=all_controllers,params=params,vision_mode=False,progress_bar=True)
+agentPositions_hybrid, agentVels_hybrid = sim.runSim(all_controllers,params,initial_positions=agentPositions[0],initial_velocities=agentVels[0],progress_bar=True)
+export.export(export.ExportType.GIF,"linearBoidsOutput/Hybrid",agentPositions_hybrid,agentVels_hybrid,controllers=all_controllers,params=params,vision_mode=False,progress_bar=True)
 
