@@ -14,12 +14,12 @@ from models import Boids as bo
 from models import Dance
 
 params = sim.SimParams(
-    num_agents=40, 
-    dt=0.05,
-    overall_time = 15, 
-    enclosure_size = 10, 
-    init_pos_max= None, #if None, then defaults to enclosure_size
-    agent_max_vel=7,
+    num_agents=20,
+    dt=0.01,
+    overall_time = 5,
+    enclosure_size = 40,
+    init_pos_max = 40, #if None, then defaults to enclosure_size
+    agent_max_vel=10,
     init_vel_max = None,
     agent_max_accel=np.inf,
     agent_max_turn_rate=np.inf,
@@ -35,8 +35,8 @@ params = sim.SimParams(
 
 
 #constants to imitate
-k_coh = 3
-k_align = 5
+k_coh = 1
+k_align = 1
 k_sep = 1
 k_inertia = 1
 
@@ -53,7 +53,7 @@ agentPositions, agentVels = sim.runSim(controllers,params,progress_bar=True)
 if not os.path.exists("linearBoidsOutput"):
     os.makedirs("linearBoidsOutput")
 
-export.export(export.ExportType.GIF,"linearBoidsOutput/Initial",agentPositions,agentVels,params=params,vision_mode=False,progress_bar=True)
+export.export(export.ExportType.MP4,"linearBoidsOutput/Initial",agentPositions,agentVels,params=params,vision_mode=False,progress_bar=True)
 
 
 
@@ -75,7 +75,7 @@ posVelSlices = []
 #run tons more short sims
 shortSimParams = copy.deepcopy(params)
 print("Running short sims")
-shortSimParams.overall_time = 2
+shortSimParams.overall_time = 1
 shortSimParams.enclosure_size = 2*params.enclosure_size
 shortSimParams.init_pos_max = params.enclosure_size
 
@@ -147,7 +147,7 @@ for slice in tqdm(posVelSlices):
             
             dist = np.linalg.norm(otherPos-agentPos)
 
-            separation += ((otherPos-agentPos)/dist)*-1*(1/(dist**2))
+            separation += ((otherPos-agentPos)/dist)*(-1/(dist**6))
             otherVel = slice.vel[otherAgent]
             posCentroid += otherPos
             velCentroid += otherVel
@@ -194,12 +194,20 @@ for controller in controllers_imitated:
 #start at exactly the same place
 print("Running final visual")
 agentPositions_imitated, agentVels_imitated = sim.runSim(controllers_imitated,params,initial_positions=agentPositions[0],initial_velocities=agentVels[0],progress_bar=True)
-export.export(export.ExportType.GIF,"linearBoidsOutput/Imitated",agentPositions_imitated,agentVels_imitated,controllers=controllers_imitated,params=params,vision_mode=False,progress_bar=True)
+export.export(export.ExportType.MP4,"linearBoidsOutput/Imitated",agentPositions_imitated,agentVels_imitated,controllers=controllers_imitated,params=params,vision_mode=False,progress_bar=True)
 
 
 # now create some hybrid visualizations
 print("Running hybrid visual")
+
+#some parameters for hybrid visualization
 mix_factor = 0.6
+params.num_agents = 100
+params.enclosure_size = 20
+params.overall_time = 20
+params.init_pos_max = params.enclosure_size
+params.agent_max_vel = 7
+
 original_agents = [bo.Boids(*true_gains) for i in range(int(params.num_agents*mix_factor))]
 for controller in original_agents:
     controller.setColor("rgb(99, 110, 250)")
@@ -209,6 +217,6 @@ for controller in imitated_agents:
 
 all_controllers = original_agents + imitated_agents
 
-agentPositions_hybrid, agentVels_hybrid = sim.runSim(all_controllers,params,initial_positions=agentPositions[0],initial_velocities=agentVels[0],progress_bar=True)
-export.export(export.ExportType.GIF,"linearBoidsOutput/Hybrid",agentPositions_hybrid,agentVels_hybrid,controllers=all_controllers,params=params,vision_mode=False,progress_bar=True)
+agentPositions_hybrid, agentVels_hybrid = sim.runSim(all_controllers,params,progress_bar=True)
+export.export(export.ExportType.MP4,"linearBoidsOutput/Hybrid",agentPositions_hybrid,agentVels_hybrid,controllers=all_controllers,params=params,vision_mode=False,progress_bar=True)
 
