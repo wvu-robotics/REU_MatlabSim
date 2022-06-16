@@ -1,4 +1,4 @@
-function agentControl_Update(currentAgent,localAgents,thermalStrength, target, simLaw)
+function agentControl_Update(currentAgent,localAgents,thermalStrength, target, SL)
     numLocalAgents = size(localAgents,2);
     if(numLocalAgents > 0)
         %% Get Centroid
@@ -9,7 +9,17 @@ function agentControl_Update(currentAgent,localAgents,thermalStrength, target, s
                 continue;
             end
             distances(i) = norm(currentAgent.position - localAgents(i).savedPosition);
-            centroid = centroid + localAgents(i).savedPosition;
+            diffHeight = -currentAgent.position(3) + localAgents(i).savedPosition(3); % negative if above others.
+            normHeight = diffHeight/SL.neighborRadius;
+            heightOffset = -0.4; % ignore agents below -40% height
+            if normHeight < heightOffset
+                weight = 0;
+            else
+                weight = SL.heightPriority * (normHeight - heightOffset);
+                % if normHeight = 0 and heightOffset = -0.4, weight is 0.4
+                % if normHeight = 1 and heightOffset = -1, weight is 2.
+            end
+            centroid = centroid + weight*localAgents(i).savedPosition;
         end
         centroid = centroid / numLocalAgents;
 
@@ -46,10 +56,10 @@ function agentControl_Update(currentAgent,localAgents,thermalStrength, target, s
         targetUnit     = diffTarget / distToTarget;
 
         %% Get Accel
-        accelMag_cohesion   = simLaw.cohesion   *      distToCentroid^2; %Positive, to go TOWARDS the other
-        accelMag_separation = simLaw.separation *   -1/distToNearest^2; %Negative, to go AWAY from the other
-        accelMag_alignment  = simLaw.alignment  *    1/distToNearest^2;
-        accelMag_migration  = simLaw.migration  *      distToTarget^6;
+        accelMag_cohesion   = SL.cohesion   *      distToCentroid^2; %Positive, to go TOWARDS the other
+        accelMag_separation = SL.separation *   -1/distToNearest^2; %Negative, to go AWAY from the other
+        accelMag_alignment  = SL.alignment  *    1/distToNearest^2;
+        accelMag_migration  = SL.migration  *      distToTarget^6;
 
         newAccel = accelMag_separation * nearestUnit + ...
                    accelMag_cohesion   * centroidUnit + ...
@@ -64,7 +74,7 @@ function agentControl_Update(currentAgent,localAgents,thermalStrength, target, s
         diffTarget(3)  = 0;
         distToTarget   = norm(diffTarget);
         targetUnit     = diffTarget / distToTarget;
-        accelMag_migration  = simLaw.migration  *      distToTarget^6;
+        accelMag_migration  = SL.migration  *      distToTarget^6;
         newAccel = accelMag_migration  * targetUnit; % nets accel vector to add on to current accel
 
         newAccel(3) = 0; % removes z component
@@ -86,40 +96,40 @@ function agentControl_Update(currentAgent,localAgents,thermalStrength, target, s
     newAccel = [newAccel_forward; newAccel_circ];
 
     %% Get Vel
-    newVel(1) = currentAgent.velocity(1) + newAccel(1)*simLaw.dt;
-    if(newVel(1) > simLaw.forwardSpeedMax)
-        newVel(1) = simLaw.forwardSpeedMax;
-    elseif(newVel(1) < simLaw.forwardSpeedMin)
-        newVel(1) = simLaw.forwardSpeedMin;
+    newVel(1) = currentAgent.velocity(1) + newAccel(1)*SL.dt;
+    if(newVel(1) > SL.forwardSpeedMax)
+        newVel(1) = SL.forwardSpeedMax;
+    elseif(newVel(1) < SL.forwardSpeedMin)
+        newVel(1) = SL.forwardSpeedMin;
     end
     % a = omega * v
-    currentAgent.bankAngle = atan(newAccel(2)/simLaw.g);
+    currentAgent.bankAngle = atan(newAccel(2)/SL.g);
 
-    if(currentAgent.bankAngle > simLaw.bankMax)
-        currentAgent.bankAngle = simLaw.bankMax;
+    if(currentAgent.bankAngle > SL.bankMax)
+        currentAgent.bankAngle = SL.bankMax;
     end
-    if(currentAgent.bankAngle < simLaw.bankMin)
-        currentAgent.bankAngle = simLaw.bankMin;
+    if(currentAgent.bankAngle < SL.bankMin)
+        currentAgent.bankAngle = SL.bankMin;
     end
-    newAccel(2) = tan(currentAgent.bankAngle)*simLaw.g;
+    newAccel(2) = tan(currentAgent.bankAngle)*SL.g;
     newVel(2) = newAccel(2)/newVel(1);
 
-    vsink = (simLaw.Sink_A*newVel(1).^2 + simLaw.Sink_B*newVel(1) + simLaw.Sink_C)...
+    vsink = (SL.Sink_A*newVel(1).^2 + SL.Sink_B*newVel(1) + SL.Sink_C)...
             / sqrt(cos(currentAgent.bankAngle));
     vspeed = vsink + thermalStrength;
 
     %% Get Pos
-    newPos(1:2) = currentAgent.position(1:2) + newVel(1)*forwardUnit(1:2)'*simLaw.dt;
-    newPos(3) = currentAgent.position(3) + vspeed*simLaw.dt;
-    if newPos(3) > simLaw.agentCeiling
-        newPos(3) = simLaw.agentCeiling;
-    elseif newPos(3) < simLaw.agentFloor % not Giga-Jank
-        newPos(3) = simLaw.agentFloor; % Tera-Jank
+    newPos(1:2) = currentAgent.position(1:2) + newVel(1)*forwardUnit(1:2)'*SL.dt;
+    newPos(3) = currentAgent.position(3) + vspeed*SL.dt;
+    if newPos(3) > SL.agentCeiling
+        newPos(3) = SL.agentCeiling;
+    elseif newPos(3) < SL.agentFloor % not Giga-Jank
+        newPos(3) = SL.agentFloor; % Tera-Jank
     end
     if newPos(3) <= 0
         currentAgent.isAlive = false;
     end
-    currentAgent.heading = currentAgent.heading + newVel(2)*simLaw.dt;
+    currentAgent.heading = currentAgent.heading + newVel(2)*SL.dt;
 
     currentAgent.velocity = newVel;
     currentAgent.position = newPos;

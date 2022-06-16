@@ -2,29 +2,30 @@ classdef MaxsLaw
     properties
         %% Variables to save
         % Simulation constraints
-        dt = 0.25;        %s
-        totalTime = 240;  %s
-        fpsMult = 10;
+        dt = 1;           %s
+        totalTime = 1800;  %s
+        fpsMult = 30;
         mapSize = [-4000,4000];   %m, bounds of square map
         numAgents = 40;  %agents
         numThermals = 4; %thermals
 
         % Initial conditions
         agentSpawnPosRange = [-3000,-3000; 3000,3000];     %m, [xMin,yMin;xMax,yMax]
-        agentSpawnAltiRange = [500,3000];             %m, [Min,Max]
+        agentSpawnAltiRange = [1600,1600];             %m, [Min,Max]
         agentSpawnVelRange = [8,0;13,0];           %m/s,rad/s [forwardMin,omegaMin;forwardMax,omegaMax];
         g = 9.81;                                  % m/s/s
 
         % Rule constraints
-        separation = 1e6;
-        cohesion = 1e-6;
-        alignment = 1e6;
-        migration = 1e-21;
+        separation = 1;
+        cohesion   = 1;
+        alignment  = 1;
+        migration  = 1e-21;
         waggle = 0;
+        heightPriority = 1;
 
         % Agent constraints
         neighborRadius = 1000;     %m
-        agentCeiling   = 8000;    %m
+        agentCeiling   = 2600;    %m
         agentFloor     = 0;      %m
         forwardSpeedMin = 5;     %m/s
         forwardSpeedMax = 20;    %m/s
@@ -64,9 +65,9 @@ classdef MaxsLaw
     methods % temporary, remove later
         function strength = getTempThermalStrength(~,agent)
             position = agent.position;
-            radius = 300;
+            radius = 600;
             peakStrength = 20;
-            thermalPos = [-100,1000];
+            thermalPos = [-1000,1000];
             
             dist = norm(position(1:2)-thermalPos);
             closeStrength = peakStrength*(1-(dist/radius)^2);
