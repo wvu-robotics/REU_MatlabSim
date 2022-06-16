@@ -4,7 +4,7 @@ import models.GenericSwarmController as GenericSwarmController
 
 #need to review paper, this is not working as expected, might need to add walls
 class Boids(GenericSwarmController.GenericSwarmController):    
-    def __init__(self,align_gain,cohesion_gain,separation_gain,inertia):
+    def __init__(self,cohesion_gain,align_gain,separation_gain,inertia):
         self.alignment_gain = align_gain
         self.cohesion_gain = cohesion_gain
         self.separation_gain = separation_gain
@@ -39,7 +39,7 @@ class Boids(GenericSwarmController.GenericSwarmController):
                 continue
             unit_diff = diffPos / dist
             if dist != 0:
-                separation_out += -1*self.separation_gain*unit_diff
+                separation_out += -1*self.separation_gain*unit_diff*(1/(dist**6))
         
         v_gain += separation_out
         
