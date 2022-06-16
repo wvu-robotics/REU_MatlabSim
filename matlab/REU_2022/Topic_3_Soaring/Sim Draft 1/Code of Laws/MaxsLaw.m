@@ -11,20 +11,20 @@ classdef MaxsLaw
 
         % Initial conditions
         agentSpawnPosRange = [-3000,-3000; 3000,3000];     %m, [xMin,yMin;xMax,yMax]
-        agentSpawnAltiRange = [5,50];             %m, [Min,Max]
+        agentSpawnAltiRange = [500,3000];             %m, [Min,Max]
         agentSpawnVelRange = [8,0;13,0];           %m/s,rad/s [forwardMin,omegaMin;forwardMax,omegaMax];
         g = 9.81;                                  % m/s/s
 
         % Rule constraints
         separation = 1e6;
-        cohesion = 1e-4;
-        alignment = 1e8;
+        cohesion = 1e-6;
+        alignment = 1e6;
         migration = 1e-21;
         waggle = 0;
 
         % Agent constraints
         neighborRadius = 1000;     %m
-        agentCeiling   = 100;    %m
+        agentCeiling   = 8000;    %m
         agentFloor     = 0;      %m
         forwardSpeedMin = 5;     %m/s
         forwardSpeedMax = 20;    %m/s
@@ -59,6 +59,19 @@ classdef MaxsLaw
 
         % Functions to use
         agentControlFuncName = "agentControl_Update";
+    end
+
+    methods % temporary, remove later
+        function strength = getTempThermalStrength(~,agent)
+            position = agent.position;
+            radius = 300;
+            peakStrength = 20;
+            thermalPos = [-100,1000];
+            
+            dist = norm(position(1:2)-thermalPos);
+            closeStrength = peakStrength*(1-(dist/radius)^2);
+            strength = max(0,closeStrength);
+        end
     end
 end
 
