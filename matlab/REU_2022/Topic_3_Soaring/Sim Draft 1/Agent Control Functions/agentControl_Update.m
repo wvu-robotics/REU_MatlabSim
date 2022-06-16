@@ -4,14 +4,15 @@ function agentControl_Update(currentAgent,localAgents,thermalStrength, target, S
         %% Get Centroid
         centroid = [0,0,0];
         distances = zeros(1,numLocalAgents);
+        diffHeight = distances;
         for i = 1:numLocalAgents
             if localAgents(i).savedPosition(3) <= 0
                 continue;
             end
             distances(i) = norm(currentAgent.position - localAgents(i).savedPosition);
-            diffHeight = -currentAgent.position(3) + localAgents(i).savedPosition(3); % negative if above others.
-            normHeight = diffHeight/SL.neighborRadius;
-            heightOffset = -0.4; % ignore agents below -40% height
+            diffHeight(i) = -currentAgent.position(3) + localAgents(i).savedPosition(3); % negative if above others.
+            normHeight = diffHeight(i)/SL.neighborRadius;
+            heightOffset = -0.2; % ignore agents below -20% height
             if normHeight < heightOffset
                 weight = 0;
             else
@@ -34,8 +35,17 @@ function agentControl_Update(currentAgent,localAgents,thermalStrength, target, S
             centroidUnit   = diffCentroid / distToCentroid;
         end
 
-        % Separation & Alignment
-        nearest = find(distances == min(distances));
+        %% Get Nearest
+
+        % Nearest must be vertically close
+        vertRange = 0.3; % 30% above and below.
+        nearest = 1;
+        for i = 2:numLocalAgents
+            if abs(diffHeight(i)) <= vertRange && distances(i) <= distances(i-1)
+                nearest = i;
+            end
+        end
+        
         if ~isempty(nearest)
             nearest        = nearest(1);
             diffNearest    = localAgents(nearest).savedPosition - currentAgent.position;

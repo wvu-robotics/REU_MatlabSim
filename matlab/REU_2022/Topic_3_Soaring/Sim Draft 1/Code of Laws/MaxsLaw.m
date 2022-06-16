@@ -24,7 +24,7 @@ classdef MaxsLaw
         heightPriority = 3;
 
         % Agent constraints
-        neighborRadius = 1000;     %m
+        neighborRadius = 1500;     %m
         agentCeiling   = 2600;    %m
         agentFloor     = 0;      %m
         forwardSpeedMin = 5;     %m/s

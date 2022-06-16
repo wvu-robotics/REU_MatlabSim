@@ -1,4 +1,4 @@
-function MainScriptFunction(ParamS, ParamC, ParamA, number)
+function [average, surviving] = MainScriptFunction(ParamS, ParamC, ParamA, number)
 % Main script: loads parameter variables and runs swarm step function
 %% Clear
 close all
@@ -64,8 +64,9 @@ patchObj = patch('XData',patchX,'YData',patchY,'FaceColor','red','FaceAlpha',0.8
 
 %% Run simulation
 steps = simLaw.totalTime/simLaw.dt;
+Living = simLaw.numAgents;
 for step = 1:steps
-%     c1 = clock;
+    c1 = clock;
     %fprintf("Frame %g/%g:  ",step,steps);
     
     % Render agents
@@ -80,8 +81,12 @@ for step = 1:steps
     swarm.saveAgentData();
     swarm.stepSimulation();
     
+%     if nnz([swarm.agents.isAlive]) ~= Living
+%        sound(y,fs);
+%     end
     % Print number of Living Agents
     Living = nnz([swarm.agents.isAlive]);
+    
     %fprintf("%g Agents, ", Living);
     maxHeight = -1;
     minHeight = 1E6;
@@ -103,15 +108,16 @@ for step = 1:steps
         number, minutes,Living,averageHeight,simLaw.separation, simLaw.cohesion, simLaw.alignment);
     title(stringTitle);
 
-    % Find and print elapsed time
-%     c2 = clock;
-%     elapsedTime = c2(6)-c1(6);
-    % If minute advances, elapsedTime will appear negative (1min20sec - 0min50sec = 20sec-50sec = -30sec)
-%     if(elapsedTime < 0) 
-%         elapsedTime = elapsedTime + 60;
-%     end
-    %fprintf("%g sec\n",elapsedTime);
+%     Find and print elapsed time
+    c2 = clock;
+    elapsedTime = c2(6)-c1(6);
+%     If minute advances, elapsedTime will appear negative (1min20sec - 0min50sec = 20sec-50sec = -30sec)
+    if(elapsedTime < 0) 
+        elapsedTime = elapsedTime + 60;
+    end
+    fprintf("%g sec\n",elapsedTime);
 end
-
+average = averageHeight;
+surviving = Living;
 close(video);
 end
