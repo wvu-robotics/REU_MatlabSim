@@ -19,7 +19,7 @@ mapY = linspace(SL.mapSize(1),SL.mapSize(2),thermalPixels);
 mapDiff = (SL.mapSize(2)-SL.mapSize(1))/(thermalPixels-1);
 
 % Initialize thermals as a matrix of Thermals
-thermalMap = ThermalMap(SL);
+thermalMap = ThermalMap(SL, 0);
 
 %% Set up video and figure
 video = VideoWriter('thermals1.avi');
@@ -30,6 +30,7 @@ simFig = figure;
 
 %% Run simulation
 for step = 1:steps
+    c1 = clock;
     %% Set up frame
     fprintf("Frame %g/%g\n",step,steps);
     clf
@@ -59,8 +60,16 @@ for step = 1:steps
     pause(0.0001);
     
     %% Step physics
-    thermalMap.step(dt);
+    thermalMap.staticStep(dt);
     
+        % Find and print elapsed time
+    c2 = clock;
+    elapsedTime = c2(6)-c1(6);
+    % If minute advances, elapsedTime will appear negative (1min20sec - 0min50sec = 20sec-50sec = -30sec)
+    if(elapsedTime < 0) 
+        elapsedTime = elapsedTime + 60;
+    end
+    fprintf("%g sec\n",elapsedTime);
 end
 
 close(video);
