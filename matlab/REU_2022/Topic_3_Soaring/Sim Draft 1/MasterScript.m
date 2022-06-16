@@ -18,5 +18,7 @@ for i = 1:size(ParamMatrix,1)
     ParamS = 10^ParamMatrix(i,1);
     ParamC = 10^ParamMatrix(i,2);
     ParamA = 10^ParamMatrix(i,3);
-    MainScriptFunction(ParamS, ParamC, ParamA);
+    MainScriptFunction(ParamS, ParamC, ParamA, i);
 end
+load gong.mat;
+sound(y)

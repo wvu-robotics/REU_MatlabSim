@@ -1,4 +1,4 @@
-function MainScriptFunction(ParamS, ParamC, ParamA)
+function MainScriptFunction(ParamS, ParamC, ParamA, number)
 % Main script: loads parameter variables and runs swarm step function
 %% Clear
 close all
@@ -99,8 +99,8 @@ for step = 1:steps
     %stringTitle = sprintf("Agents Alive: %g\nMax Height: %.1f\nMin Height: %.1f\nAverage Height: %.1f",Living,maxHeight,minHeight,averageHeight);
     minutes = floor(step*simLaw.dt/60);
     %stringTitle = sprintf("Minutes: %g\nAgents Alive: %g\nAverage Height: %.1f",minutes,Living,averageHeight);
-    stringTitle = sprintf("Minutes: %g\nAgents Alive: %g  Average Height: %.1f\n S=%1.0E, C=%1.0E, A=%1.0E", ...
-        minutes,Living,averageHeight,simLaw.separation, simLaw.cohesion, simLaw.alignment);
+    stringTitle = sprintf("Number %g, Minute %g\nAgents Alive: %g  Average Height: %.1f\n S=%1.0E, C=%1.0E, A=%1.0E", ...
+        number, minutes,Living,averageHeight,simLaw.separation, simLaw.cohesion, simLaw.alignment);
     title(stringTitle);
 
     % Find and print elapsed time

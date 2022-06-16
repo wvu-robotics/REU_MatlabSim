@@ -21,7 +21,7 @@ classdef MaxsLaw
         alignment  = 1;
         migration  = 1e-21;
         waggle = 0;
-        heightPriority = 1;
+        heightPriority = 3;
 
         % Agent constraints
         neighborRadius = 1000;     %m
