@@ -53,7 +53,7 @@ daspect([1 1 1])
 swarm = Swarm(simLaw);
 theta = linspace(0,2*pi,50);
 patchX = 50*cos(theta)-100;
-patchY = 50*sin(theta)+100;
+patchY = 50*sin(theta)-100;
 patchObj = patch('XData',patchX,'YData',patchY,'FaceColor','red','FaceAlpha',0.8);
 
 %% Run simulation
@@ -77,8 +77,19 @@ for step = 1:steps
     % Print number of Living Agents
     Living = nnz([swarm.agents.isAlive]);
     fprintf("%g Agents, ", Living);
-    stringLiving = sprintf("%g Agents Alive",Living);
-    title(stringLiving);
+    maxHeight = -1;
+    minHeight = 1E6;
+    averageHeight = 0;
+    for i=1:simLaw.numAgents
+        currentHeight = swarm.agents(i).position(3);
+        maxHeight = max(maxHeight,currentHeight);
+        minHeight = min(minHeight,currentHeight);
+        averageHeight = averageHeight + currentHeight;
+    end
+    averageHeight = averageHeight / simLaw.numAgents;
+    
+    stringTitle = sprintf("Agents Alive: %g\nMax Height: %.1f\nMin Height: %.1f\nAverage Height: %.1f",Living,maxHeight,minHeight,averageHeight);
+    title(stringTitle);
 
     % Find and print elapsed time
     c2 = clock;
