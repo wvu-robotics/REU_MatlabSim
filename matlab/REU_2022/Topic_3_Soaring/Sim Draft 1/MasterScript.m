@@ -3,6 +3,7 @@ ParamMatrix = readmatrix("Params.xlsx","Range","A2:G31");
 render = false;
 average = zeros(1,size(ParamMatrix,1));
 surviving = average;
+tic
 for i = 1:size(ParamMatrix,1)
     ParamS = 10^ParamMatrix(i,2);
     ParamC = 10^ParamMatrix(i,3);
@@ -15,8 +16,8 @@ end
 clf
 load gong.mat;
 sound(y)
+toc
 hold on
-
 yyaxis left
 plot(average);
 yyaxis right
