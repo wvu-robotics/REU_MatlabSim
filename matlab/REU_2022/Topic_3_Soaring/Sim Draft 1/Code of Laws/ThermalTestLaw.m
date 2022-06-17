@@ -5,7 +5,7 @@ classdef ThermalTestLaw
         totalTime = 60  %s
         mapSize = [-100,100]   %m, bounds of square map
         numAgents = 100  %agents
-        numThermals = 20 %thermals
+        numThermals = 4 %thermals
         
         % Initial conditions
         agentSpawnPosRange = [-70,-70; 70,70];     %m, [xMin,yMin;xMax,yMax]

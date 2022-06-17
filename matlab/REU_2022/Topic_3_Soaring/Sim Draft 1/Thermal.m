@@ -7,7 +7,7 @@ classdef Thermal < handle
         maxStrength = 0;
         curStrength = 0;
         stepCount = 0;
-        strengthDirection = -1;
+        strengthDirection = 1;
         bounds = [0 0];
     end
     methods
