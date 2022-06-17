@@ -60,7 +60,8 @@ classdef MaxsLaw
         renderScale = [300;300]; %[scaleX; scaleY];
 
         % Functions to use
-        agentControlFuncName = "agentControl_Update";
+        funcName_agentControl = "agentControl_Update";
+        funcName_findNeighborhood = "findNeighborhood_fixedRadius";
     end
 
     methods % temporary, remove later

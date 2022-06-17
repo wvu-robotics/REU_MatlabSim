@@ -16,13 +16,13 @@ classdef AdamsLaw
         g = 9.81;                                  % m/s/s
 
         % Rule constraints
-        separation = 60.0;
+        separation = 7;
         separationHeightGap = 10;
-        cohesion = 0.05;
-        cohesionHeightMult = 5;
-        alignment = 30;
+        cohesion = 0.008;
+        cohesionHeightMult = 1;
+        alignment = 20;
         migration = 0*2e-12;
-        waggle = 5;
+        waggle = 0.5;
 
         % Agent constraints
         neighborRadius = 120;     %m
@@ -58,7 +58,9 @@ classdef AdamsLaw
         renderScale = [8;8]; %[scaleX; scaleY];
 
         % Functions to use
-        agentControlFuncName = "agentControl_KNN";
+        funcName_agentControl = "agentControl_KNN";
+        funcName_findNeighborhood = "findNeighborhood_fixedRadius";
+        
     end
     
     methods

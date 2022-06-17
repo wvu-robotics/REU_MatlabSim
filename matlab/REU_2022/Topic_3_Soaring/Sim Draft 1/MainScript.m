@@ -7,6 +7,7 @@ clc
 %% Add search paths for sim laws and agent functions
 addpath("Code of Laws");
 addpath("Agent Control Functions");
+addpath("Find Neighborhood Functions");
 
 %% Load simulation parameters
 simLaw = AdamsLaw();
