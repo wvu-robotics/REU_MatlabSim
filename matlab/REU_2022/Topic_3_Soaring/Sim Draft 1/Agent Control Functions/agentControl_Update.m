@@ -1,9 +1,17 @@
-function agentControl_Update(currentAgent,localAgents,thermalStrength, target, SL, Utility)
+function agentControl_Update(currentAgent,localAgents,thermalStrength, target, SL)
     numLocalAgents = size(localAgents,2);
+
+    % some common migration stuff
+    diffTarget     = target - currentAgent.position;
+    diffTarget(3)  = 0;
+    distToTarget   = norm(diffTarget);
+    targetUnit     = diffTarget / distToTarget;
+
+    %% Get SCAM Accel
     if(numLocalAgents > 0)
         %% Get Centroid + Cohesion
-        centroid = [0,0,0];
-        distances = zeros(1,numLocalAgents);
+        centroid   = [0,0,0];
+        distances  = zeros(1,numLocalAgents);
         diffHeight = distances;
         for i = 1:numLocalAgents
             if localAgents(i).savedPosition(3) <= 0
@@ -37,7 +45,7 @@ function agentControl_Update(currentAgent,localAgents,thermalStrength, target, S
 
         % Nearest must be vertically close
         vertRange = 0.3; % 30% above and below.
-        nearest = 1;
+        nearest   = 1;
         for i = 2:numLocalAgents
             if abs(diffHeight(i)) <= vertRange && distances(i) <= distances(i-1)
                 nearest = i;
@@ -56,14 +64,9 @@ function agentControl_Update(currentAgent,localAgents,thermalStrength, target, S
             nearestUnit    = [0,0,0];
             nearestVelUnit = [0,0,0];
         end
+        
+        %% Get SCAM Accel (with neighbors)
 
-        % Migration
-        diffTarget     = target - currentAgent.position;
-        diffTarget(3)  = 0;
-        distToTarget   = norm(diffTarget);
-        targetUnit     = diffTarget / distToTarget;
-
-        %% Get Accel (with neighbors)
         accelMag_separation = SL.separation *   -1/distToNearest^2; %Negative, to go AWAY from the other
         accelMag_cohesion   = SL.cohesion   *      distToCentroid^2; %Positive, to go TOWARDS the other
         accelMag_alignment  = SL.alignment  *    1/distToNearest^2;
@@ -73,34 +76,28 @@ function agentControl_Update(currentAgent,localAgents,thermalStrength, target, S
                    accelMag_cohesion   * centroidUnit   + ...
                    accelMag_alignment  * nearestVelUnit + ...
                    accelMag_migration  * targetUnit; % nets accel vector to add on to current accel
-
-        newAccel(3) = 0; % removes z component
-        currentAgent.accelDir = atan2(newAccel(2), newAccel(1));
     else
         %% Cope with Loneliness
-        diffTarget     = target - currentAgent.position;
-        diffTarget(3)  = 0;
-        distToTarget   = norm(diffTarget);
-        targetUnit     = diffTarget / distToTarget;
+        % Agents will be directed solely by migration if alone.
         accelMag_migration  = SL.migration  *      distToTarget^6;
-        newAccel = accelMag_migration  * targetUnit; % nets accel vector to add on to current accel
-
-        newAccel(3) = 0; % removes z component
-        currentAgent.accelDir = atan2(newAccel(2), newAccel(1));
+        newAccel = accelMag_migration  * targetUnit;
     end
-    
+
     %% Finalize Accel
+    newAccel(3) = 0; % removes z component
+    currentAgent.accelDir = atan2(newAccel(2), newAccel(1));
+
     Heading      = [cos(currentAgent.heading),sin(currentAgent.heading),0];
-    newAccel_forward = dot(newAccel,Heading);
-    if(norm(newAccel) - norm(newAccel_forward) < 1E-6)
-        newAccel_circ = 0;
+    forwardAccel = dot(newAccel,Heading);
+    if(norm(newAccel) - norm(forwardAccel) < 1E-6)
+        CentriAccel = 0;
     else
-        newAccel_circ = 1.0 * sqrt((norm(newAccel))^2-newAccel_forward^2);
+        CentriAccel = 1.0 * sqrt((norm(newAccel))^2-forwardAccel^2);
     end
     turningCrossProduct = cross(Heading,newAccel);
-    newAccel_circ = newAccel_circ * sign(turningCrossProduct(3));
+    CentriAccel = CentriAccel * sign(turningCrossProduct(3));
 
-    newAccel = [newAccel_forward; newAccel_circ];
+    newAccel = [forwardAccel; CentriAccel];
 
     %% Get Vel
     newVel(1) = currentAgent.velocity(1) + newAccel(1)*SL.dt;
