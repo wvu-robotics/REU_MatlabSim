@@ -1,0 +1,6 @@
+[submodule "matlab/REU_2022/Topic_1_ Imitating_Swarms/SwarmSimClassSeparationPy/matlab/REU_2022/Topic_1_Imitating_Swarms/SwarmSimClassSeparationPy/msvr"]
+	path = matlab/REU_2022/Topic_1_ Imitating_Swarms/SwarmSimClassSeparationPy/matlab/REU_2022/Topic_1_Imitating_Swarms/SwarmSimClassSeparationPy/msvr
+	url = https://github.com/Analytics-for-Forecasting/msvr
+[submodule "matlab/REU_2022/Topic_1_ Imitating_Swarms/SwarmSimClassSeparationPy/msvr"]
+	path = matlab/REU_2022/Topic_1_ Imitating_Swarms/SwarmSimClassSeparationPy/msvr
+	url = https://github.com/Analytics-for-Forecasting/msvr

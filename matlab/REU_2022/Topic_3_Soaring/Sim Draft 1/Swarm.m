@@ -1,22 +1,34 @@
 % Swarm class
 classdef Swarm < handle
     properties
-        agents = Agent.empty(0,SimLaw.numAgents)
+        agents
         thermalMap
+        simLaw
+        funcHandle_agentControl
+        funcHandle_findNeighborhood
     end
     
     methods
         % Generation Function
-        function obj = Swarm()
+        function obj = Swarm(simLaw)
+            % Save parameters and agentControlFunc
+            obj.simLaw = simLaw;
+            SL = obj.simLaw;
+            
+            obj.funcHandle_agentControl = str2func(SL.funcName_agentControl);
+            obj.funcHandle_findNeighborhood = str2func(SL.funcName_findNeighborhood);
+            
             %% Generate agents
-            numAgents = SimLaw.numAgents;   %Get total number of agents
+            numAgents = SL.numAgents;   %Get total number of agents
+            obj.agents = Agent.empty(0,SL.numAgents);
             obj.agents(1,numAgents) = Agent();  %Fill agents with default constructors of Agent
             
             %Iterate through all agents
-            posRange = SimLaw.agentSpawnPosRange;
-            velRange = SimLaw.agentSpawnVelRange;
-            altiRange = SimLaw.agentSpawnAltiRange;
+            posRange = SL.agentSpawnPosRange;
+            velRange = SL.agentSpawnVelRange;
+            altiRange = SL.agentSpawnAltiRange;
             for i=1:numAgents
+                obj.agents(i).simLaw = SL;
                 %Set agent initial position, heading, bank angle, velocity
                 obj.agents(i).position(1) = Utility.randIR(posRange(1,1),posRange(2,1));
                 obj.agents(i).position(2) = Utility.randIR(posRange(1,2),posRange(2,2));
@@ -28,12 +40,13 @@ classdef Swarm < handle
             end
             
             %% Generate thermal map
-            obj.thermalMap = ThermalMap();
+            obj.thermalMap = ThermalMap(SL);
         end
         
         % Save Function
         function obj = saveAgentData(obj)
-            numAgents = SimLaw.numAgents;
+            SL = obj.simLaw;
+            numAgents = SL.numAgents;
             for i=1:numAgents
                 obj.agents(i).saveData();
             end
@@ -41,45 +54,33 @@ classdef Swarm < handle
         
         % Step Function
         function obj = stepSimulation(obj)
-            numAgents = SimLaw.numAgents;   %Get total number of agents
+            SL = obj.simLaw;
+            numAgents = SL.numAgents;   %Get total number of agents
             for i=1:numAgents
                 if obj.agents(i).isAlive
                     currentAgent = obj.agents(i);
                     
-                    %Find local agents for currentAgent
-                    numLocalAgents = 0;
-                    localAgentIndices = -1 * ones(1,numAgents);
-                    for j=1:numAgents
-                        if(j==i) || (~obj.agents(j).isAlive)
-                            continue
-                        end
-                        otherAgent = obj.agents(j);
-                        dist = norm(currentAgent.position - otherAgent.position);
-                        if i == 1
-                            %fprintf("Agent %g (%g,%g,%g) to %g (%g,%g,%g), dist: %g\n",i,currentAgent.position(1),currentAgent.position(2),currentAgent.position(3),j,otherAgent.position(1),otherAgent.position(2),otherAgent.position(3),dist);
-                        end
-                        %fprintf("Agent %g Angle: %g\n", i, currentAgent.bankAngle/2/pi*180);
-                        if(dist < SimLaw.neighborRadius)
-                            numLocalAgents = numLocalAgents + 1;
-                            localAgentIndices(numLocalAgents) = j;
-                        end
-                    end
-                    clear localAgents
-                    localAgents(1:numLocalAgents) = obj.agents(localAgentIndices(1:numLocalAgents));
+                    %Find localAgents
+                    localAgents = obj.funcHandle_findNeighborhood(obj,i,SL);
                     
                     %Find thermal strength from ThermalMap
                     %thermalStrength = thermalMap.getStrength(currentAgent.position);
-                    thermalStrength = 0;
+                    if(ismethod(SL,"getTempThermalStrength"))
+                        thermalStrength = SL.getTempThermalStrength(currentAgent);
+                    else
+                        thermalStrength = SL.tempThermalStrength;
+                    end
                     
                     %Update currentAgent
-                    agentControl_Update(currentAgent,localAgents,thermalStrength,[0,0,0]);
+                    obj.funcHandle_agentControl(currentAgent,localAgents,thermalStrength,[0,0,0], SL);
                 end
             end
         end
         
         % Render
         function obj = renderAgents(obj)
-            for i=1:SimLaw.numAgents
+            SL = obj.simLaw;
+            for i=1:SL.numAgents
                 obj.agents(i).render();
             end
         end

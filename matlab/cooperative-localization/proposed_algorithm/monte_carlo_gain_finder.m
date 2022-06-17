@@ -106,7 +106,7 @@ for num_agents = [5,10,25,50]    %[5,10,25,50] range of number of agent experime
 
                 COST = zeros(length(GAINS),1);
                 %% simulations
-                for g = 1:length(GAINS)
+                parfor g = 1:length(GAINS)
                     g
                     gains = GAINS(:,g);
 
