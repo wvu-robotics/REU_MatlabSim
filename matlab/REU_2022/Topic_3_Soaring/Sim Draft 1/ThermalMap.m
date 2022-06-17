@@ -8,7 +8,7 @@ classdef ThermalMap < handle
     end
 
     methods 
-        % Construcor
+        % Constructor
         function thermalMap = ThermalMap(simLaw, velocity) 
             thermalMap.simLaw = simLaw;
             SL = thermalMap.simLaw;
@@ -19,7 +19,6 @@ classdef ThermalMap < handle
     
                 for i = 1:SL.numThermals
                     thermalMap.thermals(i) = Thermal(SL);
-                    thermalMap.isOverlap(i);
                 end
             elseif nargin == 2 % If velocity is specified
                 thermalMap.thermals = Thermal.empty(0,SL.numThermals);
@@ -27,18 +26,44 @@ classdef ThermalMap < handle
                 for i = 1:SL.numThermals
                     thermalMap.thermals(i) = Thermal(SL, velocity);
                 end
+                %adjustThermalPositions(0);
             end
         end
 
-        function [] = isOverlap(thermalMap, index, SL, velocity)
-            for i = 1:(index-1)
-                distance = norm(thermalMap.thermals(i).position - thermalMap.thermals(index).position);
-                if distance <= (thermalMap.thermals(i).radius + thermalMap.thermals(index).radius)
-                    thermalMap.thermals(index) = Thermal(SL, velocity);
-                    thermalMap.isOverlap(index, SL, velocity);
+        %% Return true if the two input thermals overlap, return false otherwise
+        function overlapBool = isOverlap(thermalMap, index1, index2)
+            distance = norm(thermalMap.thermals(index1).position - thermalMap.thermals(index2).position);
+            overlapBool = (distance <= (thermalMap.thermals(index1).radius + thermalMap.thermals(index2).radius));
+        end
+
+        %% Check for overlap between one thermal and all the thermals following it
+        function index = checkOverlap(thermalMap, SL, index, vel)
+            for i = (index + 1):SL.numThermals
+                if isOverlap(thermalMap, index, i)
+                    reinitWeakThermal(thermalMap, SL, index, i, vel);
+                    index = 1;
                     break;
                 end
             end
+        end
+
+        %% Determine weaker thermal
+        function [] = reinitWeakThermal(thermalMap, SL, index1, index2, vel)
+            % Determine which thermal is weaker
+            if (thermalMap.thermals(index1).curStrength <= thermalMap.thermals(index2).curStrength) 
+                weakerThermal = index1;
+            else
+                weakerThermal = index2;
+            end
+            
+            % Make the weaker thermal disappear and reincarnate it
+            if vel ~= [0 0]
+                thermalMap.thermals(weakerThermal) = Thermal(SL);
+            else 
+                thermalMap.thermals(weakerThermal) = Thermal(SL, 0);
+            end
+            thermalMap.thermals(weakerThermal).curStrength = 0;
+            thermalMap.thermals(weakerThermal).stepCount = SL.thermalMinPlateauTime;
         end
 
         %% Calculate updraft strength at a given point
@@ -54,30 +79,32 @@ classdef ThermalMap < handle
         end
 
         %% Fade the thermals in or out depending on the time
-        function [] = fadeThermals(thermalMap, i)
+        function [] = fadeThermals(thermalMap)
             SL = thermalMap.simLaw;
-            % If the current strength is at the thermal's max, determine the step count
-            if thermalMap.thermals(i).curStrength >= thermalMap.thermals(i).maxStrength
-                % If the step count is at the plateau time, reset it to 0 and increment the
-                % current strength in the new direction
-                if thermalMap.thermals(i).stepCount == SL.thermalMaxPlateauTime
-                    thermalMap.thermals(i).strengthDirection = -thermalMap.thermals(i).strengthDirection;
-                    thermalMap.thermals(i).stepCount = 0;       
+            for i = 1:SL.numThermals
+                % If the current strength is at the thermal's max, determine the step count
+                if thermalMap.thermals(i).curStrength >= (thermalMap.thermals(i).maxStrength - 1E-5)
+                    % If the step count is at the plateau time, reset it to 0 and increment the
+                    % current strength in the new direction
+                    if thermalMap.thermals(i).stepCount == SL.thermalMaxPlateauTime
+                        thermalMap.thermals(i).strengthDirection = -1;
+                        thermalMap.thermals(i).stepCount = 0;       
+                        thermalMap.thermals(i).curStrength = thermalMap.thermals(i).curStrength + thermalMap.thermals(i).strengthDirection * SL.thermalFadeRate;
+                    else % Otherwise, increment the step count
+                        thermalMap.thermals(i).stepCount = thermalMap.thermals(i).stepCount + 1;
+                    end
+                % Otherwise check if the current strength is at 0
+                elseif round(thermalMap.thermals(i).curStrength,1) <= 1E-5                                    
+                    if thermalMap.thermals(i).stepCount == SL.thermalMinPlateauTime
+                        thermalMap.thermals(i).strengthDirection = 1;
+                        thermalMap.thermals(i).stepCount = 0;
+                        thermalMap.thermals(i).curStrength = thermalMap.thermals(i).curStrength + thermalMap.thermals(i).strengthDirection * SL.thermalFadeRate;
+                    else % Otherwise, increment the step count
+                        thermalMap.thermals(i).stepCount = thermalMap.thermals(i).stepCount + 1;
+                    end
+                else % Otherwise, increment the current strength in the same direction
                     thermalMap.thermals(i).curStrength = thermalMap.thermals(i).curStrength + thermalMap.thermals(i).strengthDirection * SL.thermalFadeRate;
-                else % Otherwise, increment the step count
-                    thermalMap.thermals(i).stepCount = thermalMap.thermals(i).stepCount + 1;
                 end
-            % Otherwise check if the current strength is at 0
-            elseif thermalMap.thermals(i).curStrength <= 0                                    
-                if thermalMap.thermals(i).stepCount == SL.thermalMinPlateauTime
-                    thermalMap.thermals(i).strengthDirection = -thermalMap.thermals(i).strengthDirection;
-                    thermalMap.thermals(i).stepCount = 0;
-                    thermalMap.thermals(i).curStrength = thermalMap.thermals(i).curStrength + thermalMap.thermals(i).strengthDirection * SL.thermalFadeRate;
-                else % Otherwise, increment the step count
-                    thermalMap.thermals(i).stepCount = thermalMap.thermals(i).stepCount + 1;
-                end
-            else % Otherwise, increment the current strength in the same direction
-                thermalMap.thermals(i).curStrength = thermalMap.thermals(i).curStrength + thermalMap.thermals(i).strengthDirection * SL.thermalFadeRate;
             end
         end
 
@@ -137,11 +164,12 @@ classdef ThermalMap < handle
         end
 
         %% Step functions
+        % Step for location varying simulation
         function [] = step(thermalMap, dt)
             SL = thermalMap.simLaw;
             for thermalIndex = 1:SL.numThermals
-                thermalMap.adjustThermalPositions();
-                thermalMap.fadeThermals(thermalIndex);
+                thermalMap.adjustThermalPositions(thermalMap.thermals(thermalIndex).velocity);
+                thermalMap.fadeThermals();
                 thermalList = thermalMap.thermals;
         
                 % Update the position of the thermal
@@ -157,33 +185,15 @@ classdef ThermalMap < handle
             SL = thermalMap.simLaw;
             for thermalIndex = 1:SL.numThermals
                 thermalMap.adjustThermalPositions(0);
-                thermalMap.fadeThermals(thermalIndex);
+                thermalMap.fadeThermals();
             end
         end
 
-        %% Ensure thermals don't overlap
-        function [] = adjustThermalPositions(thermalMap, velocity)
+        %% Adjust thermal positions if they overlap
+        function [] = adjustThermalPositions(thermalMap, vel)
             SL = thermalMap.simLaw;
             for i = 1:SL.numThermals
-                for j = (i + 1):SL.numThermals
-                    % Calculate if the thermals overlap
-                    distance = norm(thermalMap.thermals(i).position - thermalMap.thermals(j).position);
-                    if distance <= (thermalMap.thermals(i).radius * (thermalMap.thermals(i).curStrength/thermalMap.thermals(i).maxStrength) + thermalMap.thermals(j).radius * (thermalMap.thermals(j).curStrength/thermalMap.thermals(j).maxStrength))
-                        % Determine which thermal is weaker
-                        if (thermalMap.thermals(i).curStrength < thermalMap.thermals(j).curStrength) 
-                            weakerThermal = i;
-                        else
-                            weakerThermal = j;
-                        end
-                        
-                        % Make the weaker thermal disappear and reincarnate it
-                        thermalMap.thermals(weakerThermal) = Thermal(SL, velocity);
-                        thermalMap.isOverlap(weakerThermal, SL, velocity);
-                        thermalMap.thermals(weakerThermal).curStrength = 0;
-                        thermalMap.thermals(weakerThermal).stepCount = SL.thermalMinPlateauTime;
-                        thermalMap.fadeThermals(weakerThermal);
-                    end
-                end
+                i = checkOverlap(thermalMap, SL, i, vel);
             end
         end
     end

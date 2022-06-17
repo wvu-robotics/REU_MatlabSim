@@ -22,7 +22,7 @@ mapDiff = (SL.mapSize(2)-SL.mapSize(1))/(thermalPixels-1);
 thermalMap = ThermalMap(SL, 0);
 
 %% Set up video and figure
-video = VideoWriter('thermals1.avi');
+video = VideoWriter('Thermal Outputs/staticThermals.avi');
 video.FrameRate = 1/dt;
 open(video);
 
@@ -62,7 +62,7 @@ for step = 1:steps
     %% Step physics
     thermalMap.staticStep(dt);
     
-        % Find and print elapsed time
+    %% Find and print elapsed time
     c2 = clock;
     elapsedTime = c2(6)-c1(6);
     % If minute advances, elapsedTime will appear negative (1min20sec - 0min50sec = 20sec-50sec = -30sec)
