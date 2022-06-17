@@ -10,33 +10,14 @@ function agentControl_Update(currentAgent,localAgents,thermalStrength, target, S
     %% Get SCAM Accel
     if(numLocalAgents > 0)
         %% Get Centroid + Cohesion
-        centroid   = [0,0,0];
-        distances  = zeros(1,numLocalAgents);
-        diffHeight = distances;
-        for i = 1:numLocalAgents
-            if localAgents(i).savedPosition(3) <= 0
-                continue;
-            end
-            distances(i) = norm(currentAgent.position - localAgents(i).savedPosition);
-            diffHeight(i) = -currentAgent.position(3) + localAgents(i).savedPosition(3); % negative if above others.
-            normHeight = diffHeight(i)/SL.neighborRadius;
-            if normHeight < SL.heightIgnore
-                weight = 0;
-            else
-                weight = SL.heightPriority * (normHeight - SL.heightIgnore);
-                % if normHeight = 0 and heightOffset = -0.4, weight is 0.4
-                % if normHeight = 1 and heightOffset = -1, weight is 2.
-            end
-            centroid = centroid + weight*localAgents(i).savedPosition;
-        end
-        centroid = centroid / numLocalAgents;
+        [centroid, distances, diffHeight] = Utility.findCentroid(currentAgent, localAgents, SL);
 
         % Cohesion
         diffCentroid    = centroid - currentAgent.position;
         diffCentroid(3) = 0;
         distToCentroid  = norm(diffCentroid);
         if distToCentroid == 0
-            centroidUnit = [0,0,0];
+            centroidUnit = [0,0,0]; % skips cohesion
         else
             centroidUnit = diffCentroid / distToCentroid;
         end
@@ -44,7 +25,7 @@ function agentControl_Update(currentAgent,localAgents,thermalStrength, target, S
         %% Get Nearest
 
         % Nearest must be vertically close
-        vertRange = 0.3; % 30% above and below.
+        vertRange = 0.5; % 50% above and below.
         nearest   = 1;
         for i = 2:numLocalAgents
             if abs(diffHeight(i)) <= vertRange && distances(i) <= distances(i-1)

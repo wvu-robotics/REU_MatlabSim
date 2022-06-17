@@ -2,7 +2,7 @@ classdef MaxsLaw
     properties
         %% Variables to save
         % Simulation constraints
-        dt = 1;           %s
+        dt = .2;           %s
         totalTime = 1800;  %s
         fpsMult = 30;
         mapSize = [-4000,4000];   %m, bounds of square map

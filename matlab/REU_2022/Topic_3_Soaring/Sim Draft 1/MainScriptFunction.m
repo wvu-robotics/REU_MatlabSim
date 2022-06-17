@@ -1,4 +1,4 @@
-function [average, surviving] = MainScriptFunction(ParamS, ParamC, ParamA, number, render)
+function [average, surviving] = MainScriptFunction(ParamS, ParamC, ParamA, ParamM, ParamhPr, ParamhIg, number, render)
 % Main script: loads parameter variables and runs swarm step function
 %% Clear
 close all
@@ -14,6 +14,9 @@ simLaw = MaxsLaw();
 simLaw.separation = ParamS;
 simLaw.cohesion   = ParamC;
 simLaw.alignment  = ParamA;
+simLaw.migration  = ParamM;
+simLaw.heightPriority = ParamhPr;
+simLaw.heightIgnore   = ParamhIg;
 
 %% Video Initialization
 if render
@@ -61,7 +64,7 @@ if render
     patchObj = patch('XData',patchX,'YData',patchY,'FaceColor','red','FaceAlpha',0.8);
 end
 
-%% Run simulation
+%% Run simulation...
 steps = simLaw.totalTime/simLaw.dt;
 Living = simLaw.numAgents;
 maxHeight = -1;
@@ -106,7 +109,7 @@ for step = 1:steps
             %If minute advances, elapsedTime will appear negative (1min20sec - 0min50sec = 20sec-50sec = -30sec)
             dTime = dTime + 60;
         end
-        %fprintf("Frame %g/%g:  ",step,steps);
+        fprintf("Frame %g/%g:  ",step,steps);
         fprintf("Run # %g, ", number);
         fprintf("%g Agents, ", Living);
         fprintf("Minute %g, ", minutes);

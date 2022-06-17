@@ -28,16 +28,18 @@ classdef Utility
                 Verdict = dist;
             end
         end
-        %% Calculates Weighted Centroid (WIP, don't use)
-
-        function Centroid = findCentroid(currentAgent,localAgents)
+        %% Calculates Weighted Centroid
+        function [Centroid, distances, diffHeight] = findCentroid(currentAgent, localAgents, SL)
+            %% Init
             numLocalAgents = size(localAgents,2);
-            Centroid = [0,0,0];
-            distances = zeros(1,numLocalAgents);
-            diffHeight = distances;
+            Centroid       = [0,0,0];
+            distances      = zeros(1,numLocalAgents);
+            diffHeight     = distances;
             numLocalAgents = length(distances);
+            
+            %% Loop
             for i = 1:numLocalAgents
-                if localAgents(i).savedPosition(3) <= 0
+                if ~localAgents(i).isAlive
                     continue;
                 end
                 distances(i) = norm(currentAgent.position - localAgents(i).savedPosition);
@@ -47,10 +49,9 @@ classdef Utility
                     weight = 0;
                 else
                     weight = SL.heightPriority * (normHeight - SL.heightIgnore);
-                    % if normHeight = 0 and heightOffset = -0.4, weight is 0.4
-                    % if normHeight = 1 and heightOffset = -1, weight is 2.
+                    % if normHeight = 1 and heightIgnore = -1, weight is 2.
                 end
-                centroid = centroid + weight*localAgents(i).savedPosition;
+                Centroid = Centroid + weight*localAgents(i).savedPosition;
             end
             Centroid = Centroid / numLocalAgents;  
         end
