@@ -5,7 +5,7 @@ classdef ThermalTestLaw
         totalTime = 60  %s
         mapSize = [-100,100]   %m, bounds of square map
         numAgents = 100  %agents
-        numThermals = 4 %thermals
+        numThermals = 20 %thermals
         
         % Initial conditions
         agentSpawnPosRange = [-70,-70; 70,70];     %m, [xMin,yMin;xMax,yMax]
@@ -35,14 +35,14 @@ classdef ThermalTestLaw
         Sink_C = -2.3782
         
         % Thermal constraints
-        thermalSpeedMin = 20        % m/s
-        thermalSpeedMax = 50        % m/s
+        thermalSpeedMin = 5        % m/s
+        thermalSpeedMax = 20        % m/s
         thermalRadiusMin = 10       % m
         thermalRadiusMax = 25       % m
         thermalStrengthMin = 3      % m/s, peak updraft speed
         thermalStrengthMax = 10     % m/s, peak updraft speed
-        thermalFadeRate = 0.25      % m/s, rate at which thermals fade in or out 
-        thermalMinPlateauTime = 10; % steps at the min strength
+        thermalFadeRate = 0.05      % m/s, rate at which thermals fade in or out 
+        thermalMinPlateauTime = 20; % steps at the min strength
         thermalMaxPlateauTime = 50  % steps at the max strength
 
         %Visuals
