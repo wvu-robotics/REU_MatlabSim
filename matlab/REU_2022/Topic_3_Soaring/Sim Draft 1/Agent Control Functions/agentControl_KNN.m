@@ -1,16 +1,4 @@
 function agentControl_KNN(currentAgent, localAgents, thermalStrength, target, SL)
-    %{
-    thermalStrength = 10
-    mapSize = [-200,200]
-    numAgents = 20
-    separation = 15.0
-    cohesion = 0.06
-    waggle = 50
-    forwardSpeedMin = 15
-    forwardSpeedMax = 30
-    renderScale = [5;5];
-    %}
-
     accelMag_separation = 0;
     accelMag_cohesion = 0;
     accelMag_alignment = 0;
