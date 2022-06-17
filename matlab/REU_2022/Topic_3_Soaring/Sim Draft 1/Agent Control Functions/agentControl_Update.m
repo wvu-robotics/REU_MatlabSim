@@ -1,7 +1,7 @@
-function agentControl_Update(currentAgent,localAgents,thermalStrength, target, SL)
+function agentControl_Update(currentAgent,localAgents,thermalStrength, target, SL, Utility)
     numLocalAgents = size(localAgents,2);
     if(numLocalAgents > 0)
-        %% Get Centroid
+        %% Get Centroid + Cohesion
         centroid = [0,0,0];
         distances = zeros(1,numLocalAgents);
         diffHeight = distances;
@@ -12,11 +12,10 @@ function agentControl_Update(currentAgent,localAgents,thermalStrength, target, S
             distances(i) = norm(currentAgent.position - localAgents(i).savedPosition);
             diffHeight(i) = -currentAgent.position(3) + localAgents(i).savedPosition(3); % negative if above others.
             normHeight = diffHeight(i)/SL.neighborRadius;
-            heightOffset = -0.2; % ignore agents below -20% height
-            if normHeight < heightOffset
+            if normHeight < SL.heightIgnore
                 weight = 0;
             else
-                weight = SL.heightPriority * (normHeight - heightOffset);
+                weight = SL.heightPriority * (normHeight - SL.heightIgnore);
                 % if normHeight = 0 and heightOffset = -0.4, weight is 0.4
                 % if normHeight = 1 and heightOffset = -1, weight is 2.
             end
@@ -24,15 +23,14 @@ function agentControl_Update(currentAgent,localAgents,thermalStrength, target, S
         end
         centroid = centroid / numLocalAgents;
 
-        %% Get Vectors
         % Cohesion
-        diffCentroid = centroid - currentAgent.position;
+        diffCentroid    = centroid - currentAgent.position;
         diffCentroid(3) = 0;
-        distToCentroid = norm(diffCentroid);
+        distToCentroid  = norm(diffCentroid);
         if distToCentroid == 0
             centroidUnit = [0,0,0];
         else
-            centroidUnit   = diffCentroid / distToCentroid;
+            centroidUnit = diffCentroid / distToCentroid;
         end
 
         %% Get Nearest
@@ -45,7 +43,7 @@ function agentControl_Update(currentAgent,localAgents,thermalStrength, target, S
                 nearest = i;
             end
         end
-        
+
         if ~isempty(nearest)
             nearest        = nearest(1);
             diffNearest    = localAgents(nearest).savedPosition - currentAgent.position;
@@ -65,21 +63,21 @@ function agentControl_Update(currentAgent,localAgents,thermalStrength, target, S
         distToTarget   = norm(diffTarget);
         targetUnit     = diffTarget / distToTarget;
 
-        %% Get Accel
-        accelMag_cohesion   = SL.cohesion   *      distToCentroid^2; %Positive, to go TOWARDS the other
+        %% Get Accel (with neighbors)
         accelMag_separation = SL.separation *   -1/distToNearest^2; %Negative, to go AWAY from the other
+        accelMag_cohesion   = SL.cohesion   *      distToCentroid^2; %Positive, to go TOWARDS the other
         accelMag_alignment  = SL.alignment  *    1/distToNearest^2;
         accelMag_migration  = SL.migration  *      distToTarget^6;
 
-        newAccel = accelMag_separation * nearestUnit + ...
-                   accelMag_cohesion   * centroidUnit + ...
+        newAccel = accelMag_separation * nearestUnit    + ...
+                   accelMag_cohesion   * centroidUnit   + ...
                    accelMag_alignment  * nearestVelUnit + ...
                    accelMag_migration  * targetUnit; % nets accel vector to add on to current accel
 
         newAccel(3) = 0; % removes z component
         currentAgent.accelDir = atan2(newAccel(2), newAccel(1));
     else
-        % Migration
+        %% Cope with Loneliness
         diffTarget     = target - currentAgent.position;
         diffTarget(3)  = 0;
         distToTarget   = norm(diffTarget);
@@ -90,37 +88,30 @@ function agentControl_Update(currentAgent,localAgents,thermalStrength, target, S
         newAccel(3) = 0; % removes z component
         currentAgent.accelDir = atan2(newAccel(2), newAccel(1));
     end
-
-
-
-    forwardUnit      = [cos(currentAgent.heading);sin(currentAgent.heading);0];
-    newAccel_forward = dot(newAccel,forwardUnit);
+    
+    %% Finalize Accel
+    Heading      = [cos(currentAgent.heading),sin(currentAgent.heading),0];
+    newAccel_forward = dot(newAccel,Heading);
     if(norm(newAccel) - norm(newAccel_forward) < 1E-6)
         newAccel_circ = 0;
     else
         newAccel_circ = 1.0 * sqrt((norm(newAccel))^2-newAccel_forward^2);
     end
-    turningCrossProduct = cross(forwardUnit,newAccel);
+    turningCrossProduct = cross(Heading,newAccel);
     newAccel_circ = newAccel_circ * sign(turningCrossProduct(3));
 
     newAccel = [newAccel_forward; newAccel_circ];
 
     %% Get Vel
     newVel(1) = currentAgent.velocity(1) + newAccel(1)*SL.dt;
-    if(newVel(1) > SL.forwardSpeedMax)
-        newVel(1) = SL.forwardSpeedMax;
-    elseif(newVel(1) < SL.forwardSpeedMin)
-        newVel(1) = SL.forwardSpeedMin;
-    end
+
+    newVel(1) = Utility.midMinMax(newVel(1),SL.forwardSpeedMin, SL.forwardSpeedMax);
+
     % a = omega * v
     currentAgent.bankAngle = atan(newAccel(2)/SL.g);
+    
+    currentAgent.bankAngle = Utility.midMinMax(currentAgent.bankAngle,SL.bankMin,  SL.bankMax);
 
-    if(currentAgent.bankAngle > SL.bankMax)
-        currentAgent.bankAngle = SL.bankMax;
-    end
-    if(currentAgent.bankAngle < SL.bankMin)
-        currentAgent.bankAngle = SL.bankMin;
-    end
     newAccel(2) = tan(currentAgent.bankAngle)*SL.g;
     newVel(2) = newAccel(2)/newVel(1);
 
@@ -129,13 +120,10 @@ function agentControl_Update(currentAgent,localAgents,thermalStrength, target, S
     vspeed = vsink + thermalStrength;
 
     %% Get Pos
-    newPos(1:2) = currentAgent.position(1:2) + newVel(1)*forwardUnit(1:2)'*SL.dt;
-    newPos(3) = currentAgent.position(3) + vspeed*SL.dt;
-    if newPos(3) > SL.agentCeiling
-        newPos(3) = SL.agentCeiling;
-    elseif newPos(3) < SL.agentFloor % not Giga-Jank
-        newPos(3) = SL.agentFloor; % Tera-Jank
-    end
+    newPos(1:2) = currentAgent.position(1:2) + newVel(1)*Heading(1:2)*SL.dt;
+    newPos(3)   = currentAgent.position(3)   + vspeed*SL.dt;
+    newPos(3)   = Utility.midMinMax(newPos(3), SL.agentFloor, SL.agentCeiling);
+
     if newPos(3) <= 0
         currentAgent.isAlive = false;
     end

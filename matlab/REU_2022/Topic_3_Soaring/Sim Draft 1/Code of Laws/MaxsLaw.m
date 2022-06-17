@@ -21,17 +21,18 @@ classdef MaxsLaw
         alignment  = 1;
         migration  = 1e-21;
         waggle = 0;
-        heightPriority = 3;
+        heightPriority = 5;
+        heightIgnore = -0.2;
 
         % Agent constraints
-        neighborRadius = 1500;     %m
+        neighborRadius = 1000;     %m
         agentCeiling   = 2600;    %m
         agentFloor     = 0;      %m
         forwardSpeedMin = 5;     %m/s
         forwardSpeedMax = 20;    %m/s
         forwardInertia = 10;
-        bankMin = -5*pi/12;           %rad
-        bankMax = 5*pi/12;            %rad
+        bankMin = -2*pi/12;           %rad
+        bankMax = 2*pi/12;            %rad
         bankInertia = 1;
         fov = 2*pi;              %rad
         Sink_A = -0.01843;
