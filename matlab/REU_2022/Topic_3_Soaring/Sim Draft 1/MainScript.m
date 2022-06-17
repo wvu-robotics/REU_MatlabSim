@@ -55,6 +55,8 @@ swarm = Swarm(simLaw);
 theta = linspace(0,2*pi,50);
 patchX = 50*cos(theta)-150;
 patchY = 50*sin(theta)-150;
+% patchX = 600*cos(theta)-1000;
+% patchY = 600*sin(theta)+1000;
 patchObj = patch('XData',patchX,'YData',patchY,'FaceColor','red','FaceAlpha',0.8);
 
 %% Prepare data
