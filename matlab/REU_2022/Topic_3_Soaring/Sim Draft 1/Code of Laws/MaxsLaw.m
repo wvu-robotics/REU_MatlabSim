@@ -2,7 +2,7 @@ classdef MaxsLaw
     properties
         %% Variables to save
         % Simulation constraints
-        dt = 1;           %s
+        dt = .25;           %s
         totalTime = 1800;  %s
         fpsMult = 30;
         mapSize = [-4000,4000];   %m, bounds of square map
@@ -21,7 +21,8 @@ classdef MaxsLaw
         alignment  = 1;
         migration  = 1e-21;
         waggle = 0;
-        heightPriority = 1;
+        heightPriority = 5;
+        heightIgnore = -0.2;
 
         % Agent constraints
         neighborRadius = 1000;     %m
@@ -30,8 +31,8 @@ classdef MaxsLaw
         forwardSpeedMin = 5;     %m/s
         forwardSpeedMax = 20;    %m/s
         forwardInertia = 10;
-        bankMin = -5*pi/12;           %rad
-        bankMax = 5*pi/12;            %rad
+        bankMin = -2*pi/12;           %rad
+        bankMax = 2*pi/12;            %rad
         bankInertia = 1;
         fov = 2*pi;              %rad
         Sink_A = -0.01843;
@@ -59,7 +60,8 @@ classdef MaxsLaw
         renderScale = [300;300]; %[scaleX; scaleY];
 
         % Functions to use
-        agentControlFuncName = "agentControl_Update";
+        funcName_agentControl = "agentControl_Update";
+        funcName_findNeighborhood = "findNeighborhood_fixedRadius";
     end
 
     methods % temporary, remove later

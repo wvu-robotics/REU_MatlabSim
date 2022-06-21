@@ -4,7 +4,8 @@ classdef Swarm < handle
         agents
         thermalMap
         simLaw
-        agentControlFunc
+        funcHandle_agentControl
+        funcHandle_findNeighborhood
     end
     
     methods
@@ -14,7 +15,8 @@ classdef Swarm < handle
             obj.simLaw = simLaw;
             SL = obj.simLaw;
             
-            obj.agentControlFunc = str2func(SL.agentControlFuncName);
+            obj.funcHandle_agentControl = str2func(SL.funcName_agentControl);
+            obj.funcHandle_findNeighborhood = str2func(SL.funcName_findNeighborhood);
             
             %% Generate agents
             numAgents = SL.numAgents;   %Get total number of agents
@@ -58,26 +60,8 @@ classdef Swarm < handle
                 if obj.agents(i).isAlive
                     currentAgent = obj.agents(i);
                     
-                    %Find local agents for currentAgent
-                    numLocalAgents = 0;
-                    localAgentIndices = -1 * ones(1,numAgents);
-                    for j=1:numAgents
-                        if(j==i) || (~obj.agents(j).isAlive)
-                            continue
-                        end
-                        otherAgent = obj.agents(j);
-                        dist = norm(currentAgent.position - otherAgent.position);
-                        if i == 1
-                            %fprintf("Agent %g (%g,%g,%g) to %g (%g,%g,%g), dist: %g\n",i,currentAgent.position(1),currentAgent.position(2),currentAgent.position(3),j,otherAgent.position(1),otherAgent.position(2),otherAgent.position(3),dist);
-                        end
-                        %fprintf("Agent %g Angle: %g\n", i, currentAgent.bankAngle/2/pi*180);
-                        if(dist < SL.neighborRadius)
-                            numLocalAgents = numLocalAgents + 1;
-                            localAgentIndices(numLocalAgents) = j;
-                        end
-                    end
-                    clear localAgents
-                    localAgents(1:numLocalAgents) = obj.agents(localAgentIndices(1:numLocalAgents));
+                    %Find localAgents
+                    localAgents = obj.funcHandle_findNeighborhood(obj,i,SL);
                     
                     %Find thermal strength from ThermalMap
                     %thermalStrength = thermalMap.getStrength(currentAgent.position);
@@ -88,7 +72,7 @@ classdef Swarm < handle
                     end
                     
                     %Update currentAgent
-                    obj.agentControlFunc(currentAgent,localAgents,thermalStrength,[0,0,0], SL);
+                    obj.funcHandle_agentControl(currentAgent,localAgents,thermalStrength,[0,0,0], SL);
                 end
             end
         end

@@ -8,17 +8,18 @@ from models import Boids as bo
 from models import PFSM
 from models import Dance
 
+
 #all parameters for simulation
 params = sim.SimParams(
-    num_agents=10, 
-    dt=0.05, 
+    num_agents=40, 
+    dt=0.1, 
     overall_time = 15, 
     enclosure_size = 10, 
-    init_pos_max= 5, #if None, then defaults to enclosure_size
+    init_pos_max= None, #if None, then defaults to enclosure_size
     agent_max_vel=3,
     init_vel_max = None,
-    agent_max_accel=np.inf,
-    agent_max_turn_rate=np.inf,
+    agent_max_accel=2,
+    agent_max_turn_rate=4*np.pi,
     neighbor_radius=3,
     periodic_boundary=False
     )
@@ -36,7 +37,7 @@ agentPositions, agentVels = sim.runSim(controllers,params,progress_bar=True)
 print("Sim finished -- Generating media")
 
 #export types, NONE, INTERACTIVE, GIF, MP4
-media_type = export.ExportType.MP4
+media_type = export.ExportType.GIF
 
 export.export(media_type,"new",agentPositions,agentVels,controllers=controllers,params=params,vision_mode=False,progress_bar=True)
 print("Media generated")
