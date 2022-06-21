@@ -6,6 +6,7 @@ import sim_tools.media_export as export
 import copy
 import os 
 
+import imitation_tools.automation as automation
 
 from sklearn.linear_model import LinearRegression as lr
 from tqdm import tqdm
@@ -83,104 +84,18 @@ shortSimParams.agent_max_vel = 5
 shortControllers = [bo.Boids(*true_gains) for i in range(shortSimParams.num_agents)]
 #colors = ["rgb(255, 0, 24)","rgb(255, 165, 44)","rgb(255, 255, 65)","rgb(0, 128, 24)","rgb(0, 0, 249)","rgb(134, 0, 125)","rgb(85, 205, 252)","rgb(247, 168, 184)"]
 
-
-extra_sims = 80
-for extra_sim in tqdm(range(extra_sims)):
-    shortAgentPositions, shortAgentVels = sim.runSim(shortControllers,shortSimParams, progress_bar=True)
-    posVelSlices.extend([posVelSlice(shortAgentPositions[i],shortAgentVels[i],shortAgentVels[i+1]) for i in range(len(shortAgentPositions)-1)])
-    if extra_sim % 10 == 0:
-        #for controller in shortControllers:
-            #controller.setColor(colors[int(extra_sim/10)])
-        export.export(export.ExportType.GIF,"linearBoidsOutput/ShortSim"+str(extra_sim),shortAgentPositions,shortAgentVels,params=shortSimParams,controllers=shortControllers)
-
-# print("PosVelSlices:")
-# print(posVelSlices)
-
-#reformat slices to be relevant by agent, getting the centroid, separation, alignment, and last vel
-@dataclass
-class agentSlice:
-    #inputs
-    cohesion: np.ndarray
-    alignment: np.ndarray
-    separation: np.ndarray
-    last_vel: np.ndarray
-    #output
-    output_vel: np.ndarray
-
-print("Parsing slices")
-agentSlices = []
-for slice in tqdm(posVelSlices):
-    for agent in range(shortSimParams.num_agents):
-        #calculate all relevant derivate metrics, repackage
-        posCentroid = np.zeros(2)
-        velCentroid = np.zeros(2)
-        agentPos = slice.pos[agent]
-    
-        #throw out data near the boundary, only needed with bounce
-        if(agentPos[0] > shortSimParams.enclosure_size or agentPos[0] < -shortSimParams.enclosure_size
-        or agentPos[1] > shortSimParams.enclosure_size or agentPos[1] < -shortSimParams.enclosure_size):
-            continue
-
-        agentVel = slice.vel[agent]
-        agentNextVel = slice.next_vel[agent]
-        separation = np.zeros(2)
-        agentVelDifference = agentNextVel #- agentVel
-
-        # throw out data that is at the edge of action constraints--might add some probability
-        if np.linalg.norm(agentVel) >= shortSimParams.agent_max_vel:
-            continue
-        
-        # if np.linalg.norm(agentVelDifference) >= params.agent_max_accel:
-        #     continue
-        
-        # vel_new_angle = np.arctan2(agentNextVel[1],agentNextVel[0])
-        # vel_angle = np.arctan2(agentVel[1],agentVel[0])
-        # angleDeviation = vel_new_angle - vel_angle
-        # if angleDeviation > np.pi or angleDeviation < -np.pi:
-        #     angleDeviation = -2*np.pi + angleDeviation
-        
-        # if abs(angleDeviation) >= params.agent_max_turn_rate*params.dt:
-        #     continue
-
-        adjacent = 0
-        for otherAgent in range(shortSimParams.num_agents):
-            if otherAgent == agent:
-                continue
-            
-            otherPos = slice.pos[otherAgent]
-
-            if np.linalg.norm(otherPos-agentPos) > shortSimParams.neighbor_radius:
-                continue
-            
-            dist = np.linalg.norm(otherPos-agentPos)
-
-            separation += ((otherPos-agentPos)/dist)*(-1/(dist**6))
-            otherVel = slice.vel[otherAgent]
-            posCentroid += otherPos
-            velCentroid += otherVel
-            adjacent += 1
-        
-        #throw out data without interactions
-        if adjacent < 1:
-            continue
-
-        posCentroid /= adjacent
-        velCentroid /= adjacent
-
-
-
-        agentSlices.append(agentSlice(posCentroid-agentPos,velCentroid,separation,np.zeros(2),agentVelDifference))
-
-print("Ignored ",(len(posVelSlices)*shortSimParams.num_agents)-len(agentSlices),"/",len(posVelSlices)*shortSimParams.num_agents," slices")
+agentSlices = automation.runSims(shortControllers,params=shortSimParams,num_sims=80,ignoreMC=False,
+export_info=[export.ExportType.GIF,"linearBoidsOutput/ShortSims",8])
+print("Num agent slices",len(agentSlices))
 
 x = []
 y = []
 
 #reshapes were being annoying, will rewrite better
 for slice in agentSlices:
-    x.append(np.array([slice.cohesion[0],slice.alignment[0],slice.separation[0],slice.last_vel[0]]))
+    x.append(np.array([slice.cohesion[0],slice.alignment[0],slice.separation[0]]))
     y.append(np.array(slice.output_vel[0]))
-    x.append(np.array([slice.cohesion[1],slice.alignment[1],slice.separation[1],slice.last_vel[1]]))
+    x.append(np.array([slice.cohesion[1],slice.alignment[1],slice.separation[1]]))
     y.append(np.array(slice.output_vel[1]))
 
 # print("True loss: ",true_loss)
@@ -190,7 +105,7 @@ print("R^2: ",reg.score(x,y))
 # #create some visuals with the imitated swarm
 #     #maybe do an imposter(s) pretending to be within the original swarm
 gains = reg.coef_.tolist()
-gains[3]=k_inertia
+gains.append(k_inertia)
 
 print(gains)
 
