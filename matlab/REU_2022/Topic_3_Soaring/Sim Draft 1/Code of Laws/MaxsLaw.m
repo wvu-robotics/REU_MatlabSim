@@ -29,6 +29,7 @@ classdef MaxsLaw
 
         % Agent constraints
         neighborRadius = 1000;     %m
+        k = 5;                      % number of nearest neighbors
         agentCeiling   = 2600;    %m
         agentFloor     = 0;      %m
         forwardSpeedMin = 5;     %m/s
@@ -66,7 +67,7 @@ classdef MaxsLaw
 
         % Functions to use
         funcName_agentControl = "agentControl_KNN";
-        funcName_findNeighborhood = "findNeighborhood_fixedRadius";
+        funcName_findNeighborhood = "findNeighborhood_KNN";
     end
 
     methods % temporary, remove later

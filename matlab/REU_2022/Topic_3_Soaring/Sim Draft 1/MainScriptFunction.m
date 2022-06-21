@@ -1,4 +1,4 @@
-function [average, surviving] = MainScriptFunction(ParamS, ParamC, ParamA, ParamM, ParamhPr, ParamhIg, number, render)
+function [average, surviving] = MainScriptFunction(ParamS, ParamC, ParamA, ParamM, ParamhPr, ParamhIg, dt, number, render)
 % Main script: loads parameter variables and runs swarm step function
 %% Clear
 close all
@@ -17,6 +17,7 @@ simLaw.alignment  = ParamA;
 simLaw.migration  = ParamM;
 simLaw.heightPriority = ParamhPr;
 simLaw.heightIgnore   = ParamhIg;
+simLaw.dt         = dt;
 
 %% Video Initialization
 if render
