@@ -2,7 +2,7 @@ classdef MaxsLaw
     properties
         %% Variables to save
         % Simulation constraints
-        dt = .25;           %s
+        dt = .1;           %s
         totalTime = 1800;  %s
         fpsMult = 30;
         mapSize = [-4000,4000];   %m, bounds of square map
@@ -20,9 +20,12 @@ classdef MaxsLaw
         cohesion   = 1;
         alignment  = 1;
         migration  = 1e-21;
-        waggle = 0;
+        waggle = pi/24; %Radians of bank
         heightPriority = 5;
+        cohesionHeightMult = 5;
         heightIgnore = -0.2;
+        separationHeightGap = 100;
+        
 
         % Agent constraints
         neighborRadius = 1000;     %m
@@ -60,7 +63,7 @@ classdef MaxsLaw
         renderScale = [300;300]; %[scaleX; scaleY];
 
         % Functions to use
-        funcName_agentControl = "agentControl_Update";
+        funcName_agentControl = "agentControl_KNN";
         funcName_findNeighborhood = "findNeighborhood_fixedRadius";
     end
 
