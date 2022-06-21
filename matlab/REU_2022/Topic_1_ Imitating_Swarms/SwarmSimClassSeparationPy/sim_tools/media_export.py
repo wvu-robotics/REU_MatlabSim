@@ -17,7 +17,7 @@ class ExportType(enum.Enum):
     MP4 = 3
     CVS=4
 
-def export(export_type,name,agentPositions,agentVels,params=sim.SimParams(),controllers = [],vision_mode=False,progress_bar=False):
+def export(export_type,name,agentPositions,agentVels,params=sim.SimParams(),controllers = [],vision_mode=False,progress_bar=False,framecap=60):
     #controllers used to grab per-agent color
     colors = [controller.color for controller in controllers]
     
@@ -26,14 +26,13 @@ def export(export_type,name,agentPositions,agentVels,params=sim.SimParams(),cont
     elif export_type == ExportType.GIF:
         toGIF(name,agentPositions,params,colors,vision_mode=vision_mode,progress_bar=progress_bar)
     elif export_type == ExportType.MP4:
-        toMP4(name,agentPositions,params,colors,vision_mode=vision_mode,progress_bar=progress_bar)
+        toMP4(name,agentPositions,params,colors,vision_mode=vision_mode,progress_bar=progress_bar,framecap=framecap)
     elif export_type == ExportType.CVS:
         toCVS(name,agentPositions,agentVels,params)
     else:
         pass
 
 def toPandasFrame(agentPositions,colors=[],params=sim.SimParams()):
-
     steps = int(params.overall_time/params.dt)
     if colors == []:
         colors = np.repeat('rgb(99, 110, 250)',(steps+1)*params.num_agents)
@@ -83,16 +82,28 @@ def toGIF(name,agentPositions,params=sim.SimParams(),colors=[],vision_mode=False
         frames.append(im)
     frames[0].save(name+'.gif', format='GIF', append_images=frames[1:], save_all=True, duration=params.overall_time, loop=0)
 
-def toMP4(name,agentPositions,params=sim.SimParams(),colors=[],vision_mode=False,progress_bar=False):
+def toMP4(name,agentPositions,params=sim.SimParams(),colors=[],vision_mode=False,progress_bar=False,framecap=60):
     df= toPandasFrame(agentPositions,colors=colors,params=params)
-    video = cv2.VideoWriter(name+'.mp4',cv2.VideoWriter_fourcc(*'mp4v'), 1/params.dt, (500,500), True)
-    for i in (tqdm(range(0,len(agentPositions))) if progress_bar else range(0,len(agentPositions))):
-        fig = plot(i,df,params,vision_mode,write=False)
-        fig_bytes = fig.to_image(format='png') #getting rid of file writes,slightly faster
-        buf = io.BytesIO(fig_bytes)
-        img = Image.open(buf) #would like a way to go from bytes to cv2 image immediately, haven't found yet
-        im = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-        video.write(im)
+    video = cv2.VideoWriter(name+'.mp4',cv2.VideoWriter_fourcc(*'mp4v'), min(1/params.dt,framecap), (500,500), True)
+    
+    if (1/params.dt) < framecap:
+        for i in (tqdm(range(0,len(agentPositions))) if progress_bar else range(0,len(agentPositions))):
+            fig = plot(i,df,params,vision_mode,write=False)
+            fig_bytes = fig.to_image(format='png') #getting rid of file writes,slightly faster
+            buf = io.BytesIO(fig_bytes)
+            img = Image.open(buf) #would like a way to go from bytes to cv2 image immediately, haven't found yet
+            im = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+            video.write(im)
+    else:
+        n_sample_frame = int(1/(params.dt*framecap)) # neeed to think about this math, there may be a better way to interp
+        for i in (tqdm(range(0,len(agentPositions))) if progress_bar else range(0,len(agentPositions))):
+            if (i%n_sample_frame ==0):
+                fig = plot(i,df,params,vision_mode,write=False)
+                fig_bytes = fig.to_image(format='png') #getting rid of file writes,slightly faster
+                buf = io.BytesIO(fig_bytes)
+                img = Image.open(buf) #would like a way to go from bytes to cv2 image immediately, haven't found yet
+                im = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+                video.write(im)
 
 def toCVS(name,agentPositions,agentVels,params=sim.SimParams()):
     path="./data/"

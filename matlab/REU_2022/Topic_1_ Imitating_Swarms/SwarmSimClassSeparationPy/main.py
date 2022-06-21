@@ -12,8 +12,8 @@ from models import Dance
 #all parameters for simulation
 params = sim.SimParams(
     num_agents=40, 
-    dt=0.1, 
-    overall_time = 15, 
+    dt=0.001, 
+    overall_time = 5, 
     enclosure_size = 10, 
     init_pos_max= None, #if None, then defaults to enclosure_size
     agent_max_vel=3,
@@ -37,7 +37,7 @@ agentPositions, agentVels = sim.runSim(controllers,params,progress_bar=True)
 print("Sim finished -- Generating media")
 
 #export types, NONE, INTERACTIVE, GIF, MP4
-media_type = export.ExportType.GIF
+media_type = export.ExportType.MP4
 
 export.export(media_type,"new",agentPositions,agentVels,controllers=controllers,params=params,vision_mode=False,progress_bar=True)
 print("Media generated")
