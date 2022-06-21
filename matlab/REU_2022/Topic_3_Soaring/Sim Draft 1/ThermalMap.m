@@ -4,30 +4,41 @@ classdef ThermalMap < handle
         thermalSizeLims = [5 20];
         thermalVelLims = [20 50];
         thermals
+        thermalPixels = 200;
         simLaw
     end
 
     methods 
         % Constructor
-        function thermalMap = ThermalMap(simLaw, velocity) 
+        function thermalMap = ThermalMap(simLaw, pixels, velocity) 
             thermalMap.simLaw = simLaw;
             SL = thermalMap.simLaw;
             
             % Default constructor
             if nargin == 1
                 thermalMap.thermals = Thermal.empty(0,SL.numThermals);
-    
+
                 for i = 1:SL.numThermals
                     thermalMap.thermals(i) = Thermal(SL);
                 end
-            elseif nargin == 2 % If velocity is specified
+            elseif nargin == 2 % If pixels are specified
+                thermalMap.thermals = Thermal.empty(0, SL.numThermals);
+                thermalMap.thermalPixels = pixels;
+
+            elseif nargin == 3 % If velocity is specified
                 thermalMap.thermals = Thermal.empty(0,SL.numThermals);
-    
+                thermalMap.thermalPixels = pixels;
+
                 for i = 1:SL.numThermals
                     thermalMap.thermals(i) = Thermal(SL, velocity);
                 end
                 %adjustThermalPositions(0);
             end
+        end
+
+        %% Initialize map background
+        function [] = makeMap(thermalMap)
+          
         end
 
         %% Return true if the two input thermals overlap, return false otherwise
@@ -132,9 +143,14 @@ classdef ThermalMap < handle
         end
 
         %% Render thermals
-        function finalThermalMap = renderThermals(thermalMap, thermalPixels, mapX, mapY, mapDiff)
+        function finalThermalMap = renderThermals(thermalMap)
             SL = thermalMap.simLaw;
-            finalThermalMap = zeros(thermalPixels);
+            % Initialize background of map
+            mapX = linspace(SL.mapSize(1),SL.mapSize(2),thermalMap.thermalPixels);
+            mapY = linspace(SL.mapSize(1),SL.mapSize(2),thermalMap.thermalPixels);
+            mapDiff = (SL.mapSize(2)-SL.mapSize(1))/(thermalMap.thermalPixels-1);
+            
+            finalThermalMap = zeros(thermalMap.thermalPixels);
             % Iterate through thermals
             for thermalIndex = 1:SL.numThermals
                 thermalPos = thermalMap.thermals(thermalIndex).position;
@@ -150,7 +166,7 @@ classdef ThermalMap < handle
                 mapPosMax = [round((thermalSquareMax(1)-SL.mapSize(1))/mapDiff),round((thermalSquareMax(2)-SL.mapSize(1))/mapDiff)];
                 
                 % Create temporary empty matrix to hold strengths around this thermal
-                tempThermalMap = zeros(thermalPixels);
+                tempThermalMap = zeros(thermalMap.thermalPixels);
                 % Iterate through the indices in the thermal square
                 for row = mapPosMin(2):mapPosMax(2)
                     for column = mapPosMin(1):mapPosMax(1)
