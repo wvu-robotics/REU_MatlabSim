@@ -61,6 +61,8 @@ classdef MaxsLaw
                       0.5000, 0.8660, 1.0000,  0.8660,  0.5000,  0.0000, -0.5000, -0.8660, -1.0000, -0.8660, -0.5000, -0.0000];
         showArrow = false;
         renderScale = [300;300]; %[scaleX; scaleY];
+        showKNN = false;
+        showFixedRadius = false;
 
         % Functions to use
         funcName_agentControl = "agentControl_KNN";

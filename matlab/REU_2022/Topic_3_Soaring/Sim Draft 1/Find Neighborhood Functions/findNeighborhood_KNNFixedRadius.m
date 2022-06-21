@@ -6,8 +6,10 @@ function localAgents = findNeighborhood_KNNFixedRadius(swarm, agentIndex, SL)
     % Calculate distances
     distances = -1 * ones(1,numAgents);
     numWithinRadius = 0;
+    numInvalidAgents = 0;
     for j=1:numAgents
-        if (j==agentIndex)
+        if (j==agentIndex || ~swarm.agents(j).isAlive)
+            numInvalidAgents = numInvalidAgents + 1;
             continue;
         end
         otherAgent = swarm.agents(j);
@@ -23,11 +25,11 @@ function localAgents = findNeighborhood_KNNFixedRadius(swarm, agentIndex, SL)
     
     [~,distIndices] = sort(distances);
     
-    if(numWithinRadius + SL.k < numAgents-1)
+    if(numWithinRadius + SL.k < numAgents - numInvalidAgents)
         numLocalAgents = numWithinRadius + SL.k;
     else
-        numLocalAgents = numAgents-1;
+        numLocalAgents = numAgents - numInvalidAgents;
     end
     
-    localAgents(1:numLocalAgents) = swarm.agents(distIndices(2:numLocalAgents+1));
+    localAgents(1:numLocalAgents) = swarm.agents(distIndices(1+numInvalidAgents:numLocalAgents+numInvalidAgents));
 end

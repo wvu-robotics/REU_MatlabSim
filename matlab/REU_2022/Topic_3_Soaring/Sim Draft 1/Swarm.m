@@ -6,6 +6,9 @@ classdef Swarm < handle
         simLaw
         funcHandle_agentControl
         funcHandle_findNeighborhood
+        
+        lineCircle = NaN
+        lineNeighbors = NaN
     end
     
     methods
@@ -80,7 +83,44 @@ classdef Swarm < handle
         % Render
         function obj = renderAgents(obj)
             SL = obj.simLaw;
+            shownNeighbors = false;
             for i=1:SL.numAgents
+                if((SL.showFixedRadius || SL.showKNN) && obj.agents(i).isAlive && ~shownNeighbors)
+                    shownNeighbors = true;
+                    currentAgent = obj.agents(i);
+                    localAgents = obj.funcHandle_findNeighborhood(obj,i,SL);
+                    if(SL.showFixedRadius)
+                        theta = linspace(0,2*pi,30);
+                        xCircle = SL.neighborRadius * cos(theta) + currentAgent.position(1);
+                        yCircle = SL.neighborRadius * sin(theta) + currentAgent.position(2);
+
+                        if(class(obj.lineCircle) == "double")
+                            obj.lineCircle = line();
+                        end
+                        obj.lineCircle.XData = xCircle;
+                        obj.lineCircle.YData = yCircle;
+                    end
+                    
+                    if(SL.showKNN)
+                        numLocalAgents = size(localAgents,2);
+                        linePoints = zeros(2,2*numLocalAgents+1);
+                        linePoints(1,1) = currentAgent.position(1);
+                        linePoints(2,1) = currentAgent.position(2);
+                        for j=1:numLocalAgents
+                            linePoints(1,2*j) = localAgents(j).position(1);
+                            linePoints(2,2*j) = localAgents(j).position(2);
+                            linePoints(1,2*j+1) = currentAgent.position(1);
+                            linePoints(2,2*j+1) = currentAgent.position(2);
+                        end
+
+                        if(class(obj.lineNeighbors) == "double")
+                            obj.lineNeighbors = line();
+                        end
+                        obj.lineNeighbors.XData = linePoints(1,:);
+                        obj.lineNeighbors.YData = linePoints(2,:);
+                    end
+                end
+                
                 obj.agents(i).render();
             end
         end
