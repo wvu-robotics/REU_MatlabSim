@@ -3,7 +3,7 @@ classdef AdamsLaw
         %% Variables to save
         % Simulation constraints
         dt = 0.1;        %s
-        totalTime = 120;  %s
+        totalTime = 60;  %s
         fpsMult = 1;
         mapSize = [-200,200];   %m, bounds of square map
         numAgents = 50;  %agents
@@ -19,13 +19,13 @@ classdef AdamsLaw
         separation = 7;
         separationHeightGap = 10;
         cohesion = 0.008;
-        cohesionHeightMult = 5;
-        alignment = 20;
+        cohesionHeightMult = 8;
+        alignment = 3;
         migration = 0*2e-12;
         waggle = 0.5;
 
         % Agent constraints
-        neighborRadius = 120;     %m
+        neighborRadius = 80;     %m
         k = 5; %k-nearest neighbors
         agentCeiling   = 100;    %m
         agentFloor     = 0;      %m
@@ -57,6 +57,8 @@ classdef AdamsLaw
         Arrow = [2 1.5 1.5 0 0 1.5 1.5; 0 .5 .2 .2 -.2 -.2 -.5];
         showArrow = false;
         renderScale = [8;8]; %[scaleX; scaleY];
+        showKNN = true;
+        showFixedRadius = false;
 
         % Functions to use
         funcName_agentControl = "agentControl_KNN";

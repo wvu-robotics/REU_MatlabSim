@@ -12,14 +12,8 @@ overallTime = 20; % s
 dt = .05; % s 
 steps = overallTime/dt; 
 
-% Initialize background of map
-thermalPixels = 200;
-mapX = linspace(SL.mapSize(1),SL.mapSize(2),thermalPixels);
-mapY = linspace(SL.mapSize(1),SL.mapSize(2),thermalPixels);
-mapDiff = (SL.mapSize(2)-SL.mapSize(1))/(thermalPixels-1);
-
 % Initialize thermals as a matrix of Thermals
-thermalMap = ThermalMap(SL, 0);
+thermalMap = ThermalMap(SL, 200, 0);
 
 %% Set up video and figure
 video = VideoWriter('Thermal Outputs/staticThermals.avi');
@@ -28,27 +22,27 @@ open(video);
 
 simFig = figure;
 
+clf
+xlim(SL.mapSize);
+ylim(SL.mapSize);
+daspect([1 1 1]);
+colorbar;
+cbLimits = [-1,SL.thermalStrengthMax];
+colors = [6 42 127; 41 76 247; 102 59 231; 162 41 216; 222 24 200; 255 192 203] / 255;
+x = [0:thermalMap.thermalPixels/(length(colors)-1):thermalMap.thermalPixels];
+map = interp1(x/thermalMap.thermalPixels,colors,linspace(0,1,thermalMap.thermalPixels)); % Creates a color gradient for the map
+colormap(map);
+set(gca,'clim',cbLimits);
+
 %% Run simulation
 for step = 1:steps
     c1 = clock;
     %% Set up frame
     fprintf("Frame %g/%g\n",step,steps);
-    clf
     hold on
-    xlim(SL.mapSize);
-    ylim(SL.mapSize);
-    daspect([1 1 1]);
-    colorbar;
-    cbLimits = [-1,SL.thermalStrengthMax];
-    %colors = [6 42 127; 11 84 254; 41 76 247; 71 67 239; 102 59 231; 132 50 223; 162 41 216; 192 32 208; 222 24 200; 252 15 192; 255 192 203] / 255;
-    colors = [6 42 127; 41 76 247; 102 59 231; 162 41 216; 222 24 200; 255 192 203] / 255;
-    x = [0:thermalPixels/(length(colors)-1):thermalPixels];
-    map = interp1(x/thermalPixels,colors,linspace(0,1,thermalPixels)); % Creates a color gradient for the map
-    colormap(map);
-    set(gca,'clim',cbLimits);
-    
+        
     %% Render thermals
-    finalThermalMap = thermalMap.renderThermals(thermalPixels, mapX, mapY, mapDiff);
+    finalThermalMap = thermalMap.renderThermals();
 
     thermalMapImg = imagesc(finalThermalMap,'XData',SL.mapSize,'YData',SL.mapSize);
     thermalMapImg.AlphaData = 1;
