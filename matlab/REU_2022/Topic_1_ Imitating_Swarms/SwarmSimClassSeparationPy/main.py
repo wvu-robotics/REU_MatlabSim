@@ -18,8 +18,8 @@ params = sim.SimParams(
     init_pos_max= None, #if None, then defaults to enclosure_size
     agent_max_vel=3,
     init_vel_max = None,
-    agent_max_accel=2,
-    agent_max_turn_rate=4*np.pi,
+    agent_max_accel=np.inf,
+    agent_max_turn_rate=np.inf,
     neighbor_radius=3,
     periodic_boundary=False
     )
