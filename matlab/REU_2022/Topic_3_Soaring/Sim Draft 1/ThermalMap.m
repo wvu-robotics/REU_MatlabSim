@@ -36,11 +36,6 @@ classdef ThermalMap < handle
             end
         end
 
-        %% Initialize map background
-        function [] = makeMap(thermalMap)
-          
-        end
-
         %% Return true if the two input thermals overlap, return false otherwise
         function overlapBool = isOverlap(thermalMap, index1, index2)
             distance = norm(thermalMap.thermals(index1).position - thermalMap.thermals(index2).position);
@@ -48,10 +43,11 @@ classdef ThermalMap < handle
         end
 
         %% Check for overlap between one thermal and all the thermals following it
-        function index = checkOverlap(thermalMap, SL, index, vel)
+        function index = checkOverlap(thermalMap, index, vel)
+            SL = thermalMap.simLaw;
             for i = (index + 1):SL.numThermals
                 if isOverlap(thermalMap, index, i)
-                    reinitWeakThermal(thermalMap, SL, index, i, vel);
+                    reinitWeakThermal(thermalMap, index, i, vel);
                     index = 1;
                     break;
                 end
@@ -59,7 +55,8 @@ classdef ThermalMap < handle
         end
 
         %% Determine weaker thermal
-        function [] = reinitWeakThermal(thermalMap, SL, index1, index2, vel)
+        function [] = reinitWeakThermal(thermalMap, index1, index2, vel)
+            SL = thermalMap.simLaw;
             % Determine which thermal is weaker
             if (thermalMap.thermals(index1).curStrength <= thermalMap.thermals(index2).curStrength) 
                 weakerThermal = index1;
@@ -77,16 +74,41 @@ classdef ThermalMap < handle
             thermalMap.thermals(weakerThermal).stepCount = SL.thermalMinPlateauTime;
         end
 
+        %% Determine which thermal a point is in
+        function thermalIndex = findThermalIndex(thermalMap, position)
+            SL = thermalMap.simLaw;
+            thermalIndex = 0;
+            for i = 1:SL.numThermals
+                % If the distance from the thermal center to the point
+                % is less than the radius, the point is in the thermal
+                distance = norm(thermalMap.thermals(i).position - position(1:2));
+                if distance < thermalMap.thermals(i).radius
+                    thermalIndex = i;
+                    break;
+                end
+            end
+        end
+
         %% Calculate updraft strength at a given point
         function strength = getStrength(thermalMap, position, i)
+            % If the thermal index isn't specified, call findThermalIndex
+            if nargin == 2
+                i = findThermalIndex(thermalMap, position);
+            end
+            if i == 0
+                strength = 0;
+                return;
+            end
+
             radius = thermalMap.thermals(i).radius;
             % determine distance to the given thermals
-            distTherm = norm(thermalMap.thermals(i).position - position);
+            distTherm = norm(thermalMap.thermals(i).position - position(1:2));
             
             % Calculate the updraft strength
             x = exp(-(3*distTherm/radius)^2);
             y = (1-(3*distTherm/radius)^2);
             strength = thermalMap.thermals(i).curStrength.*x.*y;
+            
         end
 
         %% Fade the thermals in or out depending on the time
@@ -197,7 +219,7 @@ classdef ThermalMap < handle
         end
 
         % Step for non-location varying map
-        function [] = staticStep(thermalMap, dt)
+        function [] = staticStep(thermalMap)
             SL = thermalMap.simLaw;
             for thermalIndex = 1:SL.numThermals
                 thermalMap.adjustThermalPositions(0);
@@ -209,7 +231,7 @@ classdef ThermalMap < handle
         function [] = adjustThermalPositions(thermalMap, vel)
             SL = thermalMap.simLaw;
             for i = 1:SL.numThermals
-                i = checkOverlap(thermalMap, SL, i, vel);
+                i = checkOverlap(thermalMap, i, vel);
             end
         end
     end
