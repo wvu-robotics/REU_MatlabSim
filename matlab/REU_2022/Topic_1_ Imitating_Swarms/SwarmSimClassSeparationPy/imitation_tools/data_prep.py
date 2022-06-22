@@ -155,10 +155,16 @@ def toAgentSlices(posVelSlices,params=sim.SimParams(),threads = 4,neighborCaps=[
     pool = Pool(threads)
     
     #partial eval to pass in params, normal function currying doesn't work
-    clumpedSlices = pool.map(
-        partial(agentSliceFromPosVelSlice,params=params,neighborCaps=neighborCaps,ignoreConstrainedMotion=ignoreConstrainedMotion,
-        ignoreBoundaryData=ignoreBoundaryData)
-        ,posVelSlices)
+    clumpedSlices = []
+    if verbose:
+        clumpedSlices = tqdm(pool.imap(
+            partial(agentSliceFromPosVelSlice,params=params,neighborCaps=neighborCaps,ignoreConstrainedMotion=ignoreConstrainedMotion,ignoreBoundaryData=ignoreBoundaryData),
+            posVelSlices),total=len(posVelSlices))
+    else:
+        clumpedSlices = pool.map(
+            partial(agentSliceFromPosVelSlice,params=params,neighborCaps=neighborCaps,ignoreConstrainedMotion=ignoreConstrainedMotion,
+            ignoreBoundaryData=ignoreBoundaryData)
+            ,posVelSlices)
 
     agentSlices = []
     for clump in clumpedSlices:
