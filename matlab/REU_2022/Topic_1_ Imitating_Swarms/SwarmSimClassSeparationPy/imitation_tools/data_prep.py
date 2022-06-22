@@ -2,6 +2,7 @@
 import numpy as np
 import sim_tools.sim as sim
 import sim_tools.media_export as export
+from shapely import geometry
 from tqdm import tqdm
 
 from dataclasses import dataclass
@@ -27,6 +28,7 @@ class agentSlice:
     cohesion: np.ndarray
     alignment: np.ndarray
     separation: np.ndarray
+    steer_to_avoid:np.ndarray
     rotation: np.ndarray
     last_vel: np.ndarray
     #output
@@ -79,7 +81,7 @@ def toAgentSlices(posVelSlices,params=sim.SimParams(),neighborCaps=[1,np.inf],ig
                 
                 dist = np.linalg.norm(otherPos-agentPos)
 
-                separation += ((otherPos-agentPos)/dist)*-1*(1/(dist**6))
+                separation += ((otherPos-agentPos)/dist)*-1*(1/(dist**2))
                 otherVel = slice.vel[otherAgent]
                 posCentroid += otherPos
                 velCentroid += otherVel
@@ -100,7 +102,53 @@ def toAgentSlices(posVelSlices,params=sim.SimParams(),neighborCaps=[1,np.inf],ig
             posCentroid /= adjacent
             velCentroid /= adjacent
 
-            agentSlices.append(agentSlice(posCentroid-agentPos,velCentroid,separation,rotation,agentVel,agentNextVel))
+
+
+            #steer-to-avoid
+            origin = geometry.Point(agentPos[0],agentPos[1])
+
+            # need to pass params for neighborhood stuff
+            orientation = (agentVel/np.linalg.norm(agentVel))*params.neighbor_radius
+            toward = geometry.Point(agentPos[0]+orientation[0],agentPos[1]+orientation[1])        
+
+            velLine = geometry.LineString([origin,toward])
+
+            steerToAvoid = np.zeros(2)
+            # this can be considered a property of the environment?, how is agent's size defined
+            collision_distance = params.neighbor_radius/4
+
+            closest = np.zeros(2)
+            closestDist = np.inf
+            for otherAgent in range(params.num_agents):
+                position = slice.pos[otherAgent]
+                other = geometry.Point(position[0],position[1])
+                collision = other.buffer(collision_distance)
+                if velLine.intersects(collision):
+                    dist = np.linalg.norm(position-agentPos)
+                    if(dist < closestDist):
+                        closestDist = dist
+                        closest = position
+            
+            #assign 
+            if closestDist != np.inf and closestDist != 0:
+                mag = 1/(closestDist**2)
+                #figure out side
+                diffPos = closest-agentPos
+                #project onto v, grab remaining component as orthogonal direction
+                v_hat = agentVel/np.linalg.norm(agentVel)
+                d_v = np.dot(v_hat,diffPos)*v_hat
+                remaining = diffPos - d_v
+                if np.linalg.norm(remaining) > 0:
+                    remaining = remaining/np.linalg.norm(remaining)
+                # print("Verify orthogonal: ",np.dot(remaining,v))
+                # print("DiffPos",diffPos)
+                # print("D_v",d_v)
+                # print("D_r",remaining)
+                # print("Sign",np.sign(np.cross(remaining,v)))
+                steerToAvoid = remaining*mag
+
+
+            agentSlices.append(agentSlice(posCentroid-agentPos,velCentroid,separation,steerToAvoid,rotation,agentVel,agentNextVel))
         # not sure why this is broken
     if verbose:
         print("Ignored ",(len(posVelSlices)*params.num_agents)-len(agentSlices),"/",len(posVelSlices)*params.num_agents," slices")

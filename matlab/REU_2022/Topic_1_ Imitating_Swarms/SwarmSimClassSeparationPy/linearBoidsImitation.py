@@ -13,10 +13,11 @@ from tqdm import tqdm
 from dataclasses import dataclass #data class is like the python equivalent of a struct
 from models import Boids as bo
 from models import Dance
+from models import linearSuperSet as lss
 
 params = sim.SimParams(
     num_agents=50,
-    dt=0.05,
+    dt=0.01,
     overall_time = 10,
     enclosure_size = 20,
     init_pos_max = None, #if None, then defaults to enclosure_size
@@ -36,9 +37,9 @@ params = sim.SimParams(
 
 
 #constants to imitate
-k_coh = 1
+k_coh = 3
 k_align = 1
-k_sep = 0.2
+k_sep = 1
 k_inertia = 1
 
 true_gains = [k_coh, k_align, k_sep, k_inertia]
@@ -77,15 +78,15 @@ posVelSlices = []
 shortSimParams = copy.deepcopy(params)
 print("Running short sims")
 shortSimParams.num_agents = 20
-shortSimParams.enclosure_size = 1*shortSimParams.num_agents #strong effect on learning separation
-shortSimParams.overall_time = 1
+shortSimParams.enclosure_size = 1.5*shortSimParams.num_agents #strong effect on learning separation
+shortSimParams.overall_time = 2
 shortSimParams.init_pos_max = shortSimParams.enclosure_size
-shortSimParams.agent_max_vel = 5
+shortSimParams.agent_max_vel = 10
 shortControllers = [bo.Boids(*true_gains) for i in range(shortSimParams.num_agents)]
 #colors = ["rgb(255, 0, 24)","rgb(255, 165, 44)","rgb(255, 255, 65)","rgb(0, 128, 24)","rgb(0, 0, 249)","rgb(134, 0, 125)","rgb(85, 205, 252)","rgb(247, 168, 184)"]
 
-agentSlices = automation.runSims(shortControllers,params=shortSimParams,num_sims=80,ignoreMC=False,
-export_info=[export.ExportType.GIF,"linearBoidsOutput/ShortSims",8])
+agentSlices = automation.runSims(shortControllers,params=shortSimParams,num_sims=100,ignoreMC=False,
+export_info=[export.ExportType.GIF,"linearBoidsOutput/ShortSims",100])
 print("Num agent slices",len(agentSlices))
 
 x = []
@@ -93,9 +94,9 @@ y = []
 
 #reshapes were being annoying, will rewrite better
 for slice in agentSlices:
-    x.append(np.array([slice.cohesion[0],slice.alignment[0],slice.separation[0]]))
+    x.append(np.array([slice.cohesion[0],slice.alignment[0],slice.separation[0],0]))
     y.append(np.array(slice.output_vel[0]))
-    x.append(np.array([slice.cohesion[1],slice.alignment[1],slice.separation[1]]))
+    x.append(np.array([slice.cohesion[1],slice.alignment[1],slice.separation[1],0]))
     y.append(np.array(slice.output_vel[1]))
 
 # print("True loss: ",true_loss)
@@ -105,13 +106,12 @@ print("R^2: ",reg.score(x,y))
 # #create some visuals with the imitated swarm
 #     #maybe do an imposter(s) pretending to be within the original swarm
 gains = reg.coef_.tolist()
-gains.append(k_inertia)
-
 print(gains)
 
-controllers_imitated = [bo.Boids(*gains) for i in range(params.num_agents)]
+# make sure to read lss constructor definition
+controllers_imitated = [lss.SuperSet(gains[0],gains[1],gains[2],0,gains[3]) for i in range(params.num_agents)]
 for controller in controllers_imitated:
-    controller.setColor("black")
+    controller.setColor("red")
 
 #start at exactly the same place
 print("Running final visual")
@@ -133,7 +133,7 @@ params.agent_max_vel = 7
 original_agents = [bo.Boids(*true_gains) for i in range(int(params.num_agents*mix_factor))]
 for controller in original_agents:
     controller.setColor("rgb(99, 110, 250)")
-imitated_agents = [bo.Boids(*gains) for i in range(int(params.num_agents*(1-mix_factor)))]
+imitated_agents = [lss.SuperSet(gains[0],gains[1],gains[2],0,gains[3]) for i in range(int(params.num_agents*(1-mix_factor)))]
 for controller in imitated_agents:
     controller.setColor("rgb(99, 110, 250)")
 
@@ -148,13 +148,12 @@ export.export(export.ExportType.MP4,"linearBoidsOutput/HybridUniform",agentPosit
 original_agents = [bo.Boids(*true_gains) for i in range(int(params.num_agents*mix_factor))]
 for controller in original_agents:
     controller.setColor("rgb(99, 110, 250)")
-imitated_agents = [bo.Boids(*gains) for i in range(int(params.num_agents*(1-mix_factor)))]
+imitated_agents = [lss.SuperSet(gains[0],gains[1],gains[2],0,gains[3]) for i in range(int(params.num_agents*(1-mix_factor)))]
 for controller in imitated_agents:
-    controller.setColor("black")
+    controller.setColor("red")
 
 all_controllers = original_agents + imitated_agents
 
 agentPositions_hybrid, agentVels_hybrid = sim.runSim(all_controllers,params,progress_bar=True,initial_positions=agentPositions_hybrid[-1],initial_velocities=agentVels_hybrid[-1])
 export.export(export.ExportType.MP4,"linearBoidsOutput/HybridNonuniform",agentPositions_hybrid,agentVels_hybrid,controllers=all_controllers,params=params,vision_mode=False,progress_bar=True)
-
 

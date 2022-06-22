@@ -68,12 +68,8 @@ class Boids(GenericSwarmController.GenericSwarmController):
             v_hat = v/np.linalg.norm(v)
             d_v = np.dot(v_hat,diffPos)*v_hat
             remaining = diffPos - d_v
-            remaining = remaining/np.linalg.norm(remaining)
-            # print("Verify orthogonal: ",np.dot(remaining,v))
-            # print("DiffPos",diffPos)
-            # print("D_v",d_v)
-            # print("D_r",remaining)
-            # print("Sign",np.sign(np.cross(remaining,v)))
+            if np.linalg.norm(remaining) > 0:
+                remaining = remaining/np.linalg.norm(remaining)
             separation = remaining*mag
 
         v_gain += self.separation_gain*separation

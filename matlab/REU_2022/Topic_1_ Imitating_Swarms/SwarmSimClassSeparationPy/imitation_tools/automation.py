@@ -20,6 +20,8 @@ def runSims(controllers=[],params=sim.SimParams(),num_sims=10,verbose=True,expor
                     controller.setColor(export_info[3][int(shortSim/export_info[2])]) #if you are doing rainbow, colors at each iteration
             export.export(export_info[0],export_info[1]+str(shortSim),agentPositions,agentVels,params=params)
         posVelSlices.extend(data_prep.toPosVelSlices(agentPositions,params))
+    if verbose:
+        print("Parsing to agent slices")
     agentSlices = data_prep.toAgentSlices(posVelSlices,params=params,verbose=verbose,
     ignoreConstrainedMotion=ignoreMC,ignoreBoundaryData=ignoreBC)
     return agentSlices
