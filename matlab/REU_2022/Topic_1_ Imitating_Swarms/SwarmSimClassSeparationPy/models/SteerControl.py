@@ -2,14 +2,17 @@ import models.GenericSwarmController as GenericSwarmController
 import numpy as np
 import math
 import random
+from sim_tools.sim import SimParams
 from shapely import geometry
 
 #need to review paper, this is not working as expected, might need to add walls
 class Boids(GenericSwarmController.GenericSwarmController):    
-    def __init__(self,align_gain,cohesion_gain,inertia):
+    def __init__(self,align_gain,cohesion_gain,separation_gain,inertia,params=SimParams()):
         self.alignment_gain = align_gain
         self.cohesion_gain = cohesion_gain
+        self.separation_gain = separation_gain
         self.inertia = inertia
+        self.params = params
         
     def vel(self,agentPositions,agentVels,pos,v):
         if(len(agentPositions) == 0):
@@ -31,68 +34,49 @@ class Boids(GenericSwarmController.GenericSwarmController):
 
         v_gain += self.alignment_gain*centroidVel
 
-        indicator1 = 0
-        indicator2 = 0
-        distance1 = [100, 100]
-        distance2 = [100, 100]
-
         #steer-to-avoid
-        for position in agentPositions:
-            agent = position
-            p0 = geometry.Point(agent[0],agent[1])
-            vision = p0.buffer(1.0)
-            velLine = geometry.LineString([agent,pos])
-            left = velLine.parallel_offset(1, 'left')
-            right = velLine.parallel_offset(1, 'right')
-            endL = left.boundary[1]
-            endR = right.boundary[0]
-            #visionBound = geometry.LineString([endL, endR])
-            slope = (((endR.y)-(endL.y))/((endR.x)-(endL.x)))
-            intercept = -slope*(endL.x)+(endL.y)
-            for position in agentPositions:
-                p1 = geometry.Point(position[0],position[1])
-                if vision.contains(p1):
-                    if  position[1] > slope*position[0]+intercept:
-                        if position[0] < agent[0]:
-                            indicator1 += 1
-                            distance = math.dist(position,v)
-                            distance1.append(distance)
-                        if position[0] > agent[0]:
-                            indicator2 += 1
-                            distance = math.dist(position,v)
-                            distance2.append(distance)
-            if indicator1 > indicator2:
-                #turn towards triangle 2 (right)
-                newX = np.cos(5.23599) - v*self.inertia * np.sin(5.23599)
-                newY = np.sin(5.2359) + v*self.inertia * np.cos(5.2359)
-                v_gain += 2*(newX + newY)
-            if indicator2 > indicator1:
-                #turn towards triangle 1 (left)
-                newX = np.cos(1.0472) - v*self.inertia * np.sin(1.0472)
-                newY = np.sin(1.0472) + v*self.inertia * np.cos(1.0472)
-                v_gain += 2*(newX + newY)
-            if indicator1 == indicator2:
-                min1 = np.min(distance1)
-                min2 = np.min(distance2)
-                if min1 > min2:
-                    #turn towards left
-                    newX = np.cos(1.0472) - v*self.inertia * np.sin(1.0472)
-                    newY = np.sin(1.0472) + v*self.inertia * np.cos(1.0472)
-                    v_gain += 2*(newX + newY)
-                if min2 > min1:
-                    #turn towards right
-                    newX = np.cos(5.23599) - v*self.inertia * np.sin(5.23599)
-                    newY = np.sin(5.2359) + v*self.inertia * np.cos(5.2359)
-                    v_gain += 2*(newX + newY)
-                if min1 == min2 and min1 != 100:
-                    choice = random.uniform(0,1)
-                    if choice > 0.5:
-                        newX = np.cos(5.23599) - v*self.inertia * np.sin(5.23599)
-                        newY = np.sin(5.2359) + v*self.inertia * np.cos(5.2359)
-                    else:
-                        newX = np.cos(1.0472) - v*self.inertia * np.sin(1.0472)
-                        newY = np.sin(1.0472) + v*self.inertia * np.cos(1.0472)
-                    v_gain += 2*(newX+ newY)
+        origin = geometry.Point(pos[0],pos[1])
 
-            v_out = v*self.inertia + v_gain
+        # need to pass params for neighborhood stuff
+        orientation = (v/np.linalg.norm(v))*self.params.neighbor_radius
+        toward = geometry.Point(pos[0]+orientation[0],pos[1]+orientation[1])        
+
+        velLine = geometry.LineString([origin,toward])
+
+        separation = np.zeros(2)
+        # this can be considered a property of the environment?, how is agent's size defined
+        collision_distance = self.params.neighbor_radius/4
+
+        closest = np.zeros(2)
+        closestDist = np.inf
+
+        for position in agentPositions:
+            other = geometry.Point(position[0],position[1])
+            collision = other.buffer(collision_distance)
+            if velLine.intersects(collision):
+                dist = np.linalg.norm(position-pos)
+                if(dist < closestDist):
+                    closestDist = dist
+                    closest = position
+        
+        #assign separation
+        if closestDist != np.inf:
+            mag = 1/(closestDist**2)
+            #figure out side
+            diffPos = closest-pos
+            #project onto v, grab remaining component as orthogonal direction
+            v_hat = v/np.linalg.norm(v)
+            d_v = np.dot(v_hat,diffPos)*v_hat
+            remaining = diffPos - d_v
+            remaining = remaining/np.linalg.norm(remaining)
+            # print("Verify orthogonal: ",np.dot(remaining,v))
+            # print("DiffPos",diffPos)
+            # print("D_v",d_v)
+            # print("D_r",remaining)
+            # print("Sign",np.sign(np.cross(remaining,v)))
+            separation = remaining*mag
+
+        v_gain += self.separation_gain*separation
+
+        v_out = v*self.inertia + v_gain
         return v_out
