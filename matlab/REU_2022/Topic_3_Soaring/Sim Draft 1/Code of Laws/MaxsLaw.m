@@ -1,73 +1,78 @@
 classdef MaxsLaw
     properties
-        %% Variables to save
-        % Simulation constraints
-        dt = .1;           %s
-        totalTime = 1800;  %s
-        fpsMult = 30;
-        mapSize = [-4000,4000];   %m, bounds of square map
-        numAgents = 40;  %agents
-        numThermals = 4; %thermals
+        %% Variables to be Changed Here
+        % Simulation
+        totalTime = 1800;           % s
+        fpsMult = 30;               % x Real Time
+        numThermals = 4;            % thermals
+        neighborRadius = 1000;      % m
+        k = 5;                      % number of nearest neighbors
+        forwardInertia = 10;        %
+        bankMin = -2*pi/12;         % rad
+        bankMax = 2*pi/12;          % rad
+        bankInertia = 1;            %
+        fov = 2*pi;                 % rad
+        
+        % Visuals
+        showArrow = false;
+        renderScale = [300;300];    % [scaleX; scaleY];
+        showKNN = true;
+        showFixedRadius = true;
 
-        % Initial conditions
-        agentSpawnPosRange = [-3000,-3000; 3000,3000];     %m, [xMin,yMin;xMax,yMax]
-        agentSpawnAltiRange = [1600,1600];             %m, [Min,Max]
-        agentSpawnVelRange = [8,0;13,0];           %m/s,rad/s [forwardMin,omegaMin;forwardMax,omegaMax];
-        g = 9.81;                                  % m/s/s
+        % Functions to use
+        funcName_agentControl = "agentControl_KNN";
+        funcName_findNeighborhood = "findNeighborhood_KNN";
 
-        % Rule constraints
+        %% Variables that get changed in the Excel Doc
         separation = 1;
         cohesion   = 1;
         alignment  = 1;
         migration  = 1e-21;
-        waggle = pi/24; %Radians of bank
-        heightPriority = 5;
-        cohesionHeightMult = 5;
-        heightIgnore = -0.2;
-        separationHeightGap = 100;
+        % these two are kind of the same
+        heightPriority = 5;         % For agentControl_Update
+        cohesionHeightMult = 5;     % For agentControl_KNN 
+        % these two are not at all the same
+        heightIgnore = 0.2;         % For agentControl_Update
+        separationHeightGap = 2;    % For agentControl_KNN
         
+        dt = .1;                    % s
+        waggle = pi/48;             % Radians of bank
+        waggleTime = 1;             % Seconds of waggle bank        
+        numAgents = 40;             % agents
 
-        % Agent constraints
-        neighborRadius = 1000;     %m
-        k = 5;                      % number of nearest neighbors
-        agentCeiling   = 2600;    %m
-        agentFloor     = 0;      %m
-        forwardSpeedMin = 5;     %m/s
-        forwardSpeedMax = 20;    %m/s
-        forwardInertia = 10;
-        bankMin = -2*pi/12;           %rad
-        bankMax = 2*pi/12;            %rad
-        bankInertia = 1;
-        fov = 2*pi;              %rad
-        Sink_A = -0.01843;
-        Sink_B = 0.3782;
-        Sink_C = -2.3782;
-
-        % Thermal constraints
-        tempThermalStrength = 10;
-        thermalSpeedMin = 20;    % m/s
-        thermalSpeedMax = 50;    % m/s
-        thermalRadiusMin = 5;    % m
-        thermalRadiusMax = 20;   % m
-        thermalStrengthMin = 0;  % m/s, peak updraft speed
-        thermalStrengthMax = 10; % m/s, peak updraft speed
-        thermalFadeRate = 1;     % m/s, rate at which thermals fade in or out 
-        thermalPlateauTime = 5;  % steps at a max or min strength
-
-        %Visuals
+        %% Not to Change
+        % Initial conditions
+        mapSize = [-4000,4000];     % m, bounds of square map
+        agentSpawnPosRange = [-3000,-3000; 3000,3000];  % m, [xMin,yMin;xMax,yMax]
+        agentSpawnAltiRange = [1600,1600];              % m, [Min,Max]
+        agentSpawnVelRange = [8,0;13,0];                % m/s,rad/s [forwardMin,omegaMin;forwardMax,omegaMax];
+        g = 9.81;   
+        
+        % Visuals
         agentShape_triangle = [-0.5,0.5,-0.5; -0.375,0,0.375];
         agentShape_plane = [-0.5,-0.3,0,0.1,0.2,0.3,0.5,0.3,0.2,0.1,0,-0.3,-0.5;-0.2,-0.1,-0.1,-0.5,-0.5,-0.1,0,0.1,0.5,0.5,0.1,0.1,0.2];
         Arrow = [2 1.5 1.5 0 0 1.5 1.5; 0 .5 .1 .1 -.1 -.1 -.5];
         ThermPatch = [0.8660, 0.5000, 0.0000, -0.5000, -0.8660, -1.0000, -0.8660, -0.5000, -0.0000,  0.5000,  0.8660,  1.0000;
                       0.5000, 0.8660, 1.0000,  0.8660,  0.5000,  0.0000, -0.5000, -0.8660, -1.0000, -0.8660, -0.5000, -0.0000];
-        showArrow = false;
-        renderScale = [300;300]; %[scaleX; scaleY];
-        showKNN = false;
-        showFixedRadius = false;
+        % Agent Constants
+        agentCeiling   = 2600;      % m
+        agentFloor     = 0;         % m
+        forwardSpeedMin = 5;        % m/s
+        forwardSpeedMax = 20;       % m/s
+        Sink_A = -0.01843;          %
+        Sink_B = 0.3782;            %
+        Sink_C = -2.3782;           %
+        % Thermal constraints
+        tempThermalStrength = 10;   %
+        thermalSpeedMin = 20;       % m/s
+        thermalSpeedMax = 50;       % m/s
+        thermalRadiusMin = 5;       % m
+        thermalRadiusMax = 20;      % m
+        thermalStrengthMin = 0;     % m/s, peak updraft speed
+        thermalStrengthMax = 10;    % m/s, peak updraft speed
+        thermalFadeRate = 1;        % m/s, rate at which thermals fade in or out 
+        thermalPlateauTime = 5;     % steps at a max or min strength
 
-        % Functions to use
-        funcName_agentControl = "agentControl_KNN";
-        funcName_findNeighborhood = "findNeighborhood_KNN";
     end
 
     methods % temporary, remove later

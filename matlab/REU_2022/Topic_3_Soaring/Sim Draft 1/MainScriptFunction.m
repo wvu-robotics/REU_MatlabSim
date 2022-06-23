@@ -1,4 +1,4 @@
-function [average, surviving] = MainScriptFunction(ParamS, ParamC, ParamA, ParamM, ParamhPr, ParamhIg, dt, number, render)
+function [average, surviving] = MainScriptFunction(Param, render)
 % Main script: loads parameter variables and runs swarm step function
 %% Clear
 close all
@@ -8,16 +8,23 @@ clc
 %% Add search paths for sim laws and agent functions
 addpath("Code of Laws");
 addpath("Agent Control Functions");
+addpath("Find Neighborhood Functions");
 
 %% Load simulation parameters
 simLaw = MaxsLaw();
-simLaw.separation = ParamS;
-simLaw.cohesion   = ParamC;
-simLaw.alignment  = ParamA;
-simLaw.migration  = ParamM;
-simLaw.heightPriority = ParamhPr;
-simLaw.heightIgnore   = ParamhIg;
-simLaw.dt         = dt;
+
+number                      = Param(1);
+simLaw.separation           = 10^Param(2);
+simLaw.cohesion             = 10^Param(3);
+simLaw.alignment            = 10^Param(4);
+simLaw.migration            = 10^Param(5);
+simLaw.cohesionHeightMult   = Param(6);
+simLaw.separationHeightGap  = Param(7);
+simLaw.dt                   = Param(8);
+simLaw.waggle               = Param(9);
+simLaw.waggleTime           = Param(10);
+simLaw.numAgents            = Param(11);
+
 
 %% Video Initialization
 if render
@@ -42,8 +49,8 @@ if render
     %% Setup video and figure
 %     videoPrefix = sprintf('[dt %g, T %g, x%g] ',simLaw.dt, simLaw.totalTime, simLaw.fpsMult);
     videoPrefix = "BIG";
-%     videoSuffix = time;
-    videoSuffix = sprintf('%1.0E, %1.0E, %1.0E', simLaw.separation, simLaw.cohesion, simLaw.alignment);
+    videoSuffix = time;
+%    videoSuffix = sprintf('%1.0E, %1.0E, %1.0E', simLaw.separation, simLaw.cohesion, simLaw.alignment);
     videoName = sprintf('%s/%s %s.avi',dateFolder,videoPrefix,videoSuffix);
 
     video = VideoWriter(videoName);
@@ -77,19 +84,19 @@ for step = 1:steps
     swarm.saveAgentData();
     swarm.stepSimulation();
     for i=1:simLaw.numAgents
-        if swarm.agents(i).position(3) > 0
+        if swarm.agents(i).isAlive
             currentHeight = swarm.agents(i).position(3);
             maxHeight = max(maxHeight,currentHeight);
             minHeight = min(minHeight,currentHeight);
             averageHeight = averageHeight + currentHeight;
         end
     end
-    averageHeight = averageHeight / simLaw.numAgents;
+    averageHeight = averageHeight / nnz([swarm.agents.isAlive]);
     minutes = floor(step*simLaw.dt/60);
     Living = nnz([swarm.agents.isAlive]);
 
     %% Render
-    if render
+    if render && mod(step,5)==0
         swarm.renderAgents();
         currFrame = getframe(simFig);
         writeVideo(video,currFrame);
@@ -104,18 +111,10 @@ for step = 1:steps
     
     %% Print and Advance Clock
     if mod(step,100) == 0
-        c2 = clock;
-        dTime = c2(6)-c1(6);
-        if(dTime < 0) 
-            %If minute advances, elapsedTime will appear negative (1min20sec - 0min50sec = 20sec-50sec = -30sec)
-            dTime = dTime + 60;
-        end
         fprintf("Frame %g/%g:  ",step,steps);
         fprintf("Run # %g, ", number);
         fprintf("%g Agents, ", Living);
-        fprintf("Minute %g, ", minutes);
-        fprintf("%g sec\n",dTime);
-        c1 = clock;
+        fprintf("Minute %g\n", minutes);
     end
 end
 average = averageHeight;
