@@ -11,6 +11,10 @@ addpath("Find Neighborhood Functions");
 
 %% Load simulation parameters
 simLaw = AdamsLaw();
+SL = ThermalTestLaw();
+
+% Generate thermal map
+thermalMap = ThermalMap(SL);
 
 %% setup output folder
 rootFolder = "Output Media";
@@ -82,7 +86,7 @@ for step = 1:steps
     
     % Step simulation
     swarm.saveAgentData();
-    swarm.stepSimulation();
+    swarm.stepSimulation(thermalMap);
     
     % Print number of Living Agents
     Living = nnz([swarm.agents.isAlive]);
