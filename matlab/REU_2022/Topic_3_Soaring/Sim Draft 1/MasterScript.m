@@ -1,5 +1,5 @@
 % Ind S, C, A, M, hPriority, hIgnore, dt, Waggle Str, Waggle Time, NAgents
-ParamMatrix = readmatrix("Params.xlsx","Range","A2:K25");
+ParamMatrix = readmatrix("Params.xlsx","Range","A2:K7");
 render = true;
 average = zeros(1,size(ParamMatrix,1));
 surviving = average;

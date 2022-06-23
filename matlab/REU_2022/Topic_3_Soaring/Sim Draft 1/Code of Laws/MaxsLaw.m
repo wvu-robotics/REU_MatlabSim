@@ -3,10 +3,11 @@ classdef MaxsLaw
         %% Variables to be Changed Here
         % Simulation
         totalTime = 1800;           % s
-        fpsMult = 30;               % x Real Time
-        numThermals = 4;            % thermals
+        fpsMult = 15;               % x Real Time
+        numThermals = 6;            % thermals
         neighborRadius = 1000;      % m
         k = 5;                      % number of nearest neighbors
+        frameSkip = 10;             % render every nth frame
         forwardInertia = 10;        %
         bankMin = -2*pi/12;         % rad
         bankMax = 2*pi/12;          % rad
@@ -14,14 +15,25 @@ classdef MaxsLaw
         fov = 2*pi;                 % rad
         
         % Visuals
-        showArrow = false;
+        showArrow = false;          %
         renderScale = [300;300];    % [scaleX; scaleY];
-        showKNN = true;
-        showFixedRadius = true;
+        showKNN = true;             %
+        showFixedRadius = true;     %
 
         % Functions to use
         funcName_agentControl = "agentControl_KNN";
         funcName_findNeighborhood = "findNeighborhood_KNN";
+
+        % Thermal constraints
+        thermalSpeedMin = 5         % m/s
+        thermalSpeedMax = 20        % m/s
+        thermalRadiusMin = 600      % m
+        thermalRadiusMax = 1300     % m
+        thermalStrengthMin = 50     % m/s, peak updraft speed
+        thermalStrengthMax = 100    % m/s, peak updraft speed
+        thermalFadeRate = 0.002     % m/s, rate at which thermals fade in or out 
+        thermalMinPlateauTime = 600 % steps at the min strength
+        thermalMaxPlateauTime = 1000% steps at the max strength
 
         %% Variables that get changed in the Excel Doc
         separation = 1;
@@ -62,16 +74,7 @@ classdef MaxsLaw
         Sink_A = -0.01843;          %
         Sink_B = 0.3782;            %
         Sink_C = -2.3782;           %
-        % Thermal constraints
-        tempThermalStrength = 10;   %
-        thermalSpeedMin = 20;       % m/s
-        thermalSpeedMax = 50;       % m/s
-        thermalRadiusMin = 5;       % m
-        thermalRadiusMax = 20;      % m
-        thermalStrengthMin = 0;     % m/s, peak updraft speed
-        thermalStrengthMax = 10;    % m/s, peak updraft speed
-        thermalFadeRate = 1;        % m/s, rate at which thermals fade in or out 
-        thermalPlateauTime = 5;     % steps at a max or min strength
+
 
     end
 

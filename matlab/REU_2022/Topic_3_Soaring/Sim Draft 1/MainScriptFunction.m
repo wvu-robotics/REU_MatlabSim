@@ -12,6 +12,8 @@ addpath("Find Neighborhood Functions");
 
 %% Load simulation parameters
 simLaw = MaxsLaw();
+% Initialize thermals as a matrix of Thermals
+thermalMap = ThermalMap(simLaw, 200, 0);
 
 number                      = Param(1);
 simLaw.separation           = 10^Param(2);
@@ -25,8 +27,7 @@ simLaw.waggle               = Param(9);
 simLaw.waggleTime           = Param(10);
 simLaw.numAgents            = Param(11);
 
-
-%% Video Initialization
+%% Video Initialization...
 if render
     %% setup output folder
     dateFormat = "mm-dd-yy";
@@ -58,31 +59,44 @@ if render
     open(video);
     
     simFig = figure('Visible','on');
+
+    % Initialize map background
+    clf
     xlim(simLaw.mapSize);
     ylim(simLaw.mapSize);
-    daspect([1 1 1])
-end
-
-%% Create Swarm and Render Thermal
-swarm = Swarm(simLaw);
-if render
-    theta  = linspace(0,2*pi,50);
-    patchX = 600*cos(theta)-1000;
-    patchY = 600*sin(theta)+1000;
-    patchObj = patch('XData',patchX,'YData',patchY,'FaceColor','red','FaceAlpha',0.8);
+    daspect([1 1 1]);
+    colorbar;
+    cbLimits = [-1,simLaw.thermalStrengthMax];
+    colors = [6 42 127; 41 76 247; 102 59 231; 162 41 216; 222 24 200; 255 192 203] / 255;
+    x = [0:thermalMap.thermalPixels/(length(colors)-1):thermalMap.thermalPixels];
+    map = interp1(x/thermalMap.thermalPixels,colors,linspace(0,1,thermalMap.thermalPixels)); % Creates a color gradient for the map
+    colormap();%map);
+    set(gca,'clim',cbLimits);
 end
 
 %% Run simulation...
+% Render Thermal
+
+% if render
+%     theta  = linspace(0,2*pi,50);
+%     patchX = 600*cos(theta)-1000;
+%     patchY = 600*sin(theta)+1000;
+%     patchObj = patch('XData',patchX,'YData',patchY,'FaceColor','red','FaceAlpha',0.8);
+% end
+swarm = Swarm(simLaw);
 steps = simLaw.totalTime/simLaw.dt;
 Living = simLaw.numAgents;
 maxHeight = -1;
 minHeight = 1E6;
 averageHeight = 0;
-c1 = clock;
+
 for step = 1:steps
     %% Step simulation & Get Data
+    thermalMap.staticStep();
+
     swarm.saveAgentData();
-    swarm.stepSimulation();
+    swarm.stepSimulation(thermalMap);
+    averageHeight = 0;
     for i=1:simLaw.numAgents
         if swarm.agents(i).isAlive
             currentHeight = swarm.agents(i).position(3);
@@ -95,8 +109,18 @@ for step = 1:steps
     minutes = floor(step*simLaw.dt/60);
     Living = nnz([swarm.agents.isAlive]);
 
+
+    
     %% Render
-    if render && mod(step,5)==0
+    if render && mod(step,simLaw.frameSkip)==1
+        hold on
+        finalThermalMap = thermalMap.renderThermals();
+        if step == 1
+            thermalMapImg = imagesc(finalThermalMap,'XData',simLaw.mapSize,'YData',simLaw.mapSize);
+            thermalMapImg.AlphaData = 1;
+        else 
+            thermalMapImg.CData = finalThermalMap;
+        end
         swarm.renderAgents();
         currFrame = getframe(simFig);
         writeVideo(video,currFrame);
@@ -104,17 +128,17 @@ for step = 1:steps
 
 %         stringTitle = sprintf("Agents Alive: %g\nMax Height: %.1f\nMin Height: %.1f\nAverage Height: %.1f",Living,maxHeight,minHeight,averageHeight);
 %         stringTitle = sprintf("Minutes: %g\nAgents Alive: %g\nAverage Height: %.1f",minutes,Living,averageHeight);
-        stringTitle = sprintf("Number %g, Minute %g\nAgents Alive: %g  Average Height: %.1f\n S=%1.0E, C=%1.0E, A=%1.0E", ...
-            number, minutes,Living,averageHeight,simLaw.separation, simLaw.cohesion, simLaw.alignment);
+        stringTitle = sprintf("Number %g, Minute %g\nAgents Alive: %g  Average Height: %.1f", ...
+            number, minutes,Living,averageHeight);
         title(stringTitle);
+        hold off
     end
     
-    %% Print and Advance Clock
+    %% Print
     if mod(step,100) == 0
-        fprintf("Frame %g/%g:  ",step,steps);
-        fprintf("Run # %g, ", number);
-        fprintf("%g Agents, ", Living);
-        fprintf("Minute %g\n", minutes);
+        fprintf("%02.2f%%, ",100*step/steps);
+        fprintf("Run # %g \n", number);
+        % fprintf("%g Agents\n ", Living);
     end
 end
 average = averageHeight;
