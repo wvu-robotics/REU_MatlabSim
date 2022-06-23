@@ -13,7 +13,7 @@ dt = .05; % s
 steps = overallTime/dt; 
 
 % Initialize thermals as a matrix of Thermals
-thermalMap = ThermalMap(SL, 200, 0);
+thermalMap = ThermalMap(SL);
 
 %% Set up video and figure
 video = VideoWriter('Thermal Outputs/staticThermals.avi');
@@ -22,31 +22,30 @@ open(video);
 
 simFig = figure;
 
+%% Initialize map background
 clf
 xlim(SL.mapSize);
 ylim(SL.mapSize);
 daspect([1 1 1]);
+
+%Setup colorbar
 colorbar;
 cbLimits = [-1,SL.thermalStrengthMax];
-colors = [6 42 127; 41 76 247; 102 59 231; 162 41 216; 222 24 200; 255 192 203] / 255;
-x = [0:thermalMap.thermalPixels/(length(colors)-1):thermalMap.thermalPixels];
-map = interp1(x/thermalMap.thermalPixels,colors,linspace(0,1,thermalMap.thermalPixels)); % Creates a color gradient for the map
-colormap(map);
 set(gca,'clim',cbLimits);
+
+%Setup colormap color-scheme
+xColor = linspace(0,SL.thermalPixels,length(SL.CMColors)) / SL.thermalPixels;
+map = interp1(xColor,SL.CMColors,linspace(0,1,SL.thermalPixels)); % Creates a color gradient for the map
+colormap(map);
 
 %% Run simulation
 for step = 1:steps
     c1 = clock;
     %% Set up frame
     fprintf("Frame %g/%g\n",step,steps);
-    hold on
         
     %% Render thermals
-    finalThermalMap = thermalMap.renderThermals();
-
-    thermalMapImg = imagesc(finalThermalMap,'XData',SL.mapSize,'YData',SL.mapSize);
-    thermalMapImg.AlphaData = 1;
-    hold off
+    thermalMap.renderThermals();
     
     %% Save frame
     currFrame = getframe(simFig);
