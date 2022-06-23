@@ -55,6 +55,12 @@ def agentSliceFromPosVelSlice(slice,params=sim.SimParams(),neighborCaps=[1,np.in
             or agentPos[1] > params.enclosure_size or agentPos[1] < -params.enclosure_size):
                 continue
 
+
+        
+        if ignoreConstrainedMotion:
+            if np.linalg.norm(agentVel) >= params.agent_max_vel:
+                continue
+            
             if np.linalg.norm(agentNextVel) >= params.agent_max_accel:
                 continue
     
@@ -65,10 +71,6 @@ def agentSliceFromPosVelSlice(slice,params=sim.SimParams(),neighborCaps=[1,np.in
                 angleDeviation = -2*np.pi + angleDeviation
     
             if abs(angleDeviation) >= params.agent_max_turn_rate*params.dt:
-                continue
-        
-        if ignoreConstrainedMotion:
-            if np.linalg.norm(agentVel) >= params.agent_max_vel:
                 continue
 
         adjacent = 0
