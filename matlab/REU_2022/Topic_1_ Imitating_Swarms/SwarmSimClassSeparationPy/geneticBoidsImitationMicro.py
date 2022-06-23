@@ -28,130 +28,131 @@ params = sim.SimParams(
     periodic_boundary=False
     )
 
-#constants to imitate
-k_coh = 3
-k_align = 5
-k_sep = .5
-k_inertia = 1
+if __name__ ==  '__main__':
+    #constants to imitate
+    k_coh = 3
+    k_align = 5
+    k_sep = .5
+    k_inertia = 1
 
-true_gains = [k_coh, k_align, k_sep, k_inertia]
+    true_gains = [k_coh, k_align, k_sep, k_inertia]
 
-#run sim
-print("Generating Initial")
-controllers = [bo.Boids(*true_gains) for i in range(params.num_agents)]
-agentPositions, agentVels = sim.runSim(controllers,params,progress_bar=True)
+    #run sim
+    print("Generating Initial")
+    controllers = [bo.Boids(*true_gains) for i in range(params.num_agents)]
+    agentPositions, agentVels = sim.runSim(controllers,params,progress_bar=True)
 
-if not os.path.exists("GeneticOutput"):
-    os.makedirs("GeneticOutput")
+    if not os.path.exists("GeneticOutput"):
+        os.makedirs("GeneticOutput")
 
-export.export(export.ExportType.GIF,"GeneticOutput/Initial",agentPositions,agentVels,params=params,vision_mode=False,progress_bar=True)
-
-
-posVelSlices = []
-#run tons more short sims
-shortSimParams = copy.deepcopy(params)
-print("Running short sims")
-shortSimParams.overall_time = 5
+    export.export(export.ExportType.GIF,"GeneticOutput/Initial",agentPositions,agentVels,params=params,vision_mode=False,progress_bar=True)
 
 
-agentSlices = automation.runSims(controllers,params=shortSimParams,num_sims=1)
+    posVelSlices = []
+    #run tons more short sims
+    shortSimParams = copy.deepcopy(params)
+    print("Running short sims")
+    shortSimParams.overall_time = 5
 
-#sanity check, this should have 0 loss, anything else is either noise or bad measurements
-#this is a bit high and I don't like it
-true_loss = 0
-for slice in agentSlices:
-    gains_ex = true_gains[:3]
-    args = np.array([slice.cohesion,slice.alignment,slice.separation])
-    # print("Args",args)
-    # print("Gains",gains_ex)
-    vel_pred = np.dot(args.transpose(),gains_ex)
-    
-    vel_pred = sim.motionConstraints(vel_pred,slice.last_vel,params)
 
-    err = vel_pred - slice.output_vel
-    #print("err",err)
-    true_loss += np.linalg.norm(err)
-true_loss/=len(agentSlices)
-print("True loss(data deviation from original on average):",true_loss)
+    agentSlices = automation.runSims(controllers,params=shortSimParams,num_sims=1)
 
-#using function currying to make this a tad more useful
-def sliceBasedFitness(agentSlices=[]):
-    def fitness(est_gains,solution_idx):
-        loss = 0.0
-        for slice in agentSlices:
-            vel_pred = np.dot(est_gains.transpose(),np.array([slice.cohesion,slice.alignment,slice.separation]))
-            vel_pred = sim.motionConstraints(vel_pred,slice.last_vel,params)
-            err = vel_pred - slice.output_vel
-            loss += np.linalg.norm(err) # could change to MSE, but I like accounting for direction better
-        return -loss/len(agentSlices) #normalized between runs
-    return fitness
+    #sanity check, this should have 0 loss, anything else is either noise or bad measurements
+    #this is a bit high and I don't like it
+    true_loss = 0
+    for slice in agentSlices:
+        gains_ex = true_gains[:3]
+        args = np.array([slice.cohesion,slice.alignment,slice.separation])
+        # print("Args",args)
+        # print("Gains",gains_ex)
+        vel_pred = np.dot(args.transpose(),gains_ex)
+        
+        vel_pred = sim.motionConstraints(vel_pred,slice.last_vel,params)
 
-fitness_function = sliceBasedFitness(agentSlices)
-num_generations = 30
-num_parents_mating = 4
+        err = vel_pred - slice.output_vel
+        #print("err",err)
+        true_loss += np.linalg.norm(err)
+    true_loss/=len(agentSlices)
+    print("True loss(data deviation from original on average):",true_loss)
 
-sol_per_pop = 8
-num_genes = 3
+    #using function currying to make this a tad more useful
+    def sliceBasedFitness(agentSlices=[]):
+        def fitness(est_gains,solution_idx):
+            loss = 0.0
+            for slice in agentSlices:
+                vel_pred = np.dot(est_gains.transpose(),np.array([slice.cohesion,slice.alignment,slice.separation]))
+                vel_pred = sim.motionConstraints(vel_pred,slice.last_vel,params)
+                err = vel_pred - slice.output_vel
+                loss += np.linalg.norm(err) # could change to MSE, but I like accounting for direction better
+            return -loss/len(agentSlices) #normalized between runs
+        return fitness
 
-#bounds for gains, will narrow if it's annoying
-init_range_low = 0
-init_range_high = 5
+    fitness_function = sliceBasedFitness(agentSlices)
+    num_generations = 30
+    num_parents_mating = 4
 
-parent_selection_type = "sss"
-keep_parents = 1
+    sol_per_pop = 8
+    num_genes = 3
 
-crossover_type = "single_point"
+    #bounds for gains, will narrow if it's annoying
+    init_range_low = 0
+    init_range_high = 5
 
-mutation_type = "random"
-mutation_percent_genes = 100
+    parent_selection_type = "sss"
+    keep_parents = 1
 
-ga_instance = pygad.GA(num_generations=num_generations,
-                       num_parents_mating=num_parents_mating,
-                       fitness_func=fitness_function,
-                       sol_per_pop=sol_per_pop,
-                       num_genes=num_genes,
-                       init_range_low=init_range_low,
-                       init_range_high=init_range_high,
-                       parent_selection_type=parent_selection_type,
-                       keep_parents=keep_parents,
-                       crossover_type=crossover_type,
-                       mutation_type=mutation_type,
-                       mutation_percent_genes=mutation_percent_genes)
+    crossover_type = "single_point"
 
-start = timer()
-ga_instance.run()
-print("Took ",timer()-start," seconds")
+    mutation_type = "random"
+    mutation_percent_genes = 100
 
-solution, solution_fitness, solution_idx = ga_instance.best_solution()
-print("Parameters of the best solution : {solution}".format(solution=solution))
-print("Fitness value of the best solution = {solution_fitness}".format(solution_fitness=solution_fitness))
+    ga_instance = pygad.GA(num_generations=num_generations,
+                        num_parents_mating=num_parents_mating,
+                        fitness_func=fitness_function,
+                        sol_per_pop=sol_per_pop,
+                        num_genes=num_genes,
+                        init_range_low=init_range_low,
+                        init_range_high=init_range_high,
+                        parent_selection_type=parent_selection_type,
+                        keep_parents=keep_parents,
+                        crossover_type=crossover_type,
+                        mutation_type=mutation_type,
+                        mutation_percent_genes=mutation_percent_genes)
 
-controllers_imitated = [bo.Boids(solution[0],solution[1],solution[2],k_inertia) for i in range(params.num_agents)]
-for controller in controllers_imitated:
-    controller.setColor('black')
-agentPositions_imitated, agentVels_imitated = sim.runSim(controllers_imitated,params,progress_bar=True)
-export.export(export.ExportType.GIF,"GeneticOutput/Imitated",agentPositions_imitated,agentVels_imitated,controllers=controllers_imitated,params=params,progress_bar=True)
+    start = timer()
+    ga_instance.run()
+    print("Took ",timer()-start," seconds")
 
-# now create some hybrid visualizations
-print("Running hybrid visual")
-#some parameters for hybrid visualization
-mix_factor = 0.6
-params.num_agents = 100
-params.enclosure_size = 20
-params.overall_time = 20
-params.init_pos_max = params.enclosure_size
-params.agent_max_vel = 7
+    solution, solution_fitness, solution_idx = ga_instance.best_solution()
+    print("Parameters of the best solution : {solution}".format(solution=solution))
+    print("Fitness value of the best solution = {solution_fitness}".format(solution_fitness=solution_fitness))
 
-original_agents = [bo.Boids(*true_gains) for i in range(int(params.num_agents*mix_factor))]
-for controller in original_agents:
-    controller.setColor("rgb(99, 110, 250)")
-imitated_agents = [bo.Boids(solution[0],solution[1],solution[2],k_inertia) for i in range(int(params.num_agents*(1-mix_factor)))]
-for controller in imitated_agents:
-    controller.setColor("black")
+    controllers_imitated = [bo.Boids(solution[0],solution[1],solution[2],k_inertia) for i in range(params.num_agents)]
+    for controller in controllers_imitated:
+        controller.setColor('black')
+    agentPositions_imitated, agentVels_imitated = sim.runSim(controllers_imitated,params,progress_bar=True)
+    export.export(export.ExportType.GIF,"GeneticOutput/Imitated",agentPositions_imitated,agentVels_imitated,controllers=controllers_imitated,params=params,progress_bar=True)
 
-all_controllers = original_agents + imitated_agents
+    # now create some hybrid visualizations
+    print("Running hybrid visual")
+    #some parameters for hybrid visualization
+    mix_factor = 0.6
+    params.num_agents = 100
+    params.enclosure_size = 20
+    params.overall_time = 20
+    params.init_pos_max = params.enclosure_size
+    params.agent_max_vel = 7
 
-agentPositions_hybrid, agentVels_hybrid = sim.runSim(all_controllers,params,progress_bar=True)
-export.export(export.ExportType.MP4,"GeneticOutput/Hybrid",agentPositions_hybrid,agentVels_hybrid,controllers=all_controllers,params=params,vision_mode=False,progress_bar=True)
+    original_agents = [bo.Boids(*true_gains) for i in range(int(params.num_agents*mix_factor))]
+    for controller in original_agents:
+        controller.setColor("rgb(99, 110, 250)")
+    imitated_agents = [bo.Boids(solution[0],solution[1],solution[2],k_inertia) for i in range(int(params.num_agents*(1-mix_factor)))]
+    for controller in imitated_agents:
+        controller.setColor("black")
 
-ga_instance.plot_fitness()
+    all_controllers = original_agents + imitated_agents
+
+    agentPositions_hybrid, agentVels_hybrid = sim.runSim(all_controllers,params,progress_bar=True)
+    export.export(export.ExportType.MP4,"GeneticOutput/Hybrid",agentPositions_hybrid,agentVels_hybrid,controllers=all_controllers,params=params,vision_mode=False,progress_bar=True)
+
+    ga_instance.plot_fitness()

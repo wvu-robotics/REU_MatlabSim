@@ -19,30 +19,31 @@ params = sim.SimParams(
     init_pos_max= None, #if None, then defaults to enclosure_size
     agent_max_vel=5,
     init_vel_max = None,
-    agent_max_accel=2,
-    agent_max_turn_rate=4*np.pi,
+    agent_max_accel=np.inf,
+    agent_max_turn_rate=np.inf,
     neighbor_radius=3,
     periodic_boundary=False
     )
 
-#define list of controllers
-controllers= [lss.SuperSet(5,5,5,5,5,params=params) for i in range(params.num_agents)]
+if __name__ ==  '__main__':
+    #define list of controllers
+    controllers= [sc.Boids(3,1,2,1,params=params) for i in range(params.num_agents)]
 
-#if you want to do coloring by agent
-for controller in controllers:
-    # vals = np.random.uniform(0,1,3)*255
-    # controller.setColor("rgb("+str(int(vals[0]))+","+str(int(vals[1]))+","+str(int(vals[2]))+")")
-    controller.setColor("blue")
+    #if you want to do coloring by agent
+    for controller in controllers:
+        # vals = np.random.uniform(0,1,3)*255
+        # controller.setColor("rgb("+str(int(vals[0]))+","+str(int(vals[1]))+","+str(int(vals[2]))+")")
+        controller.setColor("blue")
 
 
-agentPositions, agentVels = sim.runSim(controllers,params,progress_bar=True)
-print("Sim finished -- Generating media")
+    agentPositions, agentVels = sim.runSim(controllers,params,progress_bar=True)
+    print("Sim finished -- Generating media")
 
-#export types, NONE, INTERACTIVE, GIF, MP4
-media_type = export.ExportType.MP4
+    #export types, NONE, INTERACTIVE, GIF, MP4
+    media_type = export.ExportType.MP4
 
-export.export(media_type,"new",agentPositions,agentVels,controllers=controllers,params=params,vision_mode=False,progress_bar=True)
-print("Media generated")
+    export.export(media_type,"new",agentPositions,agentVels,controllers=controllers,params=params,vision_mode=False,progress_bar=True)
+    print("Media generated")
 
-filename="sim_data"
-export.toCVS(filename,agentPositions,agentVels,params)
+    filename="sim_data"
+    export.toCVS(filename,agentPositions,agentVels,params)
