@@ -31,24 +31,24 @@ params = sim.SimParams(
 
 #also add fake things soon
 
+if __name__ ==  '__main__':
+    #constants to imitate
+    k_coh = 3
+    k_align = 5
+    k_sep = 1
+    k_inertia = 1
 
-#constants to imitate
-k_coh = 3
-k_align = 5
-k_sep = 1
-k_inertia = 1
+    true_gains = [k_coh, k_align, k_sep, k_inertia]
 
-true_gains = [k_coh, k_align, k_sep, k_inertia]
+    #run sim
+    # print("Original agent slices")
 
-#run sim
-# print("Original agent slices")
+    #ran first sim
+    controllers = [bo.Boids(*true_gains) for i in range(params.num_agents)]
+    print("First sim and export")
+    agentPositions, agentVels = sim.runSim(controllers,params,progress_bar=True)
 
-#ran first sim
-controllers = [bo.Boids(*true_gains) for i in range(params.num_agents)]
-print("First sim and export")
-agentPositions, agentVels = sim.runSim(controllers,params,progress_bar=True)
-
-export.export(export.ExportType.GIF,"Initial",agentPositions,agentVels,params=params,vision_mode=False,progress_bar=True)
+    export.export(export.ExportType.GIF,"Initial",agentPositions,agentVels,params=params,vision_mode=False,progress_bar=True)
 
 
 

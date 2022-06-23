@@ -26,6 +26,7 @@ classdef AdamsLaw
 
         % Agent constraints
         neighborRadius = 80;     %m
+        neighborAngleRange = 2*pi; %rad
         k = 5; %k-nearest neighbors
         agentCeiling   = 100;    %m
         agentFloor     = 0;      %m
@@ -42,6 +43,7 @@ classdef AdamsLaw
 
         % Thermal constraints
         tempThermalStrength = 10;
+        useThermalMap = false;
         thermalSpeedMin = 20;    % m/s
         thermalSpeedMax = 50;    % m/s
         thermalRadiusMin = 5;    % m
@@ -57,12 +59,12 @@ classdef AdamsLaw
         Arrow = [2 1.5 1.5 0 0 1.5 1.5; 0 .5 .2 .2 -.2 -.2 -.5];
         showArrow = false;
         renderScale = [8;8]; %[scaleX; scaleY];
-        showKNN = true;
-        showFixedRadius = false;
+        showNeighbors = true;
+        showFixedRadius = true;
 
         % Functions to use
         funcName_agentControl = "agentControl_KNN";
-        funcName_findNeighborhood = "findNeighborhood_KNN";
+        funcName_findNeighborhood = "findNeighborhood_KNNFixedRadius";
         
     end
     

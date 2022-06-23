@@ -2,7 +2,6 @@
 classdef Swarm < handle
     properties
         agents
-        thermalMap
         simLaw
         funcHandle_agentControl
         funcHandle_findNeighborhood
@@ -41,9 +40,6 @@ classdef Swarm < handle
                 obj.agents(i).velocity(1) = Utility.randIR(velRange(1,1),velRange(2,1));
                 obj.agents(i).velocity(2) = Utility.randIR(velRange(1,2),velRange(2,2));
             end
-            
-            %% Generate thermal map
-            obj.thermalMap = ThermalMap(SL);
         end
         
         % Save Function
@@ -56,7 +52,7 @@ classdef Swarm < handle
         end
         
         % Step Function
-        function obj = stepSimulation(obj)
+        function obj = stepSimulation(obj, thermalMap)
             SL = obj.simLaw;
             numAgents = SL.numAgents;   %Get total number of agents
             for i=1:numAgents
@@ -67,12 +63,12 @@ classdef Swarm < handle
                     localAgents = obj.funcHandle_findNeighborhood(obj,i,SL);
                     
                     %Find thermal strength from ThermalMap
-                    %thermalStrength = thermalMap.getStrength(currentAgent.position);
-                    if(ismethod(SL,"getTempThermalStrength"))
-                        thermalStrength = SL.getTempThermalStrength(currentAgent);
-                    else
-                        thermalStrength = SL.tempThermalStrength;
-                    end
+                    thermalStrength = thermalMap.getStrength(currentAgent.position);
+%                     if(ismethod(SL,"getTempThermalStrength"))
+%                         thermalStrength = SL.getTempThermalStrength(currentAgent);
+%                     else
+%                         thermalStrength = SL.tempThermalStrength;
+%                     end
                     
                     %Update currentAgent
                     obj.funcHandle_agentControl(currentAgent,localAgents,thermalStrength,[0,0,0], SL);
@@ -101,24 +97,24 @@ classdef Swarm < handle
                         obj.lineCircle.YData = yCircle;
                     end
                     
-                    if(SL.showKNN)
-                        numLocalAgents = size(localAgents,2);
-                        linePoints = zeros(2,2*numLocalAgents+1);
-                        linePoints(1,1) = currentAgent.position(1);
-                        linePoints(2,1) = currentAgent.position(2);
-                        for j=1:numLocalAgents
-                            linePoints(1,2*j) = localAgents(j).position(1);
-                            linePoints(2,2*j) = localAgents(j).position(2);
-                            linePoints(1,2*j+1) = currentAgent.position(1);
-                            linePoints(2,2*j+1) = currentAgent.position(2);
-                        end
-
-                        if(class(obj.lineNeighbors) == "double")
-                            obj.lineNeighbors = line();
-                        end
-                        obj.lineNeighbors.XData = linePoints(1,:);
-                        obj.lineNeighbors.YData = linePoints(2,:);
-                    end
+%                     if(SL.showKNN)
+%                         numLocalAgents = size(localAgents,2);
+%                         linePoints = zeros(2,2*numLocalAgents+1);
+%                         linePoints(1,1) = currentAgent.position(1);
+%                         linePoints(2,1) = currentAgent.position(2);
+%                         for j=1:numLocalAgents
+%                             linePoints(1,2*j) = localAgents(j).position(1);
+%                             linePoints(2,2*j) = localAgents(j).position(2);
+%                             linePoints(1,2*j+1) = currentAgent.position(1);
+%                             linePoints(2,2*j+1) = currentAgent.position(2);
+%                         end
+% 
+%                         if(class(obj.lineNeighbors) == "double")
+%                             obj.lineNeighbors = line();
+%                         end
+%                         obj.lineNeighbors.XData = linePoints(1,:);
+%                         obj.lineNeighbors.YData = linePoints(2,:);
+%                     end
                 end
                 
                 obj.agents(i).render();
