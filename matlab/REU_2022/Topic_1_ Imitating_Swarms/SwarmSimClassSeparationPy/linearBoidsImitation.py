@@ -48,7 +48,7 @@ true_gains = [k_coh, k_align, k_sep, k_inertia]
 # print("Original agent slices")
 
 #ran first sim
-controllers = [bo.Boids(*true_gains) for i in range(params.num_agents)]
+controllers = [Dance.Dance(1,1,0,1) for i in range(params.num_agents)]
 print("First sim and export")
 agentPositions, agentVels = sim.runSim(controllers,params,progress_bar=True)
 
@@ -85,8 +85,8 @@ shortSimParams.agent_max_vel = 10
 shortControllers = [bo.Boids(*true_gains) for i in range(shortSimParams.num_agents)]
 #colors = ["rgb(255, 0, 24)","rgb(255, 165, 44)","rgb(255, 255, 65)","rgb(0, 128, 24)","rgb(0, 0, 249)","rgb(134, 0, 125)","rgb(85, 205, 252)","rgb(247, 168, 184)"]
 
-agentSlices = automation.runSims(shortControllers,params=shortSimParams,num_sims=100,ignoreMC=False,
-export_info=[export.ExportType.GIF,"linearBoidsOutput/ShortSims",100])
+agentSlices = automation.runSims(shortControllers,params=shortSimParams,num_sims=100,ignoreMC=True,
+export_info=[export.ExportType.GIF,"linearBoidsOutput/ShortSims",25])
 print("Num agent slices",len(agentSlices))
 
 x = []
@@ -94,10 +94,11 @@ y = []
 
 #reshapes were being annoying, will rewrite better
 for slice in agentSlices:
-    x.append(np.array([slice.cohesion[0],slice.alignment[0],slice.separation[0],0]))
+    x.append(np.array([slice.cohesion[0],slice.alignment[0],slice.separation[0],slice.rotation[0],slice.steer_to_avoid[0]]))
     y.append(np.array(slice.output_vel[0]))
-    x.append(np.array([slice.cohesion[1],slice.alignment[1],slice.separation[1],0]))
+    x.append(np.array([slice.cohesion[1],slice.alignment[1],slice.separation[1],slice.rotation[1],slice.steer_to_avoid[1]]))
     y.append(np.array(slice.output_vel[1]))
+
 
 # print("True loss: ",true_loss)
 reg = lr().fit(x,y)
@@ -123,37 +124,37 @@ export.export(export.ExportType.MP4,"linearBoidsOutput/Imitated",agentPositions_
 print("Running hybrid visual")
 
 #some parameters for hybrid visualization
-mix_factor = 0.6
-params.num_agents = 100
-params.enclosure_size = 20
-params.overall_time = 15
-params.init_pos_max = params.enclosure_size
-params.agent_max_vel = 7
+# mix_factor = 0.6
+# params.num_agents = 100
+# params.enclosure_size = 20
+# params.overall_time = 15
+# params.init_pos_max = params.enclosure_size
+# params.agent_max_vel = 7
 
-original_agents = [bo.Boids(*true_gains) for i in range(int(params.num_agents*mix_factor))]
-for controller in original_agents:
-    controller.setColor("rgb(99, 110, 250)")
-imitated_agents = [lss.SuperSet(gains[0],gains[1],gains[2],0,gains[3]) for i in range(int(params.num_agents*(1-mix_factor)))]
-for controller in imitated_agents:
-    controller.setColor("rgb(99, 110, 250)")
+# original_agents = [bo.Boids(*true_gains) for i in range(int(params.num_agents*mix_factor))]
+# for controller in original_agents:
+#     controller.setColor("rgb(99, 110, 250)")
+# imitated_agents = [lss.SuperSet(gains[0],gains[1],gains[2],0,gains[3]) for i in range(int(params.num_agents*(1-mix_factor)))]
+# for controller in imitated_agents:
+#     controller.setColor("rgb(99, 110, 250)")
 
-all_controllers = original_agents + imitated_agents
+# all_controllers = original_agents + imitated_agents
 
-agentPositions_hybrid, agentVels_hybrid = sim.runSim(all_controllers,params,progress_bar=True)
-export.export(export.ExportType.MP4,"linearBoidsOutput/HybridUniform",agentPositions_hybrid,agentVels_hybrid,controllers=all_controllers,params=params,vision_mode=False,progress_bar=True)
-
-
+# agentPositions_hybrid, agentVels_hybrid = sim.runSim(all_controllers,params,progress_bar=True)
+# export.export(export.ExportType.MP4,"linearBoidsOutput/HybridUniform",agentPositions_hybrid,agentVels_hybrid,controllers=all_controllers,params=params,vision_mode=False,progress_bar=True)
 
 
-original_agents = [bo.Boids(*true_gains) for i in range(int(params.num_agents*mix_factor))]
-for controller in original_agents:
-    controller.setColor("rgb(99, 110, 250)")
-imitated_agents = [lss.SuperSet(gains[0],gains[1],gains[2],0,gains[3]) for i in range(int(params.num_agents*(1-mix_factor)))]
-for controller in imitated_agents:
-    controller.setColor("red")
 
-all_controllers = original_agents + imitated_agents
 
-agentPositions_hybrid, agentVels_hybrid = sim.runSim(all_controllers,params,progress_bar=True,initial_positions=agentPositions_hybrid[-1],initial_velocities=agentVels_hybrid[-1])
-export.export(export.ExportType.MP4,"linearBoidsOutput/HybridNonuniform",agentPositions_hybrid,agentVels_hybrid,controllers=all_controllers,params=params,vision_mode=False,progress_bar=True)
+# original_agents = [bo.Boids(*true_gains) for i in range(int(params.num_agents*mix_factor))]
+# for controller in original_agents:
+#     controller.setColor("rgb(99, 110, 250)")
+# imitated_agents = [lss.SuperSet(gains[0],gains[1],gains[2],0,gains[3]) for i in range(int(params.num_agents*(1-mix_factor)))]
+# for controller in imitated_agents:
+#     controller.setColor("red")
+
+# all_controllers = original_agents + imitated_agents
+
+# agentPositions_hybrid, agentVels_hybrid = sim.runSim(all_controllers,params,progress_bar=True,initial_positions=agentPositions_hybrid[-1],initial_velocities=agentVels_hybrid[-1])
+# export.export(export.ExportType.MP4,"linearBoidsOutput/HybridNonuniform",agentPositions_hybrid,agentVels_hybrid,controllers=all_controllers,params=params,vision_mode=False,progress_bar=True)
 
