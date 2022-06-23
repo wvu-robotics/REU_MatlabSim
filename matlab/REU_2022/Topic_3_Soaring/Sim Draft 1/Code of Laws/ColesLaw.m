@@ -45,7 +45,7 @@ classdef ColesLaw
         Arrow = [2 1.5 1.5 0 0 1.5 1.5; 0 .5 .2 .2 -.2 -.2 -.5];
         showArrow = false;
         renderScale = [8;8]; %[scaleX; scaleY];
-        showKNN = true;
+        showNeighbors = true;
         showFixedRadius = false;
 
         % Functions to use

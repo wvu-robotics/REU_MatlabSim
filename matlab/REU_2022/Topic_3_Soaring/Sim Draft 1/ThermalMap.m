@@ -6,33 +6,19 @@ classdef ThermalMap < handle
         thermals
         thermalPixels = 200;
         simLaw
+        
+        thermalMapImg = NaN
     end
 
     methods 
         % Constructor
-        function thermalMap = ThermalMap(simLaw, pixels, velocity) 
+        function thermalMap = ThermalMap(simLaw)
             thermalMap.simLaw = simLaw;
-            SL = thermalMap.simLaw;
+            thermalMap.thermalPixels = simLaw.thermalPixels;
+            thermalMap.thermals = Thermal.empty(0,simLaw.numThermals);
             
-            % Default constructor
-            if nargin == 1
-                thermalMap.thermals = Thermal.empty(0,SL.numThermals);
-
-                for i = 1:SL.numThermals
-                    thermalMap.thermals(i) = Thermal(SL);
-                end
-            elseif nargin == 2 % If pixels are specified
-                thermalMap.thermals = Thermal.empty(0, SL.numThermals);
-                thermalMap.thermalPixels = pixels;
-
-            elseif nargin == 3 % If velocity is specified
-                thermalMap.thermals = Thermal.empty(0,SL.numThermals);
-                thermalMap.thermalPixels = pixels;
-
-                for i = 1:SL.numThermals
-                    thermalMap.thermals(i) = Thermal(SL, velocity);
-                end
-                %adjustThermalPositions(0);
+            for i = 1:simLaw.numThermals
+                thermalMap.thermals(i) = Thermal(simLaw);
             end
         end
 
@@ -165,7 +151,7 @@ classdef ThermalMap < handle
         end
 
         %% Render thermals
-        function finalThermalMap = renderThermals(thermalMap)
+        function renderThermals(thermalMap)
             SL = thermalMap.simLaw;
             % Initialize background of map
             mapX = linspace(SL.mapSize(1),SL.mapSize(2),thermalMap.thermalPixels);
@@ -198,6 +184,13 @@ classdef ThermalMap < handle
                     end
                 end
                 finalThermalMap = finalThermalMap + tempThermalMap;
+            end
+            
+            if(class(thermalMap.thermalMapImg) == "double")
+                thermalMap.thermalMapImg = image('CData',finalThermalMap,'XData',SL.mapSize,'YData',SL.mapSize,'CDataMapping','scaled');
+                thermalMap.thermalMapImg.AlphaData = 1;
+            else
+                thermalMap.thermalMapImg.CData = finalThermalMap;
             end
         end
 

@@ -15,7 +15,7 @@ overallTime = 60; % s
 dt = .05; % s 
 
 % Initialize thermals as a matrix of Thermals
-thermalMap = ThermalMap(SL, 200, 0);
+thermalMap = ThermalMap(SL);
 
 %% Set up video and figure
 video = VideoWriter('Thermal Outputs/thermalsWithBoids.avi');
@@ -29,16 +29,19 @@ clf
 xlim(SL.mapSize);
 ylim(SL.mapSize);
 daspect([1 1 1]);
+
+%Setup colorbar
 colorbar;
 cbLimits = [-1,SL.thermalStrengthMax];
-colors = [6 42 127; 41 76 247; 102 59 231; 162 41 216; 222 24 200; 255 192 203] / 255;
-x = [0:thermalMap.thermalPixels/(length(colors)-1):thermalMap.thermalPixels];
-map = interp1(x/thermalMap.thermalPixels,colors,linspace(0,1,thermalMap.thermalPixels)); % Creates a color gradient for the map
-colormap();%map);
 set(gca,'clim',cbLimits);
 
+%Setup colormap color-scheme
+xColor = linspace(0,SL.thermalPixels,length(SL.CMColors)) / SL.thermalPixels;
+map = interp1(xColor,SL.CMColors,linspace(0,1,SL.thermalPixels)); % Creates a color gradient for the map
+colormap(map);
+
 %% Create instance of simulation
-swarm = Swarm(simLaw);
+swarm = Swarm(simLaw,thermalMap);
 %theta = linspace(0,2*pi,50);
 %patchX = 50*cos(theta)-0;
 %patchY = 50*sin(theta)-0;
@@ -58,16 +61,9 @@ for step = 1:steps
     c1 = clock;
     %% Set up frame
     fprintf("Frame %g/%g\n",step,steps);
-    hold on
         
     %% Render thermals and agents
-    finalThermalMap = thermalMap.renderThermals();
-    if step == 1
-        thermalMapImg = imagesc(finalThermalMap,'XData',SL.mapSize,'YData',SL.mapSize);
-        thermalMapImg.AlphaData = 1;
-    else 
-        thermalMapImg.CData = finalThermalMap;
-    end
+    thermalMap.renderThermals();
 
     swarm.renderAgents();
     
@@ -80,7 +76,7 @@ for step = 1:steps
     thermalMap.staticStep();
 
     swarm.saveAgentData();
-    swarm.stepSimulation(thermalMap);
+    swarm.stepSimulation();
 
      % Print number of Living Agents
     Living = nnz([swarm.agents.isAlive]);
@@ -105,7 +101,6 @@ for step = 1:steps
     
     stringTitle = sprintf("Agents Alive: %g\nMax Height: %.1f\nMin Height: %.1f\nAverage Height: %.1f",Living,maxHeight,minHeight,averageHeight);
     title(stringTitle);
-    hold off
     
     %% Find and print elapsed time
     c2 = clock;

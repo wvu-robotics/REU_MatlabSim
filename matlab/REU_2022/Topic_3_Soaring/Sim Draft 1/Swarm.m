@@ -6,15 +6,18 @@ classdef Swarm < handle
         funcHandle_agentControl
         funcHandle_findNeighborhood
         
+        thermalMap
+        
         lineCircle = NaN
         lineNeighbors = NaN
     end
     
     methods
         % Generation Function
-        function obj = Swarm(simLaw)
+        function obj = Swarm(simLaw,thermalMap)
             % Save parameters and agentControlFunc
             obj.simLaw = simLaw;
+            obj.thermalMap = thermalMap;
             SL = obj.simLaw;
             
             obj.funcHandle_agentControl = str2func(SL.funcName_agentControl);
@@ -52,7 +55,7 @@ classdef Swarm < handle
         end
         
         % Step Function
-        function obj = stepSimulation(obj, thermalMap)
+        function obj = stepSimulation(obj)
             SL = obj.simLaw;
             numAgents = SL.numAgents;   %Get total number of agents
             for i=1:numAgents
@@ -63,12 +66,7 @@ classdef Swarm < handle
                     localAgents = obj.funcHandle_findNeighborhood(obj,i,SL);
                     
                     %Find thermal strength from ThermalMap
-                    thermalStrength = thermalMap.getStrength(currentAgent.position);
-%                     if(ismethod(SL,"getTempThermalStrength"))
-%                         thermalStrength = SL.getTempThermalStrength(currentAgent);
-%                     else
-%                         thermalStrength = SL.tempThermalStrength;
-%                     end
+                    thermalStrength = obj.thermalMap.getStrength(currentAgent.position);
                     
                     %Update currentAgent
                     obj.funcHandle_agentControl(currentAgent,localAgents,thermalStrength,[0,0,0], SL);
@@ -81,12 +79,12 @@ classdef Swarm < handle
             SL = obj.simLaw;
             shownNeighbors = false;
             for i=1:SL.numAgents
-                if((SL.showFixedRadius || SL.showKNN) && obj.agents(i).isAlive && ~shownNeighbors)
+                if((SL.showFixedRadius || SL.showNeighbors) && obj.agents(i).isAlive && ~shownNeighbors)
                     shownNeighbors = true;
                     currentAgent = obj.agents(i);
                     localAgents = obj.funcHandle_findNeighborhood(obj,i,SL);
                     if(SL.showFixedRadius)
-                        theta = linspace(0,2*pi,30);
+                        theta = linspace(currentAgent.heading-SL.neighborAngleRange/2,currentAgent.heading+SL.neighborAngleRange/2,20);
                         xCircle = SL.neighborRadius * cos(theta) + currentAgent.position(1);
                         yCircle = SL.neighborRadius * sin(theta) + currentAgent.position(2);
 
@@ -97,24 +95,24 @@ classdef Swarm < handle
                         obj.lineCircle.YData = yCircle;
                     end
                     
-%                     if(SL.showKNN)
-%                         numLocalAgents = size(localAgents,2);
-%                         linePoints = zeros(2,2*numLocalAgents+1);
-%                         linePoints(1,1) = currentAgent.position(1);
-%                         linePoints(2,1) = currentAgent.position(2);
-%                         for j=1:numLocalAgents
-%                             linePoints(1,2*j) = localAgents(j).position(1);
-%                             linePoints(2,2*j) = localAgents(j).position(2);
-%                             linePoints(1,2*j+1) = currentAgent.position(1);
-%                             linePoints(2,2*j+1) = currentAgent.position(2);
-%                         end
-% 
-%                         if(class(obj.lineNeighbors) == "double")
-%                             obj.lineNeighbors = line();
-%                         end
-%                         obj.lineNeighbors.XData = linePoints(1,:);
-%                         obj.lineNeighbors.YData = linePoints(2,:);
-%                     end
+                    if(SL.showNeighbors)
+                        numLocalAgents = size(localAgents,2);
+                        linePoints = zeros(2,2*numLocalAgents+1);
+                        linePoints(1,1) = currentAgent.position(1);
+                        linePoints(2,1) = currentAgent.position(2);
+                        for j=1:numLocalAgents
+                            linePoints(1,2*j) = localAgents(j).position(1);
+                            linePoints(2,2*j) = localAgents(j).position(2);
+                            linePoints(1,2*j+1) = currentAgent.position(1);
+                            linePoints(2,2*j+1) = currentAgent.position(2);
+                        end
+
+                        if(class(obj.lineNeighbors) == "double")
+                            obj.lineNeighbors = line();
+                        end
+                        obj.lineNeighbors.XData = linePoints(1,:);
+                        obj.lineNeighbors.YData = linePoints(2,:);
+                    end
                 end
                 
                 obj.agents(i).render();
