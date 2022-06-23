@@ -17,7 +17,7 @@ class ExportType(enum.Enum):
     MP4 = 3
     CVS=4
 
-def export(export_type,name,agentPositions,agentVels,params=sim.SimParams(),controllers = [],vision_mode=False,progress_bar=False,framecap=60):
+def export(export_type,name,agentPositions,agentVels,params=sim.SimParams(),controllers = [],vision_mode=False,progress_bar=False,framecap=20):
     #controllers used to grab per-agent color
     colors = [controller.color for controller in controllers]
     

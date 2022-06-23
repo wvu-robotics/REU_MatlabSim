@@ -8,7 +8,7 @@ addpath("Code of Laws");
 SL = ThermalTestLaw();
 
 %% Set up parameters
-overallTime = 20; % s
+overallTime = 30; % s
 dt = .05; % s 
 steps = overallTime/dt; 
 
@@ -54,7 +54,7 @@ for step = 1:steps
     pause(0.0001);
     
     %% Step physics
-    thermalMap.staticStep(dt);
+    thermalMap.staticStep();
     
     %% Find and print elapsed time
     c2 = clock;

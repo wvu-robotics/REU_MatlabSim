@@ -39,7 +39,7 @@ class Boids(GenericSwarmController.GenericSwarmController):
                 continue
             unit_diff = diffPos / dist
             if dist != 0:
-                separation_out += -1*self.separation_gain*unit_diff*(1/(dist**6))
+                separation_out += -1*self.separation_gain*unit_diff*(1/(dist**2))
         
         v_gain += separation_out
         
