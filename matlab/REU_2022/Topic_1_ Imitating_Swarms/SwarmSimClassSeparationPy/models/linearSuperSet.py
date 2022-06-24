@@ -8,7 +8,7 @@ from shapely import geometry
 
 #need to review paper, this is not working as expected, might need to add walls
 class SuperSet(GenericSwarmController.GenericSwarmController):    
-    def __init__(self,align_gain,cohesion_gain,separation_gain,steer_to_avoid_gain,rotation_gain,inertia=1,params=SimParams()):
+    def __init__(self,cohesion_gain,align_gain,separation_gain,steer_to_avoid_gain,rotation_gain,inertia=1,params=SimParams()):
         self.alignment_gain = align_gain
         self.cohesion_gain = cohesion_gain
         self.separation_gain = separation_gain

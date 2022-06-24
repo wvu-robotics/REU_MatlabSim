@@ -33,6 +33,7 @@ def runSims(controllers=[],threads = 8,params=sim.SimParams(),num_sims=10,verbos
     posVelSlices  = []
     for clump in posVelClumps:
         posVelSlices.extend(clump[0])
+    if verbose:print("Parsing to agent slices")
     agentSlices = data_prep.toAgentSlices(posVelSlices,params=params,verbose=verbose,
     ignoreConstrainedMotion=ignoreMC,ignoreBoundaryData=ignoreBC)
     return agentSlices
