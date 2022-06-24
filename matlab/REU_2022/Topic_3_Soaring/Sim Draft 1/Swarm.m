@@ -10,6 +10,7 @@ classdef Swarm < handle
         
         lineCircle = NaN
         lineNeighbors = NaN
+        lineRange = NaN
     end
     
     methods
@@ -79,7 +80,7 @@ classdef Swarm < handle
             SL = obj.simLaw;
             shownNeighbors = false;
             for i=1:SL.numAgents
-                if((SL.showFixedRadius || SL.showNeighbors) && obj.agents(i).isAlive && ~shownNeighbors)
+                if((SL.showFixedRadius || SL.showNeighbors || SL.showRange) && obj.agents(i).isAlive && ~shownNeighbors)
                     shownNeighbors = true;
                     currentAgent = obj.agents(i);
                     localAgents = obj.funcHandle_findNeighborhood(obj,i,SL);
@@ -94,7 +95,8 @@ classdef Swarm < handle
                         obj.lineCircle.XData = xCircle;
                         obj.lineCircle.YData = yCircle;
                     end
-                    
+
+                    % this was commented?
                     if(SL.showNeighbors)
                         numLocalAgents = size(localAgents,2);
                         linePoints = zeros(2,2*numLocalAgents+1);
@@ -112,6 +114,18 @@ classdef Swarm < handle
                         end
                         obj.lineNeighbors.XData = linePoints(1,:);
                         obj.lineNeighbors.YData = linePoints(2,:);
+                    end
+
+                    if(SL.showRange)
+                        theta = linspace(0,2*pi,30);
+                        xCircle = 24.4 * currentAgent.position(3) * cos(theta) + currentAgent.position(1);
+                        yCircle = 24.4 * currentAgent.position(3) * sin(theta) + currentAgent.position(2);
+
+                        if(class(obj.lineRange) == "double")
+                            obj.lineRange = line();
+                        end
+                        obj.lineRange.XData = xCircle;
+                        obj.lineRange.YData = yCircle;
                     end
                 end
                 
