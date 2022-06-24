@@ -150,7 +150,7 @@ def agentSliceFromPosVelSlice(slice,params=sim.SimParams(),neighborCaps=[1,np.in
     return agentSlices
 
 #this can be multiprocessed, maybe also allow turning off certain slices
-def toAgentSlices(posVelSlices,params=sim.SimParams(),threads = 4,neighborCaps=[1,np.inf],ignoreConstrainedMotion=False,ignoreBoundaryData=True,verbose=True):
+def toAgentSlices(posVelSlices,params=sim.SimParams(),threads = 8,neighborCaps=[1,np.inf],ignoreConstrainedMotion=False,ignoreBoundaryData=True,verbose=True):
     #multiprocessing
     pool = Pool(threads)
     
