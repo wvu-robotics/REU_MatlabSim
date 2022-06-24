@@ -17,11 +17,11 @@ from models import linearSuperSet as lss
 
 params = sim.SimParams(
     num_agents=50,
-    dt=0.01,
+    dt=0.1,
     overall_time = 10,
-    enclosure_size = 20,
-    init_pos_max = None, #if None, then defaults to enclosure_size
-    agent_max_vel=10,
+    enclosure_size = 15,
+    init_pos_max = 3, #if None, then defaults to enclosure_size
+    agent_max_vel=5,
     init_vel_max = None,
     agent_max_accel=np.inf,
     agent_max_turn_rate=np.inf,
@@ -36,19 +36,16 @@ params = sim.SimParams(
 #also add fake things soon
 
 if __name__ ==  '__main__':
-    #constants to imitate
-    k_coh = 3
-    k_align = 1
-    k_sep = 1
-    k_inertia = 1
 
-    true_gains = [k_coh, k_align, k_sep, k_inertia]
 
     #run sim
     # print("Original agent slices")
 
     #ran first sim
-    controllers = [Dance.Dance(1,1,0,1) for i in range(params.num_agents)]
+    # can probably shorten constructor definitions
+
+    orig_controller = Dance.Dance(2,1,0,1)
+    controllers = [ copy.deepcopy(orig_controller) for i in range(params.num_agents)]
     print("First sim and export")
     agentPositions, agentVels = sim.runSim(controllers,params,progress_bar=True)
 
@@ -82,11 +79,11 @@ if __name__ ==  '__main__':
     shortSimParams.overall_time = 2
     shortSimParams.init_pos_max = shortSimParams.enclosure_size
     shortSimParams.agent_max_vel = 10
-    shortControllers = [bo.Boids(*true_gains) for i in range(shortSimParams.num_agents)]
+    shortControllers = [copy.deepcopy(orig_controller) for i in range(shortSimParams.num_agents)]
     #colors = ["rgb(255, 0, 24)","rgb(255, 165, 44)","rgb(255, 255, 65)","rgb(0, 128, 24)","rgb(0, 0, 249)","rgb(134, 0, 125)","rgb(85, 205, 252)","rgb(247, 168, 184)"]
 
     agentSlices = automation.runSims(shortControllers,params=shortSimParams,num_sims=100,ignoreMC=True,
-    export_info=[export.ExportType.GIF,"linearBoidsOutput/ShortSims",25])
+    export_info=[export.ExportType.MP4,"linearBoidsOutput/ShortSims",50],threads = 10)
     print("Num agent slices",len(agentSlices))
 
     x = []
@@ -109,6 +106,10 @@ if __name__ ==  '__main__':
     gains = reg.coef_.tolist()
     print(gains)
 
+    gains = [max(gain,0) for gain in gains] # cut off at 0
+
+    print("Clipped",gains)
+
     # make sure to read lss constructor definition
     controllers_imitated = [lss.SuperSet(gains[0],gains[1],gains[2],0,gains[3]) for i in range(params.num_agents)]
     for controller in controllers_imitated:
@@ -124,14 +125,14 @@ if __name__ ==  '__main__':
     print("Running hybrid visual")
 
     #some parameters for hybrid visualization
-    # mix_factor = 0.6
-    # params.num_agents = 100
-    # params.enclosure_size = 20
-    # params.overall_time = 15
-    # params.init_pos_max = params.enclosure_size
-    # params.agent_max_vel = 7
+    mix_factor = 0.6
+    params.num_agents = 100
+    params.enclosure_size = 20
+    params.overall_time = 15
+    params.init_pos_max = params.enclosure_size
+    params.agent_max_vel = 7
 
-    # original_agents = [bo.Boids(*true_gains) for i in range(int(params.num_agents*mix_factor))]
+    # original_agents = [Dance.Dance(1,1,0,1) for i in range(int(params.num_agents*mix_factor))]
     # for controller in original_agents:
     #     controller.setColor("rgb(99, 110, 250)")
     # imitated_agents = [lss.SuperSet(gains[0],gains[1],gains[2],0,gains[3]) for i in range(int(params.num_agents*(1-mix_factor)))]
@@ -146,15 +147,15 @@ if __name__ ==  '__main__':
 
 
 
-    # original_agents = [bo.Boids(*true_gains) for i in range(int(params.num_agents*mix_factor))]
-    # for controller in original_agents:
-    #     controller.setColor("rgb(99, 110, 250)")
-    # imitated_agents = [lss.SuperSet(gains[0],gains[1],gains[2],0,gains[3]) for i in range(int(params.num_agents*(1-mix_factor)))]
-    # for controller in imitated_agents:
-    #     controller.setColor("red")
+    original_agents = [copy.deepcopy(orig_controller) for i in range(int(params.num_agents*mix_factor))]
+    for controller in original_agents:
+        controller.setColor("rgb(99, 110, 250)")
+    imitated_agents = [lss.SuperSet(gains[0],gains[1],gains[2],0,gains[3]) for i in range(int(params.num_agents*(1-mix_factor)))]
+    for controller in imitated_agents:
+        controller.setColor("red")
 
-    # all_controllers = original_agents + imitated_agents
+    all_controllers = original_agents + imitated_agents
 
-    # agentPositions_hybrid, agentVels_hybrid = sim.runSim(all_controllers,params,progress_bar=True,initial_positions=agentPositions_hybrid[-1],initial_velocities=agentVels_hybrid[-1])
-    # export.export(export.ExportType.MP4,"linearBoidsOutput/HybridNonuniform",agentPositions_hybrid,agentVels_hybrid,controllers=all_controllers,params=params,vision_mode=False,progress_bar=True)
+    agentPositions_hybrid, agentVels_hybrid = sim.runSim(all_controllers,params,progress_bar=True)
+    export.export(export.ExportType.MP4,"linearBoidsOutput/HybridNonuniform",agentPositions_hybrid,agentVels_hybrid,controllers=all_controllers,params=params,vision_mode=False,progress_bar=True)
 
