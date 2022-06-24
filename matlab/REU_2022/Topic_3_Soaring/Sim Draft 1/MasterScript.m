@@ -1,10 +1,10 @@
 % Ind S, C, A, M, hPriority, hIgnore, dt, Waggle Str, Waggle Time, NAgents
-ParamMatrix = readmatrix("Params.xlsx","Range","A2:K7");
+ParamMatrix = readmatrix("Params.xlsx","Range","A2:K8");
 render = true;
 average = zeros(1,size(ParamMatrix,1));
 surviving = average;
 tic
-for i = 1:size(ParamMatrix,1)
+parfor i = 1:size(ParamMatrix,1)
     [average(i), surviving(i)] = MainScriptFunction(ParamMatrix(i,:), render);
 end
 clf

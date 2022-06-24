@@ -19,9 +19,10 @@ classdef MaxsLaw
         renderScale = [300;300];    % [scaleX; scaleY];
         showKNN = true;             %
         showFixedRadius = true;     %
+        showRange = true;           %
 
         % Functions to use
-        funcName_agentControl = "agentControl_KNN";
+        funcName_agentControl     = "agentControl_KNN";
         funcName_findNeighborhood = "findNeighborhood_KNN";
 
         % Thermal constraints
@@ -56,7 +57,7 @@ classdef MaxsLaw
         % Initial conditions
         mapSize = [-4000,4000];     % m, bounds of square map
         agentSpawnPosRange = [-3000,-3000; 3000,3000];  % m, [xMin,yMin;xMax,yMax]
-        agentSpawnAltiRange = [1600,1600];              % m, [Min,Max]
+        agentSpawnAltiRange = [400,400];              % m, [Min,Max]
         agentSpawnVelRange = [8,0;13,0];                % m/s,rad/s [forwardMin,omegaMin;forwardMax,omegaMax];
         g = 9.81;   
         
