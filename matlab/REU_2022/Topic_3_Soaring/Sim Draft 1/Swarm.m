@@ -2,20 +2,23 @@
 classdef Swarm < handle
     properties
         agents
-        thermalMap
         simLaw
         funcHandle_agentControl
         funcHandle_findNeighborhood
         
+        thermalMap
+        
         lineCircle = NaN
         lineNeighbors = NaN
+        lineRange = NaN
     end
     
     methods
         % Generation Function
-        function obj = Swarm(simLaw)
+        function obj = Swarm(simLaw,thermalMap)
             % Save parameters and agentControlFunc
             obj.simLaw = simLaw;
+            obj.thermalMap = thermalMap;
             SL = obj.simLaw;
             
             obj.funcHandle_agentControl = str2func(SL.funcName_agentControl);
@@ -41,9 +44,6 @@ classdef Swarm < handle
                 obj.agents(i).velocity(1) = Utility.randIR(velRange(1,1),velRange(2,1));
                 obj.agents(i).velocity(2) = Utility.randIR(velRange(1,2),velRange(2,2));
             end
-            
-            %% Generate thermal map
-            obj.thermalMap = ThermalMap(SL);
         end
         
         % Save Function
@@ -67,12 +67,7 @@ classdef Swarm < handle
                     localAgents = obj.funcHandle_findNeighborhood(obj,i,SL);
                     
                     %Find thermal strength from ThermalMap
-                    %thermalStrength = thermalMap.getStrength(currentAgent.position);
-                    if(ismethod(SL,"getTempThermalStrength"))
-                        thermalStrength = SL.getTempThermalStrength(currentAgent);
-                    else
-                        thermalStrength = SL.tempThermalStrength;
-                    end
+                    thermalStrength = obj.thermalMap.getStrength(currentAgent.position);
                     
                     %Update currentAgent
                     obj.funcHandle_agentControl(currentAgent,localAgents,thermalStrength,[0,0,0], SL);
@@ -85,12 +80,12 @@ classdef Swarm < handle
             SL = obj.simLaw;
             shownNeighbors = false;
             for i=1:SL.numAgents
-                if((SL.showFixedRadius || SL.showKNN) && obj.agents(i).isAlive && ~shownNeighbors)
+                if((SL.showFixedRadius || SL.showNeighbors || SL.showRange) && obj.agents(i).isAlive && ~shownNeighbors)
                     shownNeighbors = true;
                     currentAgent = obj.agents(i);
                     localAgents = obj.funcHandle_findNeighborhood(obj,i,SL);
                     if(SL.showFixedRadius)
-                        theta = linspace(0,2*pi,30);
+                        theta = linspace(currentAgent.heading-SL.neighborAngleRange/2,currentAgent.heading+SL.neighborAngleRange/2,20);
                         xCircle = SL.neighborRadius * cos(theta) + currentAgent.position(1);
                         yCircle = SL.neighborRadius * sin(theta) + currentAgent.position(2);
 
@@ -100,8 +95,9 @@ classdef Swarm < handle
                         obj.lineCircle.XData = xCircle;
                         obj.lineCircle.YData = yCircle;
                     end
-                    
-                    if(SL.showKNN)
+
+                    % this was commented?
+                    if(SL.showNeighbors)
                         numLocalAgents = size(localAgents,2);
                         linePoints = zeros(2,2*numLocalAgents+1);
                         linePoints(1,1) = currentAgent.position(1);
@@ -118,6 +114,18 @@ classdef Swarm < handle
                         end
                         obj.lineNeighbors.XData = linePoints(1,:);
                         obj.lineNeighbors.YData = linePoints(2,:);
+                    end
+
+                    if(SL.showRange)
+                        theta = linspace(0,2*pi,30);
+                        xCircle = 24.4 * currentAgent.position(3) * cos(theta) + currentAgent.position(1);
+                        yCircle = 24.4 * currentAgent.position(3) * sin(theta) + currentAgent.position(2);
+
+                        if(class(obj.lineRange) == "double")
+                            obj.lineRange = line();
+                        end
+                        obj.lineRange.XData = xCircle;
+                        obj.lineRange.YData = yCircle;
                     end
                 end
                 

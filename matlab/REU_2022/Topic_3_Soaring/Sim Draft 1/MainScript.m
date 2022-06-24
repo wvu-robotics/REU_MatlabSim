@@ -10,7 +10,7 @@ addpath("Agent Control Functions");
 addpath("Find Neighborhood Functions");
 
 %% Load simulation parameters
-simLaw = AdamsLaw();
+SL = AdamsLaw();
 
 %% setup output folder
 rootFolder = "Output Media";
@@ -25,7 +25,6 @@ time = datestr(now,timeFormat);
 
 % Create folder/video names
 dateFolder = sprintf('%s/%s',rootFolder,date);
-
 
 %videoSuffix = sprintf('S=%1.0E, C=%1.0E, A=%1.0E, M=%1.0E', simLaw.separation, simLaw.cohesion, simLaw.alignment, simLaw.migration);
 %videoName = sprintf('%s/%s %s.avi',dateFolder,videoPrefix,videoSuffix);
@@ -42,27 +41,34 @@ if(~exist(dateFolder,'dir'))
 end
 
 %% Setup video and figure
+%Create video
 video = VideoWriter(videoName);
-video.FrameRate = 1/simLaw.dt * simLaw.fpsMult;
+video.FrameRate = 1/SL.dt * SL.fpsMult;
 open(video);
 
+%Create frame
 simFig = figure('Visible','on');
-xlim(simLaw.mapSize);
-ylim(simLaw.mapSize);
+xlim(SL.mapSize);
+ylim(SL.mapSize);
 daspect([1 1 1])
 
-%% Create instance of simulation
-swarm = Swarm(simLaw);
-theta = linspace(0,2*pi,50);
-patchX = 50*cos(theta)-0;
-patchY = 50*sin(theta)-0;
-% patchX = 600*cos(theta)-1000;
-% patchY = 600*sin(theta)+1000;
-patchObj = patch('XData',patchX,'YData',patchY,'FaceColor','red','FaceAlpha',0.8);
+%Setup colorbar
+colorbar;
+cbLimits = [-1,SL.thermalStrengthMax];
+set(gca,'clim',cbLimits);
+
+%Setup colormap color-scheme
+xColor = linspace(0,SL.thermalPixels,length(SL.CMColors)) / SL.thermalPixels;
+map = interp1(xColor,SL.CMColors,linspace(0,1,SL.thermalPixels)); % Creates a color gradient for the map
+colormap(map);
+
+%% Create objects
+thermalMap = ThermalMap(SL);
+swarm = Swarm(SL, thermalMap);
 
 %% Prepare data
-steps = simLaw.totalTime/simLaw.dt;
-timeAxis = simLaw.dt * (1:steps);
+steps = SL.totalTime/SL.dt;
+timeAxis = SL.dt * (1:steps);
 maxHeights = zeros(1,steps);
 minHeights = zeros(1,steps);
 avgHeights = zeros(1,steps);
@@ -72,7 +78,8 @@ for step = 1:steps
     c1 = clock;
     fprintf("Frame %g/%g:  ",step,steps);
     
-    % Render agents
+    % Render agents and thermals
+    thermalMap.renderThermals();
     swarm.renderAgents();
     
     % Save video frame
@@ -81,6 +88,7 @@ for step = 1:steps
     pause(0.0001);
     
     % Step simulation
+    thermalMap.staticStep();
     swarm.saveAgentData();
     swarm.stepSimulation();
     
@@ -88,10 +96,10 @@ for step = 1:steps
     Living = nnz([swarm.agents.isAlive]);
     fprintf("%g Agents, ", Living);
     
-    maxHeight = simLaw.agentFloor;
-    minHeight = simLaw.agentCeiling;
+    maxHeight = SL.agentFloor;
+    minHeight = SL.agentCeiling;
     averageHeight = 0;
-    for i=1:simLaw.numAgents
+    for i=1:SL.numAgents
         currentHeight = swarm.agents(i).position(3);
         maxHeight = max(maxHeight,currentHeight);
         if(currentHeight > 0)
@@ -99,7 +107,7 @@ for step = 1:steps
         end
         averageHeight = averageHeight + currentHeight;
     end
-    averageHeight = averageHeight / simLaw.numAgents;
+    averageHeight = averageHeight / SL.numAgents;
     
     maxHeights(step) = maxHeight;
     minHeights(step) = minHeight;
@@ -122,7 +130,7 @@ end
 simData = figure();
 hold on
 xlim([1, timeAxis(steps)]);
-ylim([simLaw.agentFloor, simLaw.agentCeiling]);
+ylim([SL.agentFloor, SL.agentCeiling]);
 xlabel("Time (s)");
 ylabel("Height (m)");
 plot(timeAxis,maxHeights);

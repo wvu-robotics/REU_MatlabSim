@@ -70,7 +70,6 @@ function agentControl_Update(currentAgent,localAgents,thermalStrength, target, S
     currentAgent.accelDir = atan2(newAccel(2), newAccel(1));
 
     Heading      = [cos(currentAgent.heading),sin(currentAgent.heading),0];
-    upUnit = [0,0,1];
     forwardAccel = dot(newAccel,Heading);
     if(norm(newAccel) - norm(forwardAccel) < 1E-6)
         CentriAccel = 0;
@@ -82,11 +81,6 @@ function agentControl_Update(currentAgent,localAgents,thermalStrength, target, S
 
     newAccel = [forwardAccel; CentriAccel];
 
-
-
-
-
-
     %% Get Vel
     newVel(1) = currentAgent.velocity(1) + newAccel(1)*SL.dt;
     newVel(1) = Utility.midMinMax(newVel(1),SL.forwardSpeedMin, SL.forwardSpeedMax);
@@ -94,7 +88,7 @@ function agentControl_Update(currentAgent,localAgents,thermalStrength, target, S
     % Waggle Timer
     if(currentAgent.lastWaggle <= 0)
         currentAgent.waggleSign = 2 * round(rand()) - 1;
-        currentAgent.lastWaggle = Utility.randIR(3,5); %Reset the timer
+        currentAgent.lastWaggle = Utility.randIR(SL.waggleTime,SL.waggleTime*2); %Reset the timer
     end
     currentAgent.lastWaggle = currentAgent.lastWaggle - SL.dt;
 
