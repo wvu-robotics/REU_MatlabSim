@@ -20,7 +20,7 @@ from scipy import optimize
 
 params = sim.SimParams(
     num_agents=50,
-    dt=0.1,
+    dt=0.01,
     overall_time = 10,
     enclosure_size = 15,
     init_pos_max = 3, #if None, then defaults to enclosure_size
@@ -47,24 +47,24 @@ if __name__ ==  '__main__':
     #ran first sim
     # can probably shorten constructor definitions
 
+    cohesion_gain = 2
     align_gain = 1
-    cohesion_gain = 1
     separation_gain = 1
     steer_to_avoid_gain = 0
     rotation_gain = 0
     inertia = 1
 
-    true_gains = [align_gain, cohesion_gain, separation_gain, steer_to_avoid_gain, rotation_gain]
+    true_gains = [cohesion_gain, align_gain, separation_gain, steer_to_avoid_gain, rotation_gain]
 
     orig_controller = lss.SuperSet(*true_gains)
     controllers = [ copy.deepcopy(orig_controller) for i in range(params.num_agents)]
     print("First sim and export")
     agentPositions, agentVels = sim.runSim(controllers,params,progress_bar=True)
 
-    if not os.path.exists("linearBoidsOutput"):
-        os.makedirs("linearBoidsOutput")
+    if not os.path.exists("TNCImitatorOutput"):
+        os.makedirs("TNCImitatorOutput")
 
-    export.export(export.ExportType.MP4,"linearBoidsOutput/Initial",agentPositions,agentVels,params=params,vision_mode=False,progress_bar=True)
+    export.export(export.ExportType.MP4,"TNCImitatorOutput/Initial",agentPositions,agentVels,params=params,vision_mode=False,progress_bar=True)
 
 
 
@@ -95,7 +95,7 @@ if __name__ ==  '__main__':
     #colors = ["rgb(255, 0, 24)","rgb(255, 165, 44)","rgb(255, 255, 65)","rgb(0, 128, 24)","rgb(0, 0, 249)","rgb(134, 0, 125)","rgb(85, 205, 252)","rgb(247, 168, 184)"]
 
     agentSlices = automation.runSims(shortControllers,params=shortSimParams,num_sims=100,ignoreMC=True,
-    export_info=[export.ExportType.MP4,"linearBoidsOutput/ShortSims",50],threads = 10)
+    export_info=[export.ExportType.MP4,"TNCImitatorOutput/ShortSims",50],threads=10)
     print("Num agent slices",len(agentSlices))
 
     x = []
@@ -112,7 +112,7 @@ if __name__ ==  '__main__':
     # print("True loss: ",true_loss)
 
     print("First pass linear regression: ")
-    reg = lr(fit_intercept=False).fit(x,y)
+    reg = lr(fit_intercept=False).fit(x,y) #lr = least squares regression, rr = ridge regression (l2 penalization)
     print("R^2: ",reg.score(x,y))
 
     # #create some visuals with the imitated swarm
@@ -124,10 +124,8 @@ if __name__ ==  '__main__':
     controllers = [lss.SuperSet(*gains) for i in range(params.num_agents)]
     agentPositions, agentVels = sim.runSim(controllers, params, progress_bar=True)
 
-    if not os.path.exists("GeneticOutput"):
-        os.makedirs("GeneticOutput")
 
-    export.export(export.ExportType.GIF, "GeneticOutput/Initial", agentPositions, agentVels, params=params,
+    export.export(export.ExportType.MP4, "TNCImitatorOutput/PostLRSim", agentPositions, agentVels, params=params,
                   vision_mode=False, progress_bar=True)
 
     posVelSlices = []
@@ -135,6 +133,8 @@ if __name__ ==  '__main__':
     shortSimParams = copy.deepcopy(params)
     print("Running short sims")
     shortSimParams.overall_time = 5
+    shortSimParams.init_pos_max = shortSimParams.enclosure_size*0.5
+    shortSimParams.dt = 0.1
 
     agentSlices = automation.runSims(controllers, params=shortSimParams, num_sims=1, threads=4, ignoreMC=False)
 
@@ -182,9 +182,9 @@ if __name__ ==  '__main__':
     controllers_imitated = [lss.SuperSet(solution.x[0], solution.x[1], solution.x[2], solution.x[3], solution.x[4]) for i in
                             range(params.num_agents)]
     for controller in controllers_imitated:
-        controller.setColor('black')
+        controller.setColor('red')
     agentPositions_imitated, agentVels_imitated = sim.runSim(controllers_imitated, params, progress_bar=True)
-    export.export(export.ExportType.MP4, "GeneticOutput/Imitated", agentPositions_imitated, agentVels_imitated,
+    export.export(export.ExportType.MP4, "TNCImitatorOutput/Imitated", agentPositions_imitated, agentVels_imitated,
                   controllers=controllers_imitated, params=params, progress_bar=True)
 
     # now create some hybrid visualizations
@@ -203,10 +203,10 @@ if __name__ ==  '__main__':
     imitated_agents = [lss.SuperSet(solution.x[0], solution.x[1], solution.x[2], solution.x[3], solution.x[4]) for i in
                        range(int(params.num_agents * (1 - mix_factor)))]
     for controller in imitated_agents:
-        controller.setColor("black")
+        controller.setColor("red")
 
     all_controllers = original_agents + imitated_agents
 
     agentPositions_hybrid, agentVels_hybrid = sim.runSim(all_controllers, params, progress_bar=True)
-    export.export(export.ExportType.GIF, "GeneticOutput/Hybrid", agentPositions_hybrid, agentVels_hybrid,
+    export.export(export.ExportType.MP4, "TNCImitatorOutput/Hybrid", agentPositions_hybrid, agentVels_hybrid,
                   controllers=all_controllers, params=params, vision_mode=False, progress_bar=True)
