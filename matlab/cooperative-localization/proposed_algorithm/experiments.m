@@ -26,9 +26,9 @@ function [cost, avg_mean_error, avg_covar, avg_path_deviation, avg_goals_reached
 %% Simulation Parameters
 simu.N=num_agents;           % number of Robots
 range = 1;           % robot detection range [m]
-e_max = 2;           % maximum mean localization error [m]
+e_max = 1;           % maximum mean localization error [m]
 cov_max = 5;         % maximum covariance norm [m^2]
-goal_tolarance = .15; % maximum tolarance for reaching the goal or not [m]
+goal_tolarance = .2; % maximum tolarance for reaching the goal or not [m]
 simu.estimator = estimator;  
 simu.dt = .5; % time step size [sec]
 simu.simulationTime=100;   %flight duration [sec] 100
@@ -96,7 +96,7 @@ total_false_goals_reached = 0; % number of goals the agents though they reached 
     
     % if boids_rules = goal only set a high gain for goals and nothing else
     if boids_rules == 0
-        ROBOTS(idx).Kg = 1000;
+        ROBOTS(idx).Kg = 1;
         ROBOTS(idx).Ka = 0;
         ROBOTS(idx).Ks = 0;
         ROBOTS(idx).Kc = 0;
@@ -169,7 +169,7 @@ while simu.accumulatedTime < simu.simulationTime
         
         % adapt the boids rules based on local stimuli and allowable
         % thresholds
-        if boids_rules == 2 || boids_rules == 3
+        if boids_rules == 2 
             ROBOTS(r) = ROBOTS(r).boids_update(e_max,rho_max,cov_max,world_len);
         end
         
@@ -178,7 +178,7 @@ while simu.accumulatedTime < simu.simulationTime
         
         % get new goal if current one is found
         if ROBOTS(r).found_goal == 1
-           
+            old_goal = ROBOTS(r).goal;
             %check to see if we actually reached the goal
             if norm(ROBOTS(r).position_t(1:2) - ROBOTS(r).goal) <  goal_tolarance
                 total_goals_reached = total_goals_reached + 1;
@@ -191,7 +191,7 @@ while simu.accumulatedTime < simu.simulationTime
                 ROBOTS(r).found_goal = 0;
             end
             %update the goal results parameters
-            total_goal_dist = total_goal_dist + norm(ROBOTS(r).position_t(1,2) - ROBOTS(r).goal)-range;
+            total_goal_dist = total_goal_dist + norm(old_goal - ROBOTS(r).goal);
 
         end
         
@@ -221,10 +221,12 @@ end
 % find the average results across all time steps per robot
 avg_covar = total_covar/(simu.N*simu.i);
 avg_mean_error = total_mean_error/(simu.N*simu.i);
-avg_path_deviation = (total_dist_traveled-total_goal_dist)/(simu.N*simu.i);
+
 avg_goals_reached = total_goals_reached/simu.N;
 avg_false_goals_reached = total_false_goals_reached/simu.N;
-avg_total_goal_dist = (total_goal_dist)/(simu.N*simu.i);
+avg_total_goals = avg_goals_reached + avg_false_goals_reached;
+avg_path_deviation = (total_dist_traveled-total_goal_dist)/(simu.N*avg_total_goals);
+avg_total_goal_dist = (total_goal_dist)/(simu.N);
 
 % TODO add in the false goals reached if needed
 

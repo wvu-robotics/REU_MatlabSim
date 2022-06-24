@@ -175,40 +175,71 @@ classdef Robot
              
              rho_norm = rho/rho_max;
              cov_norm = cov_e/cov_max;
-             e_norm = e_m/e_max;
-             dg_norm = dg/Lw;
-             dh_norm = dh/Lw + .00001;
+             e_norm = e_m/e_max +.00001;
+             dg_norm = dg/Lw    +.00001;
+             dh_norm = dh/Lw    +.00001;
+% 
+%               obj.Ka = rho_norm^2 + 1/dh_norm + relu(dlarray(e_norm - 1)).extractdata;
+%               obj.Kc = cov_norm + e_norm^2 + sigmoid(dlarray(dg_norm)).extractdata * dh_norm;
+%               obj.Ks = relu(dlarray(1 - cov_norm)).extractdata + 1/e_norm + 1/dg_norm + sigmoid(dlarray(1/dh_norm)).extractdata;
+%               obj.Kh = cov_norm + e_norm^2 + sigmoid(dlarray(dg_norm)).extractdata * (1- dh_norm);
+%               obj.Kg = (1-cov_norm) + e_norm^-1 + sigmoid(dlarray(dh_norm)).extractdata * (1/dg_norm);
+% 
+%              
+%               if obj.Ka > 10; obj.Ka = 10; end
+%               if obj.Kc > 10; obj.Kc = 10; end
+%               if obj.Ks > 10; obj.Ks = 10; end
+%               if obj.Kh > 10; obj.Kh = 10; end
+%               if obj.Kg > 10; obj.Kg = 10; end
+% 
+%               obj.Ka = obj.Ka/obj.Kg;
+%               obj.Kc = obj.Kc/obj.Kg;
+%               obj.Ks = obj.Ks/obj.Kg;
+%               obj.Kh = obj.Kh/obj.Kg;
+%               obj.Kg = obj.Kg/obj.Kg;
 
-              obj.Ka = rho_norm^2 + 1/dh_norm + relu(dlarray(e_norm - 1)).extractdata;
-              obj.Kc = cov_norm + e_norm^2 + sigmoid(dlarray(dg_norm)).extractdata * dh_norm;
-              obj.Ks = relu(dlarray(1 - cov_norm)).extractdata + 1/e_norm + 1/dg_norm + sigmoid(dlarray(1/dh_norm)).extractdata;
-              obj.Kh = cov_norm + e_norm^2 + sigmoid(dlarray(dg_norm)).extractdata * (1- dh_norm);
-              obj.Kg = (1-cov_norm) + e_norm^-2 + sigmoid(dlarray(dh_norm)).extractdata * (1/dg_norm);
-
-              if obj.Ka > 10; obj.Ka = 10; end
-              if obj.Kc > 10; obj.Kc = 10; end
-              if obj.Ks > 10; obj.Ks = 10; end
-              if obj.Kh > 10; obj.Kh = 10; end
-              if obj.Kg > 10; obj.Kg = 10; end
-
-%              obj.Ka = (rho/rho_max)^2 + dr/dh ...
+%------------------------------------------------------------------------
+%              obj.Ka = (rho/rho_max) + dr/dh  + cov_e/cov_max...
 %                       + relu(dlarray((e_m-e_max))).extractdata/e_max; 
 % 
-%              obj.Kc = cov_e/cov_max + (e_m/e_max)^2 ... 
-%                       + sigmoid(dlarray(dg/dr)).extractdata * dh/Lw;
+%              obj.Kc = (cov_e/cov_max) + ((e_m+1)/e_max) ... 
+%                       + sigmoid(dlarray(dg/dr)).extractdata * dh/dr;
 % 
 %              obj.Ks = relu(dlarray((cov_e-cov_max))).extractdata/cov_max...
 %                       + e_max/(e_m+1) + sigmoid(dlarray(dr/dh)).extractdata ...
 %                       +dg/Lw;
 % 
-%              obj.Kh = cov_e/cov_max + (e_m/e_max)^2 ...
+%              obj.Kh = (cov_e/cov_max) + ((e_m+1)/e_max) ...
 %                       + sigmoid(dlarray(dg/dr)).extractdata*((Lw-dh)/Lw);
 % 
-%              obj.Kg = (e_max/(e_m+1))^2 + (cov_max -cov_e)/cov_max ...
-%                       +sigmoid(dlarray(dh/dr)).extractdata*dr/dg;
+%              obj.Kg = (e_max-e_m)/e_max + cov_max/cov_e ...
+%                       +sigmoid(dlarray(dh/dr)).extractdata*(Lw-dg)/dr;
 
+%-----------------------------------------------------------------------
 
+% obj.Ka = rho_norm     + cov_norm     + e_norm     + (1-dh_norm) + (1-dg_norm);
+% obj.Kc = (1-rho_norm) + cov_norm     + e_norm     + dh_norm     + dg_norm;
+% obj.Ks = rho_norm     + (1-cov_norm) + (1-e_norm) + (1-dh_norm) + (1-dg_norm) ;
+% obj.Kh = 0            + cov_norm     + e_norm     + (1-dh_norm) + 0;
+% obj.Kg = 0            + (1-cov_norm) + (1-e_norm) + 0           + (1-dg_norm);
 
+% obj.Kg = ((1-cov_norm) + (1-e_norm) + (1-dg_norm));
+% 
+% obj.Ka = (rho_norm + (1-dh_norm) + e_norm)/obj.Kg;
+% obj.Kc = (cov_norm + dh_norm + e_norm -rho_norm)/obj.Kg;
+% obj.Ks = ((1-e_norm) + (1-dg_norm)-rho_norm)/obj.Kg;
+% obj.Kh = (cov_norm + e_norm + (1-dh_norm)-rho_norm)/obj.Kg;
+% 
+% obj.Kg = 1;
+
+% good linear
+obj.Ka = rho_norm + (1-dh_norm) + e_norm;
+obj.Kc = cov_norm + dh_norm + e_norm;
+obj.Ks = (1-e_norm) + (1-dg_norm) + (1-cov_norm);
+obj.Kh = cov_norm + e_norm + (1-dh_norm);
+obj.Kg = (1-cov_norm) + (1-e_norm) + (1-dg_norm);
+
+%========================================================================
 
             
 %              temp = ((cov_max-cov_e)/cov_max)*((e_max-e_m)/e_max)...
@@ -1057,21 +1088,21 @@ classdef Robot
             axis([-10 10 -10 10])
             
             %plot gain distributions
-%                 subplot(2,3,2)
-%                 histogram(KA)
-%                 title("alignment gain")
-%                 subplot(2,3,3)
-%                 histogram(KC)
-%                 title("cohesion gain")
-%                 subplot(2,3,4)
-%                 histogram(KS)
-%                 title("Seperation gain")
-%                 subplot(2,3,5)
-%                 histogram(KH)
-%                 title("Home gain")
-%                 subplot(2,3,6)
-%                 histogram(KG)
-%                 title("Goal gain")
+                subplot(2,3,2)
+                histogram(KA)
+                title("alignment gain")
+                subplot(2,3,3)
+                histogram(KC)
+                title("cohesion gain")
+                subplot(2,3,4)
+                histogram(KS)
+                title("Seperation gain")
+                subplot(2,3,5)
+                histogram(KH)
+                title("Home gain")
+                subplot(2,3,6)
+                histogram(KG)
+                title("Goal gain")
             
             
             pause(.0001);
