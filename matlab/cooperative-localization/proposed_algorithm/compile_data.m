@@ -216,7 +216,8 @@ std_FALSE_GOALS = std(ALL_FALSE_GOALS);
 %% covariance ------------------------------------------------------
 figure()
 % DR
-  subplot(1,3,1); 
+  %subplot(1,3,1);
+  figure()
   X = [SIZE(DR_GOAL)-.5; SIZE(DR_STATIC); SIZE(DR_ADAPT)+.5]./100;
   Y_mean = [MEDIAN_COVAR(DR_GOAL);MEDIAN_COVAR(DR_STATIC);MEDIAN_COVAR(DR_ADAPT)];
   Y_neg = Y_mean - [MIN_COVAR(DR_GOAL); MIN_COVAR(DR_STATIC);MIN_COVAR(DR_ADAPT)];
@@ -226,14 +227,15 @@ figure()
   Y_pos = Y_neg;
 
   errorbar(X',Y_mean',Y_neg',Y_pos', 'x-');
-  legend(["goal following","static rules","adaptive rules"]);
-  title("Covariance with dead reckoning");
-  xlabel("robot density [robots/m^2]");
+  legend(["Goal Following","Static Rules","Adaptive Rules"]);
+  title("Covariance with Dead Reckoning");
+  xlabel("Robot Density [robots/m^2]");
   ylabel("Covariance Norm [m]");
   axis([0,.6,0,16]);
 
  % CI
-  subplot(1,3,2); 
+  %subplot(1,3,2); 
+  figure()
   X = [SIZE(CI_GOAL)-.5; SIZE(CI_STATIC); SIZE(CI_ADAPT)+.5]./100;
   Y_mean = [MEDIAN_COVAR(CI_GOAL);MEDIAN_COVAR(CI_STATIC);MEDIAN_COVAR(CI_ADAPT)];
   Y_neg = Y_mean - [MIN_COVAR(CI_GOAL); MIN_COVAR(CI_STATIC);MIN_COVAR(CI_ADAPT)];
@@ -243,14 +245,15 @@ figure()
   Y_pos = Y_neg;
 
   errorbar(X',Y_mean',Y_neg',Y_pos', 'o-');
-  legend(["goal following","static rules","adaptive rules"]);
+  legend(["Goal Following","Static Rules","Adaptive Rules"]);
   title("Covariance with Covariance Intersection");
-  xlabel("robot density [robots/m^2]");
+  xlabel("Robot Density [robots/m^2]");
   ylabel("Covariance Norm [m]");
   axis([0,.6,0,16]);
 
  % DEKF
- subplot(1,3,3);
+ %subplot(1,3,3);
+ figure()
   X = [SIZE(DEKF_GOAL)-.5; SIZE(DEKF_STATIC); SIZE(DEKF_ADAPT)+.5]./100;
   Y_mean = [MEDIAN_COVAR(DEKF_GOAL);MEDIAN_COVAR(DEKF_STATIC);MEDIAN_COVAR(DEKF_ADAPT)];
   Y_neg = Y_mean - [MIN_COVAR(DEKF_GOAL); MIN_COVAR(DEKF_STATIC);MIN_COVAR(DEKF_ADAPT)];
@@ -260,9 +263,9 @@ figure()
   Y_pos = Y_neg;
   
   errorbar(X',Y_mean',Y_neg',Y_pos', 's-');
-  legend(["goal following","static rules","adaptive rules"]);
+  legend(["Goal Following","Static Rules","Adaptive Rules"]);
   title("Covariance with Decentralized EKF");
-  xlabel("robot density [robots/m^2]");
+  xlabel("Robot Density [robots/m^2]");
   ylabel("Covariance Norm [m]");
   axis([0,.6,0,16]);
 
@@ -280,7 +283,8 @@ figure()
 
 %% MEAN ERROR ------------------------------------------------------
  figure()
- subplot(1,3,1); 
+ %subplot(1,3,1); 
+ figure()
   X = [SIZE(DR_GOAL)-.5; SIZE(DR_STATIC); SIZE(DR_ADAPT)+.5]./100;
   Y_mean = [MEDIAN_ERROR(DR_GOAL);MEDIAN_ERROR(DR_STATIC);MEDIAN_ERROR(DR_ADAPT)];
   Y_neg = Y_mean - [MIN_ERROR(DR_GOAL); MIN_ERROR(DR_STATIC);MIN_ERROR(DR_ADAPT)];
@@ -290,14 +294,15 @@ figure()
   Y_pos = Y_neg;
   
   errorbar(X',Y_mean',Y_neg',Y_pos', 'x-');
-  legend(["goal following","static rules","adaptive rules"]);
-  title("Mean Error with dead reckoning");
-  xlabel("robot density [robots/m^2]");
+  legend(["Goal Following","Static Rules","Adaptive Rules"]);
+  title("Mean Error with Dead Reckoning");
+  xlabel("Robot Density [robots/m^2]");
   ylabel("Mean Error [m]");
   axis([0,.6,0,.26]);
 
  % CI
-  subplot(1,3,2); 
+  %subplot(1,3,2); 
+  figure()
   X = [SIZE(CI_GOAL)-.5; SIZE(CI_STATIC); SIZE(CI_ADAPT)+.5]./100;
   Y_mean = [MEDIAN_ERROR(CI_GOAL);MEDIAN_ERROR(CI_STATIC);MEDIAN_ERROR(CI_ADAPT)];
   Y_neg = Y_mean - [MIN_ERROR(CI_GOAL); MIN_ERROR(CI_STATIC);MIN_ERROR(CI_ADAPT)];
@@ -307,14 +312,15 @@ figure()
   Y_pos = Y_neg;
   
   errorbar(X',Y_mean',Y_neg',Y_pos', 'o-');
-  legend(["goal following","static rules","adaptive rules"]);
+  legend(["Goal Following","Static Rules","Adaptive Rules"]);
   title("Mean Error with Covariance Intersection");
-  xlabel("robot density [robots/m^2]");
+  xlabel("Robot Density [robots/m^2]");
   ylabel("Mean Error [m]");
   axis([0,.6,0,.26]);
 
  % DEKF
- subplot(1,3,3);  
+ %subplot(1,3,3); 
+ figure()
   X = [SIZE(DEKF_GOAL)-.5; SIZE(DEKF_STATIC); SIZE(DEKF_ADAPT)+.5]./100;
   Y_mean = [MEDIAN_ERROR(DEKF_GOAL);MEDIAN_ERROR(DEKF_STATIC);MEDIAN_ERROR(DEKF_ADAPT)];
   Y_neg = Y_mean - [MIN_ERROR(DEKF_GOAL); MIN_ERROR(DEKF_STATIC);MIN_ERROR(DEKF_ADAPT)];
@@ -324,9 +330,9 @@ figure()
   Y_pos = Y_neg;
   
   errorbar(X',Y_mean',Y_neg',Y_pos', 's-');
-  legend(["goal following","static rules","adaptive rules"]);
+  legend(["Goal Following","Static Rules","Adaptive Rules"]);
   title("Mean Error with Decentralized EKF");
-  xlabel("robot density [robots/m^2]");
+  xlabel("Robot Density [robots/m^2]");
   ylabel("Mean Error [m]");
   axis([0,.6,0,.26]);
 
@@ -408,7 +414,8 @@ subplot(1,3,1);
 
 %% Goals Reached ------------------------------------------------------
 figure()
-subplot(1,3,1);  
+%subplot(1,3,1);  
+figure()
   X = [SIZE(DR_GOAL)-.5; SIZE(DR_STATIC); SIZE(DR_ADAPT)+.5]./100;
   Y_mean = [MEDIAN_GOALS(DR_GOAL);MEDIAN_GOALS(DR_STATIC);MEDIAN_GOALS(DR_ADAPT)];
   Y_neg = Y_mean - [MIN_GOALS(DR_GOAL); MIN_GOALS(DR_STATIC);MIN_GOALS(DR_ADAPT)];
@@ -418,15 +425,16 @@ subplot(1,3,1);
   Y_pos = Y_neg;
   
   errorbar(X',Y_mean',Y_neg',Y_pos', 'x-');
-  legend(["goal following","static rules","adaptive rules"]);
-  title("Goals Reached with dead reckoning");
-  xlabel("robot density [robots/m^2]");
-  ylabel("number of goals reached");
+  legend(["Goal Following","Static Rules","Adaptive Rules"]);
+  title("Goals Reached with Dead Reckoning");
+  xlabel("Robot Density [robots/m^2]");
+  ylabel("Number of Goals Reached");
   axis([0,.6,0,5]);
   
 
  % CI
-  subplot(1,3,2); 
+  %subplot(1,3,2); 
+  figure()
   X = [SIZE(CI_GOAL)-.5; SIZE(CI_STATIC); SIZE(CI_ADAPT)+.5]./100;
   Y_mean = [MEDIAN_GOALS(CI_GOAL);MEDIAN_GOALS(CI_STATIC);MEDIAN_GOALS(CI_ADAPT)];
   Y_neg = Y_mean - [MIN_GOALS(CI_GOAL); MIN_GOALS(CI_STATIC);MIN_GOALS(CI_ADAPT)];
@@ -436,14 +444,15 @@ subplot(1,3,1);
   Y_pos = Y_neg;
   
   errorbar(X',Y_mean',Y_neg',Y_pos', 'o-');
-  legend(["goal following","static rules","adaptive rules"]);
+  legend(["Goal Following","Static Rules","Adaptive Rules"]);
   title("Goals Reached with Covariance Intersection");
-  xlabel("robot density [robots/m^2]");
-  ylabel("number of goals reached");
+  xlabel("Robot Density [robots/m^2]");
+  ylabel("Number of Goals Reached");
   axis([0,.6,0,5]);
 
  % DEKF
-subplot(1,3,3); 
+%subplot(1,3,3); 
+figure()
   X = [SIZE(DEKF_GOAL)-.5; SIZE(DEKF_STATIC); SIZE(DEKF_ADAPT)+.5]./100;
   Y_mean = [MEDIAN_GOALS(DEKF_GOAL);MEDIAN_GOALS(DEKF_STATIC);MEDIAN_GOALS(DEKF_ADAPT)];
   Y_neg = Y_mean - [MIN_GOALS(DEKF_GOAL); MIN_GOALS(DEKF_STATIC);MIN_GOALS(DEKF_ADAPT)];
@@ -453,10 +462,10 @@ subplot(1,3,3);
   Y_pos = Y_neg;
   
   errorbar(X',Y_mean',Y_neg',Y_pos', 's-');
-  legend(["goal following","static rules","adaptive rules"]);
+  legend(["Goal Following","Static Rules","Adaptive Rules"]);
   title("Goals Reached with Decentralized EKF");
-  xlabel("robot density [robots/m^2]");
-  ylabel("number of goals reached");
+  xlabel("Robot Density [robots/m^2]");
+  ylabel("Number of Goals Reached");
   axis([0,.6,0,5]);
 
  % CEKF
@@ -473,7 +482,8 @@ subplot(1,3,3);
 
 %% False Goals Reached ------------------------------------------------------
 figure()
-subplot(1,3,1);  
+%subplot(1,3,1);  
+figure()
   X = [SIZE(DR_GOAL)-.5; SIZE(DR_STATIC); SIZE(DR_ADAPT)+.5]./100;
   Y_mean = [MEDIAN_FALSE_GOALS(DR_GOAL);MEDIAN_FALSE_GOALS(DR_STATIC);MEDIAN_FALSE_GOALS(DR_ADAPT)];
   Y_neg = Y_mean - [MIN_FALSE_GOALS(DR_GOAL); MIN_FALSE_GOALS(DR_STATIC);MIN_FALSE_GOALS(DR_ADAPT)];
@@ -483,15 +493,16 @@ subplot(1,3,1);
   Y_pos = Y_neg;
   
   errorbar(X',Y_mean',Y_neg',Y_pos', 'x-');
-  legend(["goal following","static rules","adaptive rules"]);
-  title("Goal Success Rate with dead reckoning");
-  xlabel("robot density [robots/m^2]");
-  ylabel("Goal Sucess rate [%]");
+  legend(["Goal Following","Static Rules","Adaptive Rules"]);
+  title("Goal Success Rate with Dead Reckoning");
+  xlabel("Robot Density [robots/m^2]");
+  ylabel("Goal Sucess Rate [%]");
   axis([0,.6,0,100]); % 4
   
 
  % CI
-  subplot(1,3,2); 
+  %subplot(1,3,2); 
+  figure()
   X = [SIZE(CI_GOAL)-.5; SIZE(CI_STATIC); SIZE(CI_ADAPT)+.5]./100;
   Y_mean = [MEDIAN_FALSE_GOALS(CI_GOAL);MEDIAN_FALSE_GOALS(CI_STATIC);MEDIAN_FALSE_GOALS(CI_ADAPT)];
   Y_neg = Y_mean - [MIN_FALSE_GOALS(CI_GOAL); MIN_FALSE_GOALS(CI_STATIC);MIN_FALSE_GOALS(CI_ADAPT)];
@@ -501,14 +512,15 @@ subplot(1,3,1);
   Y_pos = Y_neg;
   
   errorbar(X',Y_mean',Y_neg',Y_pos', 'o-');
-  legend(["goal following","static rules","adaptive rules"]);
-  title("Goal Success Rate with dead reckoning");
-  xlabel("robot density [robots/m^2]");
-  ylabel("Goal Sucess rate [%]");
+  legend(["Goal Following","Static Rules","Adaptive Rules"]);
+  title("Goal Success Rate with Covariance Intersection");
+  xlabel("Robot Density [robots/m^2]");
+  ylabel("Goal Sucess Rate [%]");
   axis([0,.6,0,100]);
 
  % DEKF
-subplot(1,3,3); 
+%subplot(1,3,3); 
+figure()
   X = [SIZE(DEKF_GOAL)-.5; SIZE(DEKF_STATIC); SIZE(DEKF_ADAPT)+.5]./100;
   Y_mean = [MEDIAN_FALSE_GOALS(DEKF_GOAL);MEDIAN_FALSE_GOALS(DEKF_STATIC);MEDIAN_FALSE_GOALS(DEKF_ADAPT)];
   Y_neg = Y_mean - [MIN_FALSE_GOALS(DEKF_GOAL); MIN_FALSE_GOALS(DEKF_STATIC);MIN_FALSE_GOALS(DEKF_ADAPT)];
@@ -518,10 +530,10 @@ subplot(1,3,3);
   Y_pos = Y_neg;
   
   errorbar(X',Y_mean',Y_neg',Y_pos', 's-');
-  legend(["goal following","static rules","adaptive rules"]);
-  title("Goal Success Rate with dead reckoning");
-  xlabel("robot density [robots/m^2]");
-  ylabel("Goal Sucess rate [%]");
+  legend(["Goal Following","Static Rules","Adaptive Rules"]);
+  title("Goal Success Rate with Decentralized EKF");
+  xlabel("Robot Density [robots/m^2]");
+  ylabel("Goal Sucess Rate [%]");
   axis([0,.6,0,100]);
 %% -------------------------------------- RELATIVE PLOTS -------------------
 
