@@ -53,8 +53,6 @@ classdef ThermalMap < handle
             % Make the weaker thermal disappear and reincarnate it
             if vel ~= [0 0]
                 thermalMap.thermals(weakerThermal) = Thermal(SL);
-            else 
-                thermalMap.thermals(weakerThermal) = Thermal(SL, 0);
             end
             thermalMap.thermals(weakerThermal).curStrength = 0;
             thermalMap.thermals(weakerThermal).stepCount = SL.thermalMinPlateauTime;

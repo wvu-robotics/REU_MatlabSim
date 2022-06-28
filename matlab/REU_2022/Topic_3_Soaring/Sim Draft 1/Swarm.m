@@ -84,6 +84,7 @@ classdef Swarm < handle
                     shownNeighbors = true;
                     currentAgent = obj.agents(i);
                     localAgents = obj.funcHandle_findNeighborhood(obj,i,SL);
+
                     if(SL.showFixedRadius)
                         theta = linspace(currentAgent.heading-SL.neighborAngleRange/2,currentAgent.heading+SL.neighborAngleRange/2,20);
                         xCircle = SL.neighborRadius * cos(theta) + currentAgent.position(1);
@@ -94,6 +95,9 @@ classdef Swarm < handle
                         end
                         obj.lineCircle.XData = xCircle;
                         obj.lineCircle.YData = yCircle;
+                        if ~currentAgent.isAlive
+                            obj.lineCircle.Visible = 'off';
+                        end
                     end
 
                     % this was commented?
@@ -118,14 +122,21 @@ classdef Swarm < handle
 
                     if(SL.showRange)
                         theta = linspace(0,2*pi,30);
-                        xCircle = 24.4 * currentAgent.position(3) * cos(theta) + currentAgent.position(1);
-                        yCircle = 24.4 * currentAgent.position(3) * sin(theta) + currentAgent.position(2);
+                        xCircleRange = 24.4 * currentAgent.position(3) * cos(theta) + currentAgent.position(1);
+                        yCircleRange = 24.4 * currentAgent.position(3) * sin(theta) + currentAgent.position(2);
 
                         if(class(obj.lineRange) == "double")
                             obj.lineRange = line();
                         end
-                        obj.lineRange.XData = xCircle;
-                        obj.lineRange.YData = yCircle;
+                        if currentAgent.position(3) < 200 && currentAgent.isAlive
+                            obj.lineRange.XData = xCircleRange;
+                            obj.lineRange.YData = yCircleRange;
+                            obj.lineRange.Color = [1,0,0];
+                            obj.lineRange.Visible = 'on';
+                        else
+                            obj.lineRange.Visible = 'off';
+                        end
+
                     end
                 end
                 

@@ -6,8 +6,9 @@ classdef MaxsLaw
         fpsMult = 15;               % x Real Time
         numThermals = 6;            % thermals
         neighborRadius = 1000;      % m
+        neighborAngleRange = 2*pi; %rad
         k = 5;                      % number of nearest neighbors
-        frameSkip = 10;             % render every nth frame
+        frameSkip = 5;              % render every nth frame
         forwardInertia = 10;        %
         bankMin = -2*pi/12;         % rad
         bankMax = 2*pi/12;          % rad
@@ -17,7 +18,7 @@ classdef MaxsLaw
         % Visuals
         showArrow = false;          %
         renderScale = [300;300];    % [scaleX; scaleY];
-        showKNN = true;             %
+        showNeighbors = true;       %
         showFixedRadius = true;     %
         showRange = true;           %
 
@@ -57,7 +58,7 @@ classdef MaxsLaw
         % Initial conditions
         mapSize = [-4000,4000];     % m, bounds of square map
         agentSpawnPosRange = [-3000,-3000; 3000,3000];  % m, [xMin,yMin;xMax,yMax]
-        agentSpawnAltiRange = [400,400];              % m, [Min,Max]
+        agentSpawnAltiRange = [1600,1600];              % m, [Min,Max]
         agentSpawnVelRange = [8,0;13,0];                % m/s,rad/s [forwardMin,omegaMin;forwardMax,omegaMax];
         g = 9.81;   
         
@@ -67,6 +68,11 @@ classdef MaxsLaw
         Arrow = [2 1.5 1.5 0 0 1.5 1.5; 0 .5 .1 .1 -.1 -.1 -.5];
         ThermPatch = [0.8660, 0.5000, 0.0000, -0.5000, -0.8660, -1.0000, -0.8660, -0.5000, -0.0000,  0.5000,  0.8660,  1.0000;
                       0.5000, 0.8660, 1.0000,  0.8660,  0.5000,  0.0000, -0.5000, -0.8660, -1.0000, -0.8660, -0.5000, -0.0000];
+
+        % Thermal constraints
+        CMColors = [6 42 127; 41 76 247; 102 59 231; 162 41 216; 222 24 200; 255 192 203] / 255;
+        thermalPixels = 200
+        
         % Agent Constants
         agentCeiling   = 2600;      % m
         agentFloor     = 0;         % m
