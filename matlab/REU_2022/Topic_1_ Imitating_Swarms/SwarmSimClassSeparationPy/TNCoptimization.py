@@ -23,7 +23,7 @@ params = sim.SimParams(
     dt=0.01,
     overall_time = 10,
     enclosure_size = 15,
-    init_pos_max = 3, #if None, then defaults to enclosure_size
+    init_pos_max = None, #if None, then defaults to enclosure_size
     agent_max_vel=5,
     init_vel_max = None,
     agent_max_accel=np.inf,
@@ -49,9 +49,9 @@ if __name__ ==  '__main__':
 
     cohesion_gain = 2
     align_gain = 1
-    separation_gain = 1
+    separation_gain = 2
     steer_to_avoid_gain = 0
-    rotation_gain = 0
+    rotation_gain = 2
     inertia = 1
 
     true_gains = [cohesion_gain, align_gain, separation_gain, steer_to_avoid_gain, rotation_gain]
@@ -94,8 +94,9 @@ if __name__ ==  '__main__':
     shortControllers = [copy.deepcopy(orig_controller) for i in range(shortSimParams.num_agents)]
     #colors = ["rgb(255, 0, 24)","rgb(255, 165, 44)","rgb(255, 255, 65)","rgb(0, 128, 24)","rgb(0, 0, 249)","rgb(134, 0, 125)","rgb(85, 205, 252)","rgb(247, 168, 184)"]
 
-    agentSlices = automation.runSims(shortControllers,params=shortSimParams,num_sims=100,ignoreMC=True,
+    agentSlices = automation.runSims(shortControllers,params=shortSimParams,num_sims=10,ignoreMC=True,
     export_info=[export.ExportType.MP4,"TNCImitatorOutput/ShortSims",50],threads=10)
+
     print("Num agent slices",len(agentSlices))
 
     x = []
@@ -103,9 +104,9 @@ if __name__ ==  '__main__':
 
     #reshapes were being annoying, will rewrite better
     for slice in agentSlices:
-        x.append(np.array([slice.cohesion[0],slice.alignment[0],slice.separation[0],slice.rotation[0],slice.steer_to_avoid[0]]))
+        x.append(np.array([slice.cohesion[0],slice.alignment[0],slice.separation[0],slice.steer_to_avoid[0], slice.rotation[0]]))
         y.append(np.array(slice.output_vel[0]))
-        x.append(np.array([slice.cohesion[1],slice.alignment[1],slice.separation[1],slice.rotation[1],slice.steer_to_avoid[1]]))
+        x.append(np.array([slice.cohesion[1],slice.alignment[1],slice.separation[1],slice.steer_to_avoid[1], slice.rotation[1]]))
         y.append(np.array(slice.output_vel[1]))
 
 
@@ -116,7 +117,7 @@ if __name__ ==  '__main__':
     print("R^2: ",reg.score(x,y))
 
     # #create some visuals with the imitated swarm
-    #     #maybe do an imposter(s) pretending to be within the original swarm
+    #     #maybe do an imposter(sus) pretending to be within the original swarm
     gains = reg.coef_.tolist()
     print("Coh: " + str(gains[0]) + ", Align: " + str(gains[1]) + ", Sep: " + str(gains[2]) + ", Steer: " + str(gains[3]) + ", Rot: " + str(gains[4]))
 
@@ -132,11 +133,11 @@ if __name__ ==  '__main__':
     # run tons more short sims
     shortSimParams = copy.deepcopy(params)
     print("Running short sims")
-    shortSimParams.overall_time = 5
-    shortSimParams.init_pos_max = shortSimParams.enclosure_size*0.5
-    shortSimParams.dt = 0.1
+    shortSimParams.overall_time = 2
+    shortSimParams.init_pos_max = shortSimParams.enclosure_size*1
+    shortSimParams.dt = 0.01
 
-    agentSlices = automation.runSims(controllers, params=shortSimParams, num_sims=1, threads=4, ignoreMC=False)
+    #agentSlices = automation.runSims(controllers, params=shortSimParams, num_sims=3, threads=4, ignoreMC=False)
 
 
     # sanity check, this should have 0 loss, anything else is either noise or bad measurements
@@ -156,6 +157,13 @@ if __name__ ==  '__main__':
     # print("True loss(data deviation from original on average):",true_loss)
 
     # using function currying to make this a tad more useful
+
+
+
+    # shuffle data and subsample it for optimization
+    np.random.shuffle(agentSlices)
+    agentSlicesSubsampled = agentSlices[:int(len(agentSlices)/10)]
+
     def sliceBasedFitness(agentSlices):
         def fitness(est_gains):
             est_gains = np.array(est_gains)
@@ -164,7 +172,7 @@ if __name__ ==  '__main__':
             for slice in agentSlices:
                 vel_pred = np.dot(est_gains.transpose(), np.array([slice.cohesion, slice.alignment, slice.separation, slice.steer_to_avoid, slice.rotation]))
                 vel_pred = sim.motionConstraints(vel_pred, slice.last_vel, params)
-                err = vel_pred - slice.output_vel
+                err = (vel_pred - slice.output_vel)
                 loss += np.linalg.norm(err)  # could change to MSE, but I like accounting for direction better
             if len(agentSlices) == 0:
                 return np.inf
@@ -173,10 +181,10 @@ if __name__ ==  '__main__':
         return fitness
 
 
-    fitness_function = sliceBasedFitness(agentSlices)
-    boundary = [(-1, 5), (-1, 5), (-1, 5), (-1, 5), (-1, 5)]
+    fitness_function = sliceBasedFitness(agentSlicesSubsampled)
+    boundary = [(-1, 5), (-1, 5), (-1, 5), (-1, 5), (-5, 5)]
     solution = optimize.minimize(fitness_function, (gains[0], gains[1], gains[2], gains[3], gains[4]), method='TNC', bounds=boundary,
-                                 options={'maxiter': 300000})
+                                 tol=1e-4, options={'maxiter': 300000})
     print("Parameters of the best solution : {params}".format(params=solution.x))
 
     controllers_imitated = [lss.SuperSet(solution.x[0], solution.x[1], solution.x[2], solution.x[3], solution.x[4]) for i in
