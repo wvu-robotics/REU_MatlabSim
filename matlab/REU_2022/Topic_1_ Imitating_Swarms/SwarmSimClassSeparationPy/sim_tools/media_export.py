@@ -9,6 +9,7 @@ import sim_tools.sim as sim
 import enum
 import io
 from tqdm import tqdm
+import imageio
 
 class ExportType(enum.Enum):
     NONE = 0
@@ -73,14 +74,27 @@ def plot(i,df,params=sim.SimParams(),vision_mode=False,write=False):
 
 def toGIF(name,agentPositions,params=sim.SimParams(),colors=[],vision_mode=False,progress_bar=False):
     df= toPandasFrame(agentPositions,colors=colors,params=params)
+    maxGifRate = 20
     frames =[]
-    for i in (tqdm(range(0,len(agentPositions))) if progress_bar else range(0,len(agentPositions))):
-        fig = plot(i,df,params,vision_mode,write=False)
-        fig_bytes = fig.to_image(format='png') #getting rid of file writes,slightly faster
-        buf = io.BytesIO(fig_bytes)
-        im = Image.open(buf)
-        frames.append(im)
-    frames[0].save(name+'.gif', format='GIF', append_images=frames[1:], save_all=True, duration=params.overall_time, loop=0)
+    if (1/params.dt) < maxGifRate:
+        for i in (tqdm(range(0,len(agentPositions))) if progress_bar else range(0,len(agentPositions))):
+            fig = plot(i,df,params,vision_mode,write=False)
+            fig_bytes = fig.to_image(format='png') #getting rid of file writes,slightly faster
+            buf = io.BytesIO(fig_bytes)
+            img = Image.open(buf)
+            im = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+            frames.append(img)
+    else:
+        for i in (tqdm(range(0,len(agentPositions))) if progress_bar else range(0,len(agentPositions))):
+            n_sample_frame = int(1/(params.dt*maxGifRate))
+            if (i%n_sample_frame ==0):
+                fig = plot(i,df,params,vision_mode,write=False)
+                fig_bytes = fig.to_image(format='png') #getting rid of file writes,slightly faster
+                buf = io.BytesIO(fig_bytes)
+                img = Image.open(buf)
+                im = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+                frames.append(img)
+    imageio.mimsave(name+'.gif',frames,fps = min(1/params.dt,maxGifRate)) # implement fps capping if this is good
 
 def toMP4(name,agentPositions,params=sim.SimParams(),colors=[],vision_mode=False,progress_bar=False,framecap=60):
     df= toPandasFrame(agentPositions,colors=colors,params=params)
