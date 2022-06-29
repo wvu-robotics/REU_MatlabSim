@@ -25,7 +25,6 @@ classdef AdamsLaw
 
         % Agent constraints
         neighborRadius = 120;     %m
-        neighborAngleRange = 2*pi; %rad
         k = 5; %k-nearest neighbors
         agentCeiling   = 100;    %m
         agentFloor     = 0;      %m
@@ -67,7 +66,7 @@ classdef AdamsLaw
 
         % Functions to use
         funcName_agentControl = "agentControl_KNN";
-        funcName_findNeighborhood = "findNeighborhood_KNN";
+        funcName_findNeighborhood = "findNeighborhood_KNNInFixedRadius";
         
     end
     

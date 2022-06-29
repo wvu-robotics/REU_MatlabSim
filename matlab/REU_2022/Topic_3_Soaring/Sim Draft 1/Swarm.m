@@ -80,13 +80,13 @@ classdef Swarm < handle
             SL = obj.simLaw;
             shownNeighbors = false;
             for i=1:SL.numAgents
-                if((SL.showFixedRadius || SL.showNeighbors || SL.showRange) && obj.agents(i).isAlive && ~shownNeighbors)
+                if(~shownNeighbors && (SL.showFixedRadius || SL.showNeighbors || SL.showRange) && obj.agents(i).isAlive)
                     shownNeighbors = true;
                     currentAgent = obj.agents(i);
                     localAgents = obj.funcHandle_findNeighborhood(obj,i,SL);
 
                     if(SL.showFixedRadius)
-                        theta = linspace(currentAgent.heading-SL.neighborAngleRange/2,currentAgent.heading+SL.neighborAngleRange/2,20);
+                        theta = linspace(currentAgent.heading-SL.fov/2,currentAgent.heading+SL.fov/2,20);
                         xCircle = SL.neighborRadius * cos(theta) + currentAgent.position(1);
                         yCircle = SL.neighborRadius * sin(theta) + currentAgent.position(2);
 
