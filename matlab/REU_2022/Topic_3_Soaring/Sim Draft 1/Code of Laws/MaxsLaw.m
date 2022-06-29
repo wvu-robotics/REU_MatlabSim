@@ -16,7 +16,7 @@ classdef MaxsLaw
         fov = 2*pi;                 % rad
         
         % Visuals
-        showArrow = false;          %
+        showArrow = true;          %
         renderScale = [300;300];    % [scaleX; scaleY];
         showNeighbors = true;       %
         showFixedRadius = true;     %

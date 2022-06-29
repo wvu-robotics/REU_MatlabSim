@@ -1,9 +1,11 @@
-function localAgents = findNeighborhood_KNN(swarm, agentIndex, SL)
+%% Calculates KNN using 3D-distances
+function localAgents = findNeighborhood_KNNAndFixedRadius(swarm, agentIndex, SL)
     currentAgent = swarm.agents(agentIndex);
     numAgents = SL.numAgents;
 
     % Calculate distances
     distances = Inf * ones(1,numAgents);
+    numWithinRadius = 0;
     numValidAgents = 0;
     for j=1:numAgents
         if (j==agentIndex || ~swarm.agents(j).isAlive)
@@ -21,14 +23,18 @@ function localAgents = findNeighborhood_KNN(swarm, agentIndex, SL)
             end
         end
         
-        numValidAgents = numValidAgents + 1;
         distances(j) = dist;
+        
+        if(dist <= SL.neighborRadius)
+            numWithinRadius = numWithinRadius + 1;
+        end
+        numValidAgents = numValidAgents + 1;
     end
     
     [~,distIndices] = sort(distances);
     
-    if(SL.k < numValidAgents)
-        numLocalAgents = SL.k;
+    if(numWithinRadius + SL.k < numValidAgents)
+        numLocalAgents = numWithinRadius + SL.k;
     else
         numLocalAgents = numValidAgents;
     end

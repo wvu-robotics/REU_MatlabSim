@@ -1,6 +1,7 @@
 # import sys
 # sys.path.append("..")
 import numpy as np
+from sqlalchemy import false
 import sim_tools.sim as sim
 import sim_tools.media_export as export
 import copy
@@ -183,8 +184,7 @@ if __name__ ==  '__main__':
 
     fitness_function = sliceBasedFitness(agentSlicesSubsampled)
     boundary = [(-1, 5), (-1, 5), (-1, 5), (-1, 5), (-5, 5)]
-    solution = optimize.minimize(fitness_function, (gains[0], gains[1], gains[2], gains[3], gains[4]), method='TNC', bounds=boundary,
-                                 tol=1e-4, options={'maxiter': 300000})
+    solution = optimize.differential_evolution(fitness_function, boundary, maxiter=50000000, x0=[gains[0], gains[1], gains[2], gains[3], gains[4]])
     print("Parameters of the best solution : {params}".format(params=solution.x))
 
     controllers_imitated = [lss.SuperSet(solution.x[0], solution.x[1], solution.x[2], solution.x[3], solution.x[4]) for i in
