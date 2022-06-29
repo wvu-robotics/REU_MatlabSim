@@ -132,6 +132,10 @@ function agentControl_KNN(currentAgent, localAgents, thermalStrength, target, SL
     currentAgent.rulesDir(2) = atan2(centroidUnit(2), centroidUnit(1));
     currentAgent.rulesDir(3) = atan2(alignmentVector(2), alignmentVector(1));
     currentAgent.rulesDir(4) = atan2(targetUnit(2), targetUnit(1));
+    currentAgent.rulesMag(1) = accelMag_separation;
+    currentAgent.rulesMag(2) = accelMag_cohesion;
+    currentAgent.rulesMag(3) = accelMag_alignment;
+    currentAgent.rulesMag(4) = accelMag_migration;
     
 
     forwardUnit = [cos(currentAgent.heading), sin(currentAgent.heading), 0];
@@ -165,9 +169,9 @@ function agentControl_KNN(currentAgent, localAgents, thermalStrength, target, SL
     newAccel(2) = tan(currentAgent.bankAngle)*SL.g;
     newVel(2) = newAccel(2)/newVel(1);
 
-    vsink = (SL.Sink_A*newVel(1).^2 + SL.Sink_B*newVel(1) + SL.Sink_C)...
+    currentAgent.vsink = (SL.Sink_A*newVel(1).^2 + SL.Sink_B*newVel(1) + SL.Sink_C)...
             / sqrt(cos(currentAgent.bankAngle));
-    vspeed = vsink + thermalStrength;
+    vspeed = currentAgent.vsink + thermalStrength;
 
     %% Get Pos
     newPos(1:2) = currentAgent.position(1:2) + newVel(1)*forwardUnit(1:2)*SL.dt;

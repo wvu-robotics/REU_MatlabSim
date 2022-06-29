@@ -122,8 +122,8 @@ classdef Swarm < handle
 
                     if(SL.showRange)
                         theta = linspace(0,2*pi,30);
-                        xCircleRange = 24.4 * currentAgent.position(3) * cos(theta) + currentAgent.position(1);
-                        yCircleRange = 24.4 * currentAgent.position(3) * sin(theta) + currentAgent.position(2);
+                        xCircleRange = currentAgent.velocity(1)/currentAgent.vsink * currentAgent.position(3) * cos(theta) + currentAgent.position(1);
+                        yCircleRange = currentAgent.velocity(1)/currentAgent.vsink * currentAgent.position(3) * sin(theta) + currentAgent.position(2);
 
                         if(class(obj.lineRange) == "double")
                             obj.lineRange = line();

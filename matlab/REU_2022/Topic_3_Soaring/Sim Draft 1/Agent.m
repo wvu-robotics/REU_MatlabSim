@@ -9,9 +9,15 @@ classdef Agent < handle
         velocity = [0.0, 0.0]           %m/s, rad/s, [forward,omega]
         patchObj = NaN
         patchArr = NaN
+        patchSep = NaN
+        patchCoh = NaN
+        patchAli = NaN
+        patchMig = NaN
         isAlive  = true
         accelDir = 0.0;
         rulesDir = [0.0, 0.0, 0.0, 0.0] % S, C, A, M
+        rulesMag = [0.0, 0.0, 0.0, 0.0] % S, C, A, M
+        vsink    = 0                    % m/s
 
         lastWaggle = 0;
         waggleSign = 0;
@@ -53,27 +59,44 @@ classdef Agent < handle
                 MigMatrix      = [cos(obj.rulesDir(4)), -sin(obj.rulesDir(4)); sin(obj.rulesDir(4)), cos(obj.rulesDir(4))];
                 
                 arrow = SL.Arrow;
-                arrow(1,:) = arrow(1,:) + 0.5;
-                arrow = Arrow .* SL.renderScale;
+                %arrow(1,:) = arrow(1,:) + 0.5;
+                arrow = arrow .* 0.06 .* SL.renderScale;
                 rotatedArrow = AccelMatrix * arrow;
                 rotatedArrow = rotatedArrow';
                 globalArrow = rotatedArrow + obj.position(1:2);
 
-                Sarrow = SL.Arrow .* SL.renderScale;
+                Sarrow = (SepMatrix * arrow .*obj.rulesMag(1))' + obj.position(1:2);
+                Carrow = (CohMatrix * arrow .*obj.rulesMag(2))' + obj.position(1:2);
+                Aarrow = (AliMatrix * arrow .*obj.rulesMag(3))' + obj.position(1:2);
+                Marrow = (MigMatrix * arrow .*obj.rulesMag(4))' + obj.position(1:2);
 
             end
             
             %% Do Patch Functions
             if(class(obj.patchObj) == "double")
                 if SL.showArrow
-                    obj.patchArr = patch('FaceColor',color);
+                    % obj.patchArr = patch('FaceColor',color);
+                    obj.patchSep = patch('FaceColor',[1 1 0]); % Yellow
+                    obj.patchCoh = patch('FaceColor',[1 0 1]); % Magenta
+                    obj.patchAli = patch('FaceColor',[0 1 1]); % Cyan
+                    obj.patchMig = patch('FaceColor',[1 1 1]); % White
                 end
                 obj.patchObj = patch('FaceColor',color);
             end
             if SL.showArrow
-                obj.patchArr.FaceColor = color;
-                obj.patchArr.XData = globalArrow(:,1);
-                obj.patchArr.YData = globalArrow(:,2);
+                % obj.patchArr.FaceColor = color;
+                % obj.patchArr.XData = globalArrow(:,1);
+                % obj.patchArr.YData = globalArrow(:,2);
+                obj.patchSep.XData = Sarrow(:,1);
+                obj.patchCoh.XData = Carrow(:,1);
+                obj.patchAli.XData = Aarrow(:,1);
+                obj.patchMig.XData = Marrow(:,1);
+
+                obj.patchSep.YData = Sarrow(:,2);
+                obj.patchCoh.YData = Carrow(:,2);
+                obj.patchAli.YData = Aarrow(:,2);
+                obj.patchMig.YData = Marrow(:,2);
+
             end
             obj.patchObj.FaceColor = color;
             obj.patchObj.XData = globalShape(:,1);
@@ -81,7 +104,11 @@ classdef Agent < handle
             if ~obj.isAlive
                 obj.patchObj.Visible = 'off';
                 if SL.showArrow
-                    obj.patchArr.Visible = 'off';
+                    %obj.patchArr.Visible = 'off';
+                    obj.patchSep.Visible = 'off';
+                    obj.patchCoh.Visible = 'off';
+                    obj.patchAli.Visible = 'off';
+                    obj.patchMig.Visible = 'off';
                 end
             end
 
