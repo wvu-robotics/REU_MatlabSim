@@ -23,19 +23,19 @@
 %                            50 = very high number of agents
 
 %% SAVE DATA ???????????
-save_data = 0; % if 0 then DO NOT SAVE DATA
+save_data = 1; % if 0 then DO NOT SAVE DATA
                % if 1 then SAVE DATA
                
 %% estimator parameters
 itterations = 100; %number of itterations per experiment
-headless = 0;
+headless = save_data;
 
 %% run experiments
 
 %runs every permuation of the specified experiment parameters
-for num_agents = [5,10,25,50]    %[5,10,25,50] range of number of agent experiments
+for num_agents = [50]    %[5,10,25,50] range of number of agent experiments
     for enviorment = 0   % [0,1] enviroment type to use
-        for boids_rules = [1,2]   %[0,1,2] boids rules to use
+        for boids_rules = [2]   %[0,1,2] boids rules to use
             for estimator = [0,1,2]  %[0,1,2,3] all estimators to use
                 %% file name generator
                 %creates the file path to save the data to
@@ -80,13 +80,15 @@ for num_agents = [5,10,25,50]    %[5,10,25,50] range of number of agent experime
                 
                 %% static gains 
                 % [Ka,Ks,Kc,Kh,Kg]
-                gains.Ka =  .61102;
-                gains.Ks = 9.9236;
-                gains.Kc = 9.6478;
-                gains.Kh = 3.2343;
-                gains.Kg = 9.9235;
-               
-
+                if rule == 1
+                gains_file_name = "gains/" + est + rule + env + " " + num + ".mat"
+                load(gains_file_name);
+                [min_cost_gains,min_index] = min(COST);
+                static_gains = GAINS(:,min_index);
+                else
+                    static_gains = [1,1,1,1,1];
+                end
+            
                 %% result parameters
                 % arrays holding all the values from every itteration of
                 % each experiment
@@ -98,11 +100,11 @@ for num_agents = [5,10,25,50]    %[5,10,25,50] range of number of agent experime
                 FALSE_GOALS_REACHED = [];
                 
                 %% simulations
-                for s = 1:itterations
+                parfor s = 1:itterations
                     fprintf('simulation number, %i', s);
                     %run the experiment
                     [cost, avg_mean_error, avg_covar, avg_path_deviation, avg_goals_reached, avg_false_goals_reached] = ...
-                        experiments(estimator,boids_rules,enviorment,headless,num_agents,gains);
+                        experiments(estimator,boids_rules,enviorment,headless,num_agents,static_gains);
                     
                     %record the results for this experiment itteration
                     COST = [COST, cost];

@@ -11,7 +11,8 @@ classdef Agent < handle
         patchArr = NaN
         isAlive  = true
         accelDir = 0.0;
-        
+        rulesDir = [0.0, 0.0, 0.0, 0.0] % S, C, A, M
+
         lastWaggle = 0;
         waggleSign = 0;
         
@@ -43,11 +44,23 @@ classdef Agent < handle
             
             %% Calculate Acceleration Direction
             if SL.showArrow
+                
+
                 AccelMatrix    = [cos(obj.accelDir), -sin(obj.accelDir); sin(obj.accelDir), cos(obj.accelDir)];
-                arrow = SL.Arrow .* SL.renderScale;
+                SepMatrix      = [cos(obj.rulesDir(1)), -sin(obj.rulesDir(1)); sin(obj.rulesDir(1)), cos(obj.rulesDir(1))];
+                CohMatrix      = [cos(obj.rulesDir(2)), -sin(obj.rulesDir(2)); sin(obj.rulesDir(2)), cos(obj.rulesDir(2))];
+                AliMatrix      = [cos(obj.rulesDir(3)), -sin(obj.rulesDir(3)); sin(obj.rulesDir(3)), cos(obj.rulesDir(3))];
+                MigMatrix      = [cos(obj.rulesDir(4)), -sin(obj.rulesDir(4)); sin(obj.rulesDir(4)), cos(obj.rulesDir(4))];
+                
+                arrow = SL.Arrow;
+                arrow(1,:) = arrow(1,:) + 0.5;
+                arrow = Arrow .* SL.renderScale;
                 rotatedArrow = AccelMatrix * arrow;
                 rotatedArrow = rotatedArrow';
                 globalArrow = rotatedArrow + obj.position(1:2);
+
+                Sarrow = SL.Arrow .* SL.renderScale;
+
             end
             
             %% Do Patch Functions

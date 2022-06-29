@@ -128,7 +128,10 @@ function agentControl_KNN(currentAgent, localAgents, thermalStrength, target, SL
 
     newAccel(3) = 0; % removes z component
     currentAgent.accelDir = atan2(newAccel(2), newAccel(1));
-    
+    currentAgent.rulesDir(1) = atan2(separationVector(2), separationVector(1));
+    currentAgent.rulesDir(2) = atan2(centroidUnit(2), centroidUnit(1));
+    currentAgent.rulesDir(3) = atan2(alignmentVector(2), alignmentVector(1));
+    currentAgent.rulesDir(4) = atan2(targetUnit(2), targetUnit(1));
     
 
     forwardUnit = [cos(currentAgent.heading), sin(currentAgent.heading), 0];
