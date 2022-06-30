@@ -5,12 +5,19 @@ classdef Swarm < handle
         simLaw
         funcHandle_agentControl
         funcHandle_findNeighborhood
-        
+        thisAgent = 0;
         thermalMap
         
         lineCircle = NaN
         lineNeighbors = NaN
         lineRange = NaN
+        patchSep = NaN
+        patchCoh = NaN
+        patchAli = NaN
+        patchMig = NaN
+        patchWag = NaN
+
+        textAnnt = NaN
     end
     
     methods
@@ -83,8 +90,10 @@ classdef Swarm < handle
                 if(~shownNeighbors && (SL.showFixedRadius || SL.showNeighbors || SL.showRange) && obj.agents(i).isAlive)
                     shownNeighbors = true;
                     currentAgent = obj.agents(i);
+                    obj.thisAgent = i;
                     localAgents = obj.funcHandle_findNeighborhood(obj,i,SL);
-
+                    
+                    %% Show Vision Radius
                     if(SL.showFixedRadius)
                         theta = linspace(currentAgent.heading-SL.fov/2,currentAgent.heading+SL.fov/2,20);
                         xCircle = SL.neighborRadius * cos(theta) + currentAgent.position(1);
@@ -100,7 +109,7 @@ classdef Swarm < handle
                         end
                     end
 
-                    % this was commented?
+                    %% Show Lines to Neighbors
                     if(SL.showNeighbors)
                         numLocalAgents = size(localAgents,2);
                         linePoints = zeros(2,2*numLocalAgents+1);
@@ -119,7 +128,8 @@ classdef Swarm < handle
                         obj.lineNeighbors.XData = linePoints(1,:);
                         obj.lineNeighbors.YData = linePoints(2,:);
                     end
-
+                    
+                    %% Show Flight Range
                     if(SL.showRange)
                         theta = linspace(0,2*pi,30);
                         xCircleRange = currentAgent.velocity(1)/currentAgent.vsink * currentAgent.position(3) * cos(theta) + currentAgent.position(1);
@@ -138,10 +148,92 @@ classdef Swarm < handle
                         end
 
                     end
+                    
+                    %% Show Acceleration Arrows...
+                    if(SL.showArrow)
+                        %% Calc Arrows
+                        SepMatrix      = [cos(currentAgent.rulesDir(1)), -sin(currentAgent.rulesDir(1)); sin(currentAgent.rulesDir(1)), cos(currentAgent.rulesDir(1))];
+                        CohMatrix      = [cos(currentAgent.rulesDir(2)), -sin(currentAgent.rulesDir(2)); sin(currentAgent.rulesDir(2)), cos(currentAgent.rulesDir(2))];
+                        AliMatrix      = [cos(currentAgent.rulesDir(3)), -sin(currentAgent.rulesDir(3)); sin(currentAgent.rulesDir(3)), cos(currentAgent.rulesDir(3))];
+                        MigMatrix      = [cos(currentAgent.rulesDir(4)), -sin(currentAgent.rulesDir(4)); sin(currentAgent.rulesDir(4)), cos(currentAgent.rulesDir(4))];
+                        %WagMatrix      = [cos(currentAgent.rulesDir(5)), -sin(currentAgent.rulesDir(5)); sin(currentAgent.rulesDir(5)), cos(currentAgent.rulesDir(5))];
+
+                        arrow = SL.Arrow;
+                        arrow = arrow .* SL.renderScale .* 0.6;
+                        scalingFactor = max(max(currentAgent.rulesMag),1);
+                        Sarrow = (SepMatrix * arrow .* currentAgent.rulesMag(1) ./ scalingFactor)' + currentAgent.position(1:2);
+                        Carrow = (CohMatrix * arrow .* currentAgent.rulesMag(2) ./ scalingFactor)' + currentAgent.position(1:2);
+                        Aarrow = (AliMatrix * arrow .* currentAgent.rulesMag(3) ./ scalingFactor)' + currentAgent.position(1:2);
+                        Marrow = (MigMatrix * arrow .* currentAgent.rulesMag(4) ./ scalingFactor)' + currentAgent.position(1:2);
+                        %Warrow = (WagMatrix * arrow .* currentAgent.rulesMag(5) ./ scalingFactor)' + currentAgent.position(1:2);
+
+                        %% Create Arrows
+                        if(class(currentAgent.patchObj) == "double")
+                            % obj.patchArr = patch('FaceColor',color);
+                            obj.patchSep = patch('FaceColor',[1 1 0]); % Yellow
+                            obj.patchCoh = patch('FaceColor',[1 0 1]); % Magenta
+                            obj.patchAli = patch('FaceColor',[0 1 1]); % Cyan
+                            obj.patchMig = patch('FaceColor',[1 1 1]); % White
+                            %obj.patchWag = patch('FaceColor',[.5 .5 .5]); % Gray
+                        end
+
+                        %% Position Arrows
+                        obj.patchSep.XData = Sarrow(:,1);
+                        obj.patchCoh.XData = Carrow(:,1);
+                        obj.patchAli.XData = Aarrow(:,1);
+                        obj.patchMig.XData = Marrow(:,1);
+                        %obj.patchWag.XData = Warrow(:,1);
+        
+                        obj.patchSep.YData = Sarrow(:,2);
+                        obj.patchCoh.YData = Carrow(:,2);
+                        obj.patchAli.YData = Aarrow(:,2);
+                        obj.patchMig.YData = Marrow(:,2);
+                        %obj.patchWag.YData = Warrow(:,2);
+
+                    end
+                    
+                    %% Text Box
+                    if true
+                        textStr = sprintf('Speed: %2.0fm/s\nBank: %+3.0fdeg\nSink: %1.1fm/s',currentAgent.velocity(1), currentAgent.bankAngle*180/pi,currentAgent.vsink);
+                        if(class(obj.textAnnt) == "double")
+                            obj.textAnnt = annotation('textbox');
+                            obj.textAnnt.FontName = 'FixedWidth';
+                            obj.textAnnt.BackgroundColor = [1 0 1];
+                            obj.textAnnt.FaceAlpha = 0.75;
+                            obj.textAnnt.Position = [0.55 0.75 0.25 0.15];
+                        end
+                        obj.textAnnt.String = textStr;
+
+                    end
+   
                 end
                 
                 obj.agents(i).render();
             end
+        end
+        
+        function [maxHeight, minHeight, avgHeight] = getHeights(obj)
+            SL = obj.simLaw;
+            
+            maxHeightIndex = 0;
+            maxHeight = SL.agentFloor;
+            minHeightIndex = 0;
+            minHeight = SL.agentCeiling;
+            avgHeight = 0;
+            
+            for i=1:SL.numAgents
+                currentHeight = obj.agents(i).position(3);
+                if(currentHeight > maxHeight)
+                    maxHeightIndex = i;
+                    maxHeight = currentHeight;
+                end
+                if(currentHeight < minHeight)
+                    minHeightIndex = i;
+                    minHeight = currentHeight;
+                end
+                avgHeight = avgHeight + currentHeight;
+            end
+            avgHeight = avgHeight / SL.numAgents;
         end
     end
 end

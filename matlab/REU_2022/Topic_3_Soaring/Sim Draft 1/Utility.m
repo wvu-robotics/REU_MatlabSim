@@ -58,12 +58,7 @@ classdef Utility
 
         %% Mid of Min and Max
         function mid = midMinMax(num, min, max)
-            if num > max
-                num = max;
-            elseif num < min
-                num = min;
-            end
-            mid = num;
+            mid = min(max(num,min),max);
         end
     end
 end

@@ -6,7 +6,6 @@ classdef MaxsLaw
         fpsMult = 15;               % x Real Time
         numThermals = 6;            % thermals
         neighborRadius = 1000;      % m
-        neighborAngleRange = 2*pi; %rad
         k = 5;                      % number of nearest neighbors
         frameSkip = 5;              % render every nth frame
         forwardInertia = 10;        %
@@ -14,6 +13,8 @@ classdef MaxsLaw
         bankMax = 2*pi/12;          % rad
         bankInertia = 1;            %
         fov = 2*pi;                 % rad
+        forwardSpeedMin = 5;        % m/s
+        forwardSpeedMax = 20;       % m/s
         
         % Visuals
         showArrow = true;          %
@@ -23,7 +24,7 @@ classdef MaxsLaw
         showRange = true;           %
 
         % Functions to use
-        funcName_agentControl     = "agentControl_KNN";
+        funcName_agentControl     = "agentControl_Max";
         funcName_findNeighborhood = "findNeighborhood_KNN";
 
         % Thermal constraints
@@ -53,6 +54,7 @@ classdef MaxsLaw
         waggle = pi/48;             % Radians of bank
         waggleTime = 1;             % Seconds of waggle bank        
         numAgents = 40;             % agents
+        
 
         %% Not to Change
         % Initial conditions
@@ -71,13 +73,12 @@ classdef MaxsLaw
 
         % Thermal constraints
         CMColors = [6 42 127; 41 76 247; 102 59 231; 162 41 216; 222 24 200; 255 192 203] / 255;
-        thermalPixels = 200
+        thermalPixels = 50
         
         % Agent Constants
         agentCeiling   = 2600;      % m
         agentFloor     = 0;         % m
-        forwardSpeedMin = 5;        % m/s
-        forwardSpeedMax = 20;       % m/s
+
         Sink_A = -0.01843;          %
         Sink_B = 0.3782;            %
         Sink_C = -2.3782;           %
