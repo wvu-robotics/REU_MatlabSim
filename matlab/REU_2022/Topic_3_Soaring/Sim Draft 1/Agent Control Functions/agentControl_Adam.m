@@ -16,7 +16,7 @@ function agentControl_KNN(currentAgent, localAgents, thermalStrength, target, SL
         %% Get Centroid
         % Centroid: 2D, scaled linearly by distance
         centroid = [0,0,0];
-        distances2D = 1E6 * ones(1,numLocalAgents);
+        distances2D = Inf * ones(1,numLocalAgents);
         centroidWeight = 0;
         for i = 1:numLocalAgents
             if localAgents(i).savedPosition(3) <= 0
@@ -54,46 +54,34 @@ function agentControl_KNN(currentAgent, localAgents, thermalStrength, target, SL
             accelMag_cohesion   = SL.cohesion * distToCentroid^2;
         end
         
-        % Find k-nearest neighbors(KNN)
-        k = 10;
-        if(numLocalAgents < k)
-            NNIndices = 1:numLocalAgents;
-            numNN = numLocalAgents;
-        else
-            [~,distSortIndices] = sort(distances2D);
-            NNIndices = distSortIndices(1:k);
-            numNN = k;
-        end
-        
         % Separation and alignment
         separationVector = [0,0,0];
         alignmentVector = [0,0,0];
         
-        for i=1:numNN
-            NNIndex = NNIndices(i);
-            NNAgent = localAgents(NNIndex);
-            diffNNAgent = NNAgent.savedPosition - currentAgent.position;
-            diffNNHeight = diffNNAgent(3);
-            diffNNAgent(3) = 0;
-            distNNAgent = norm(diffNNAgent);
-            distNNAgentScaled = distNNAgent/SL.neighborRadius;
-            diffUnitNNAgent = diffNNAgent/distNNAgent;
-            NNAgentHeading = NNAgent.savedHeading;
+        for i=1:numLocalAgents
+            otherAgent = localAgents(i);
+            diff = otherAgent.savedPosition - currentAgent.position;
+            diffHeight = diff(3);
+            diff(3) = 0;
+            dist = norm(diff);
+            distScaled = dist/SL.neighborRadius;
+            diffUnit = diff/dist;
+            otherHeading = otherAgent.savedHeading;
             
-            velUnitNNAgent = [cos(NNAgentHeading),sin(NNAgentHeading),0];
+            velUnitOther = [cos(otherHeading),sin(otherHeading),0];
             
-            weightSep = 1/distNNAgentScaled^2 - 1;
+            weightSep = 1/distScaled^2 - 1;
             weightAlign = 1;
-            if(norm(diffNNHeight) > SL.separationHeightGap)
+            if(norm(diffHeight) > SL.separationHeightGap)
                 weightSep = 0;
                 weightAlign = 0;
             end
-            separationVector = separationVector - weightSep*diffUnitNNAgent;
-            alignmentVector = alignmentVector + weightAlign*velUnitNNAgent;
+            separationVector = separationVector - weightSep*diffUnit;
+            alignmentVector = alignmentVector + weightAlign*velUnitOther;
         end
         
-        separationVector = separationVector / numNN;
-        alignmentVector = alignmentVector / numNN;
+        separationVector = separationVector / numLocalAgents;
+        alignmentVector = alignmentVector / numLocalAgents;
         
         accelMag_separation = SL.separation;
         accelMag_alignment  = SL.alignment;

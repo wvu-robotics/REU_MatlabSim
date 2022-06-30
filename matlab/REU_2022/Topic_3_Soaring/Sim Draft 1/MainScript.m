@@ -96,24 +96,13 @@ for step = 1:steps
     Living = nnz([swarm.agents.isAlive]);
     fprintf("%g Agents, ", Living);
     
-    maxHeight = SL.agentFloor;
-    minHeight = SL.agentCeiling;
-    averageHeight = 0;
-    for i=1:SL.numAgents
-        currentHeight = swarm.agents(i).position(3);
-        maxHeight = max(maxHeight,currentHeight);
-        if(currentHeight > 0)
-            minHeight = min(minHeight,currentHeight);
-        end
-        averageHeight = averageHeight + currentHeight;
-    end
-    averageHeight = averageHeight / SL.numAgents;
+    [maxHeight, minHeight, avgHeight] = swarm.getHeights();
     
     maxHeights(step) = maxHeight;
     minHeights(step) = minHeight;
-    avgHeights(step) = averageHeight;
+    avgHeights(step) = avgHeight;
     
-    stringTitle = sprintf("Agents Alive: %g\nMax Height: %.1f\nMin Height: %.1f\nAverage Height: %.1f",Living,maxHeight,minHeight,averageHeight);
+    stringTitle = sprintf("Agents Alive: %g\nMax Height: %.1f\nMin Height: %.1f\nAverage Height: %.1f",Living,maxHeight,minHeight,avgHeight);
     title(stringTitle);
     
 

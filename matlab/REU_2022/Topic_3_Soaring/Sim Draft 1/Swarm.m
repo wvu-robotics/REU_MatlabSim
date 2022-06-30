@@ -211,5 +211,29 @@ classdef Swarm < handle
                 obj.agents(i).render();
             end
         end
+        
+        function [maxHeight, minHeight, avgHeight] = getHeights(obj)
+            SL = obj.simLaw;
+            
+            maxHeightIndex = 0;
+            maxHeight = SL.agentFloor;
+            minHeightIndex = 0;
+            minHeight = SL.agentCeiling;
+            avgHeight = 0;
+            
+            for i=1:SL.numAgents
+                currentHeight = obj.agents(i).position(3);
+                if(currentHeight > maxHeight)
+                    maxHeightIndex = i;
+                    maxHeight = currentHeight;
+                end
+                if(currentHeight < minHeight)
+                    minHeightIndex = i;
+                    minHeight = currentHeight;
+                end
+                avgHeight = avgHeight + currentHeight;
+            end
+            avgHeight = avgHeight / SL.numAgents;
+        end
     end
 end
