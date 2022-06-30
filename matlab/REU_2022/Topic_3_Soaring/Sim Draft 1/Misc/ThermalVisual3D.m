@@ -8,87 +8,79 @@ videoName = ("ThermalVisual.avi");
 
 %% Setup video and figure
 %Create video
-dt = 0.1;
+dt = 0.02;
 video = VideoWriter(videoName);
-video.FrameRate = dt;
+video.FrameRate = 1/dt;
 open(video);
 
 %Create frame
 simFig = figure('Visible','on');
 
 %% Prepare data
-steps = 200;
 mapSize = [-1000,1000];
-thermalResolution = 100;
-fadeCyclePeriod = 2;
+thermalRes = 100;
+thermalPos = [0,0];
+thermalRad = 800;
+thermalMaxStrength = 10;
+
+numCycles = 1;
+cycleFadeTime = 4; %s, time to individually fade in or out
+cycleUpTime = 4; %s
+cycleDownTime = 2;
+
+cycleTotal = 2*cycleFadeTime + cycleUpTime + cycleDownTime;
+steps = numCycles * cycleTotal / dt;
+
+[X,Y,mapStrength] = getMapStrength(thermalMaxStrength, mapSize, thermalRes, thermalPos, thermalRad);
+minStr = min(min(mapStrength));
+maxStr = max(max(mapStrength));
+
+surface = NaN;
 
 %% Run simulation
 for step = 1:steps
-
-    thermalPos = [0,0];
-    thermalRad = 800;
-    thermalStrength = 10;
-
-    side = linspace(mapSize(1),mapSize(2),thermalResolution);
-    [X,Y] = meshgrid(side,side);
-
-    %x = exp(-(3*distTherm/radius)^2);
-    %y = (1-(3*distTherm/radius)^2);
-    distTherm = sqrt((X-thermalPos(1)).^2 + (Y-thermalPos(2)).^2);
-    mapStrength = thermalStrength .* exp(-(3*distTherm/thermalRad).^2) .* (1-(3*distTherm/thermalRad).^2);
+    fprintf("Step %g/%g\n",step,steps);
+    
+    time = step*dt;
+    relTime = mod(time,cycleTotal);
+    
+    if(relTime < cycleFadeTime)
+        thermalStrength = interp1([0,cycleFadeTime],[0,thermalMaxStrength],relTime,'linear');
+    elseif(relTime < cycleFadeTime + cycleUpTime)
+        thermalStrength = thermalMaxStrength;
+    elseif(relTime < 2*cycleFadeTime + cycleUpTime)
+        thermalStrength = interp1([cycleFadeTime + cycleUpTime,2*cycleFadeTime + cycleUpTime],[thermalMaxStrength,0],relTime,'linear');
+    else
+        thermalStrength = 0;
+    end
+    
+    [X,Y,mapStrength] = getMapStrength(thermalStrength, mapSize, thermalRes, thermalPos, thermalRad);
     color = mapStrength;
-    surf(X,Y,mapStrength,color);
+    if(class(surface) == "double")
+        surface = surf(X,Y,mapStrength,color);
+    end
+    surface.ZData = mapStrength;
+    surface.CData = mapStrength;
     colorbar;
+    
+    zlim([minStr, maxStr]);
+    caxis([minStr, maxStr]);
 
     xlabel("X-Position (m)");
     ylabel("Y-Position (m)");
     zlabel("Updraft Velocity (m/s)");
 
-    
-    
     % Save video frame
     currFrame = getframe(simFig);
     writeVideo(video,currFrame);
-    pause(0.0001);
-    
-    % Step simulation
-    thermalMap.staticStep();
-    swarm.saveAgentData();
-    swarm.stepSimulation();
-    
-    % Print number of Living Agents
-    Living = nnz([swarm.agents.isAlive]);
-    fprintf("%g Agents, ", Living);
-    
-    maxHeight = SL.agentFloor;
-    minHeight = SL.agentCeiling;
-    averageHeight = 0;
-    for i=1:SL.numAgents
-        currentHeight = swarm.agents(i).position(3);
-        maxHeight = max(maxHeight,currentHeight);
-        if(currentHeight > 0)
-            minHeight = min(minHeight,currentHeight);
-        end
-        averageHeight = averageHeight + currentHeight;
-    end
-    averageHeight = averageHeight / SL.numAgents;
-    
-    maxHeights(step) = maxHeight;
-    minHeights(step) = minHeight;
-    avgHeights(step) = averageHeight;
-    
-    stringTitle = sprintf("Agents Alive: %g\nMax Height: %.1f\nMin Height: %.1f\nAverage Height: %.1f",Living,maxHeight,minHeight,averageHeight);
-    title(stringTitle);
-    
-
-    % Find and print elapsed time
-    c2 = clock;
-    elapsedTime = c2(6)-c1(6);
-    % If minute advances, elapsedTime will appear negative (1min20sec - 0min50sec = 20sec-50sec = -30sec)
-    if(elapsedTime < 0) 
-        elapsedTime = elapsedTime + 60;
-    end
-    fprintf("%g sec\n",elapsedTime);
 end
 
 close(video);
+
+function [X,Y,mapStrength] = getMapStrength(currStrength, mapSize, thermalRes, thermalPos, thermalRad)
+    side = linspace(mapSize(1),mapSize(2),thermalRes);
+    [X,Y] = meshgrid(side,side);
+
+    distTherm = sqrt((X-thermalPos(1)).^2 + (Y-thermalPos(2)).^2);
+    mapStrength = currStrength .* exp(-(3*distTherm/thermalRad).^2) .* (1-(3*distTherm/thermalRad).^2);
+end
