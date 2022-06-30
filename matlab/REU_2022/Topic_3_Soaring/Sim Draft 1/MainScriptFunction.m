@@ -54,8 +54,8 @@ if render
 
     %% Setup video and figure
 %     videoPrefix = sprintf('[dt %g, T %g, x%g] ',simLaw.dt, simLaw.totalTime, simLaw.fpsMult);
-    videoPrefix = "BIG";
-    videoSuffix = time;
+    videoPrefix = "COOL";
+    videoSuffix = sprintf('%02g',Param(1));
 %    videoSuffix = sprintf('%1.0E, %1.0E, %1.0E', simLaw.separation, simLaw.cohesion, simLaw.alignment);
     videoName = sprintf('%s/%s %s.avi',dateFolder,videoPrefix,videoSuffix);
 
@@ -164,19 +164,44 @@ end
 
 %% Write to Log
 
-% Date	Time	Separation	Cohesion	Alignment	
-% Migration	Height-Priority	Height-Ignore	dt	Waggle-Strength	
-% Waggle-Time	# of Agents	Total-Time	# of Thermals	Neighbor-Radius	
-% 	K	FOV	Surviving	Average Z of survivors	
-% Flight Time
+% Date
+% Time
+
+% Separation
+% Cohesion
+% Alignment	
+% Migration
+% Height-Priority
+% Height-Ignore
+% Waggle-Strength	
+% Waggle-Time
+% K of KNN (Finding Neighborhood)
+
+% dt
+% Total-Time
+% # of Agents
+% # of Thermals
+% Neighbor-Radius
+% FOV
+% Control Function
+% Neighborhood Function
+% Speed Min
+% Speed Max
+
+% Surviving
+% Average Z of survivors
+% Flight Time (Score)
+   
 
 timeFormat2 = "HH:MM:SS";
 time = datestr(now,timeFormat2);
 
-Log = {date, time, SL.separation, SL.cohesion, SL.alignment,...
-       SL.migration, SL.cohesionHeightMult, SL.separationHeightGap, SL.dt, SL.waggle,...
-       SL.waggleTime, SL.numAgents, SL.totalTime, SL.numThermals, SL.neighborRadius,...
-       SL.k, SL.fov, surviving, average, flightTime};
+Log = {date, time,...
+       SL.separation, SL.cohesion, SL.alignment,SL.migration,...
+       SL.cohesionHeightMult, SL.separationHeightGap, SL.waggle, SL.waggleTime, SL.k,...
+       SL.dt, SL.totalTime,SL.numAgents, SL.numThermals, SL.neighborRadius,...
+       SL.fov, SL.funcName_agentControl, SL.funcName_findNeighborhood, SL.forwardSpeedMin, SL.forwardSpeedMax,...
+       surviving, average, flightTime};
 
 
 end

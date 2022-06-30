@@ -1,6 +1,6 @@
 % Ind S, C, A, M, hPriority, hIgnore, dt, Waggle Str, Waggle Time, NAgents
-ParamMatrix = readmatrix("Params.xlsx","Range","A2:K2");
-render  = true;
+ParamMatrix = readmatrix("Params.xlsx","Range","A2:K25");
+render  = false;
 plot    = false;
 Write   = true;
 
@@ -9,11 +9,11 @@ average   = zeros(1,N);
 surviving = average;
 Time      = surviving;
 ToD       = zeros(max(ParamMatrix(:,11)),N);
-Log       = cell(N, 20);
+Log       = cell(N, 24);
 tic
 
 % parfor if render is false, for if render is true
-for i = 1:N
+parfor i = 1:N
     [average(i), surviving(i), Time(i), ToD(:,i), Log(i,:)] = MainScriptFunction(ParamMatrix(i,:), render);
 end
 if render

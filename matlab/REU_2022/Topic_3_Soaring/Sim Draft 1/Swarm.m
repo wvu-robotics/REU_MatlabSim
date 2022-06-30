@@ -156,7 +156,7 @@ classdef Swarm < handle
                         CohMatrix      = [cos(currentAgent.rulesDir(2)), -sin(currentAgent.rulesDir(2)); sin(currentAgent.rulesDir(2)), cos(currentAgent.rulesDir(2))];
                         AliMatrix      = [cos(currentAgent.rulesDir(3)), -sin(currentAgent.rulesDir(3)); sin(currentAgent.rulesDir(3)), cos(currentAgent.rulesDir(3))];
                         MigMatrix      = [cos(currentAgent.rulesDir(4)), -sin(currentAgent.rulesDir(4)); sin(currentAgent.rulesDir(4)), cos(currentAgent.rulesDir(4))];
-                        WagMatrix      = [cos(currentAgent.rulesDir(5)), -sin(currentAgent.rulesDir(5)); sin(currentAgent.rulesDir(5)), cos(currentAgent.rulesDir(5))];
+                        %WagMatrix      = [cos(currentAgent.rulesDir(5)), -sin(currentAgent.rulesDir(5)); sin(currentAgent.rulesDir(5)), cos(currentAgent.rulesDir(5))];
 
                         arrow = SL.Arrow;
                         arrow = arrow .* SL.renderScale .* 0.6;
@@ -165,7 +165,7 @@ classdef Swarm < handle
                         Carrow = (CohMatrix * arrow .* currentAgent.rulesMag(2) ./ scalingFactor)' + currentAgent.position(1:2);
                         Aarrow = (AliMatrix * arrow .* currentAgent.rulesMag(3) ./ scalingFactor)' + currentAgent.position(1:2);
                         Marrow = (MigMatrix * arrow .* currentAgent.rulesMag(4) ./ scalingFactor)' + currentAgent.position(1:2);
-                        Warrow = (WagMatrix * arrow .* currentAgent.rulesMag(5) ./ scalingFactor)' + currentAgent.position(1:2);
+                        %Warrow = (WagMatrix * arrow .* currentAgent.rulesMag(5) ./ scalingFactor)' + currentAgent.position(1:2);
 
                         %% Create Arrows
                         if(class(currentAgent.patchObj) == "double")
@@ -174,7 +174,7 @@ classdef Swarm < handle
                             obj.patchCoh = patch('FaceColor',[1 0 1]); % Magenta
                             obj.patchAli = patch('FaceColor',[0 1 1]); % Cyan
                             obj.patchMig = patch('FaceColor',[1 1 1]); % White
-                            obj.patchWag = patch('FaceColor',[.5 .5 .5]); % Gray
+                            %obj.patchWag = patch('FaceColor',[.5 .5 .5]); % Gray
                         end
 
                         %% Position Arrows
@@ -182,25 +182,25 @@ classdef Swarm < handle
                         obj.patchCoh.XData = Carrow(:,1);
                         obj.patchAli.XData = Aarrow(:,1);
                         obj.patchMig.XData = Marrow(:,1);
-                        obj.patchWag.XData = Warrow(:,1);
+                        %obj.patchWag.XData = Warrow(:,1);
         
                         obj.patchSep.YData = Sarrow(:,2);
                         obj.patchCoh.YData = Carrow(:,2);
                         obj.patchAli.YData = Aarrow(:,2);
                         obj.patchMig.YData = Marrow(:,2);
-                        obj.patchWag.YData = Warrow(:,2);
+                        %obj.patchWag.YData = Warrow(:,2);
 
                     end
                     
                     %% Text Box
                     if true
-                        textStr = sprintf('Speed: %2.0fm/s\nBank: %+3.0fdeg',currentAgent.velocity(1), currentAgent.bankAngle*180/pi);
+                        textStr = sprintf('Speed: %2.0fm/s\nBank: %+3.0fdeg\nSink: %1.1fm/s',currentAgent.velocity(1), currentAgent.bankAngle*180/pi,currentAgent.vsink);
                         if(class(obj.textAnnt) == "double")
                             obj.textAnnt = annotation('textbox');
                             obj.textAnnt.FontName = 'FixedWidth';
                             obj.textAnnt.BackgroundColor = [1 0 1];
                             obj.textAnnt.FaceAlpha = 0.75;
-                            obj.textAnnt.Position = [0.55 0.8 0.2 0.1];
+                            obj.textAnnt.Position = [0.55 0.75 0.25 0.15];
                         end
                         obj.textAnnt.String = textStr;
 
