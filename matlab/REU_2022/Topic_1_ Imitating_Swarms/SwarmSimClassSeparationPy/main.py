@@ -13,11 +13,11 @@ from models import linearSuperSet as lss
 #all parameters for simulation
 params = sim.SimParams(
     num_agents=40, 
-    dt=0.1, 
+    dt=0.01, 
     overall_time = 30, 
     enclosure_size = 15, 
     init_pos_max= None, #if None, then defaults to enclosure_size
-    agent_max_vel=5,
+    agent_max_vel=9,
     init_vel_max = None,
     agent_max_accel=np.inf,
     agent_max_turn_rate=np.inf,
@@ -27,7 +27,7 @@ params = sim.SimParams(
 
 if __name__ ==  '__main__':
     #define list of controllers
-    controllers= [sc.Boids(3,1,2,1,params=params) for i in range(params.num_agents)]
+    controllers= [lss.SuperSet(5,5,5,5,5,params=params) for i in range(params.num_agents)]
 
     #if you want to do coloring by agent
     for controller in controllers:
@@ -40,7 +40,7 @@ if __name__ ==  '__main__':
     print("Sim finished -- Generating media")
 
     #export types, NONE, INTERACTIVE, GIF, MP4
-    media_type = export.ExportType.MP4
+    media_type = export.ExportType.GIF
 
     export.export(media_type,"new",agentPositions,agentVels,controllers=controllers,params=params,vision_mode=False,progress_bar=True)
     print("Media generated")

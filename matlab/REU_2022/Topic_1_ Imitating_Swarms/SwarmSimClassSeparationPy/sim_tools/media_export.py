@@ -82,6 +82,7 @@ def plotToBytes(i,df,params=sim.SimParams(),vision_mode=False,write=False):
     im = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
     return im
 
+# can also be multiprocessed
 def toGIF(name,agentPositions,params=sim.SimParams(),colors=[],vision_mode=False,progress_bar=False):
     df= toPandasFrame(agentPositions,colors=colors,params=params)
     maxGifRate = 20
