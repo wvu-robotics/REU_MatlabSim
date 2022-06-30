@@ -174,7 +174,8 @@ function agentControl_KNN(currentAgent, localAgents, thermalStrength, target, SL
     end
     currentAgent.heading = currentAgent.heading + newVel(2)*SL.dt;
 
-    currentAgent.velocity = newVel;
+    currentAgent.velocity(1:2) = newVel;
+    currentAgent.velocity(3) = vspeed;
     currentAgent.position = newPos;
     if(isnan(newPos(3)))
         fprintf("NAN\n");

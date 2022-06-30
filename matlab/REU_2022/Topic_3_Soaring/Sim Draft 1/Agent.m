@@ -6,7 +6,7 @@ classdef Agent < handle
         position = [0.0, 0.0, 0.0]      %m, [x,y,z]
         heading = 0.0                   %rad
         bankAngle = 0.0                 %rad
-        velocity = [0.0, 0.0]           %m/s, rad/s, [forward,omega]
+        velocity = [0.0, 0.0, 0.0]           %m/s, rad/s, [forward,omega]
         patchObj = NaN
 
         isAlive  = true
@@ -19,7 +19,7 @@ classdef Agent < handle
         waggleSign = 0;
         
         savedPosition = [0.0, 0.0, 0.0]
-        savedVelocity = [0.0, 0.0]
+        savedVelocity = [0.0, 0.0, 0.0]
         savedHeading = 0.0
     end
     
