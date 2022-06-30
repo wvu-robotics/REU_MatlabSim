@@ -23,7 +23,7 @@ classdef MaxsLaw
         showRange = true;           %
 
         % Functions to use
-        funcName_agentControl     = "agentControl_KNN";
+        funcName_agentControl     = "agentControl_Max";
         funcName_findNeighborhood = "findNeighborhood_KNN";
 
         % Thermal constraints
