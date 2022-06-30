@@ -184,7 +184,8 @@ if __name__ ==  '__main__':
 
     fitness_function = sliceBasedFitness(agentSlicesSubsampled)
     boundary = [(-1, 5), (-1, 5), (-1, 5), (-1, 5), (-5, 5)]
-    solution = optimize.differential_evolution(fitness_function, boundary, maxiter=50000000, x0=[gains[0], gains[1], gains[2], gains[3], gains[4]])
+    #solution = optimize.differential_evolution(fitness_function, boundary, maxiter=50000000, x0=[gains[0], gains[1], gains[2], gains[3], gains[4]])
+    solution = optimize.minimize(fitness_function,([gains[0], gains[1], gains[2], gains[3], gains[4]]), method='SLSQP', options={'ftol': 1e-08, 'iprint': 1, 'eps': 1.5e-12, 'maxiter': 10000})
     print("Parameters of the best solution : {params}".format(params=solution.x))
 
     controllers_imitated = [lss.SuperSet(solution.x[0], solution.x[1], solution.x[2], solution.x[3], solution.x[4]) for i in
