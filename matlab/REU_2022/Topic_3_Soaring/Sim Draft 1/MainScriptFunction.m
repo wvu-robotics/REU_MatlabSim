@@ -60,7 +60,7 @@ if render
     videoName = sprintf('%s/%s %s.avi',dateFolder,videoPrefix,videoSuffix);
 
     video = VideoWriter(videoName);
-    video.FrameRate = 1/SL.dt * SL.fpsMult;
+    video.FrameRate = 1/SL.dt * SL.fpsMult / SL.frameSkip;
     open(video);
     
     simFig = figure('Visible','on');
@@ -120,25 +120,32 @@ for step = 1:steps
     
         
         %% Render
-        if render && mod(step,SL.frameSkip)==1
+        if render && mod(step,SL.frameSkip)==0
             hold on
+    
             thermalMap.renderThermals();
             swarm.renderAgents();
-    
+            xlim([swarm.agents(swarm.thisAgent).position(1) - 1000, swarm.agents(swarm.thisAgent).position(1) + 1000]);
+            ylim([swarm.agents(swarm.thisAgent).position(2) - 1000, swarm.agents(swarm.thisAgent).position(2) + 1000]);
+            %xlim(SL.mapSize);
+            %ylim(SL.mapSize);
+            ax = gca;
+            ax.PositionConstraint = 'outerposition';
+
             currFrame = getframe(simFig);
             writeVideo(video,currFrame);
             pause(0.0001);
     
     %         stringTitle = sprintf("Agents Alive: %g\nMax Height: %.1f\nMin Height: %.1f\nAverage Height: %.1f",Living,maxHeight,minHeight,averageHeight);
     %         stringTitle = sprintf("Minutes: %g\nAgents Alive: %g\nAverage Height: %.1f",minutes,Living,averageHeight);
-            stringTitle = sprintf("Number %g, T+%02g:%02g, Total Time = %g\nAgents Alive: %g  Average Height: %.1f", ...
+            stringTitle = sprintf("Number %g, T+%02g:%02g, Total Time = %5.0f\nAgents Alive: %g  Average Height: %.1f", ...
                 number, minutes, seconds,flightTime, Living,averageHeight);
             title(stringTitle);
             hold off
         end
         
         %% Print
-        if mod(step,1000) == 0
+        if mod(step,steps/10) == 0
             fprintf("%02.2f%%, ",100*step/steps);
             fprintf("Run # %g \n", number);
             % fprintf("%g Agents\n ", Living);

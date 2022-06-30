@@ -71,7 +71,7 @@ classdef MaxsLaw
 
         % Thermal constraints
         CMColors = [6 42 127; 41 76 247; 102 59 231; 162 41 216; 222 24 200; 255 192 203] / 255;
-        thermalPixels = 200
+        thermalPixels = 50
         
         % Agent Constants
         agentCeiling   = 2600;      % m
