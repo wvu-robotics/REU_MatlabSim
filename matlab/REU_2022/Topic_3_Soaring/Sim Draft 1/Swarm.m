@@ -193,14 +193,17 @@ classdef Swarm < handle
                     end
                     
                     %% Text Box
-                    if true
-                        textStr = sprintf('Speed: %2.0fm/s\nBank: %+3.0fdeg\nSink: %1.1fm/s',currentAgent.velocity(1), currentAgent.bankAngle*180/pi,currentAgent.vsink);
+                    if(SL.showText)
+                        textStr = sprintf('Speed: %2.0fm/s\nBank: %+3.0fdeg\nSink: %1.1fm/s\nS:%2.2g\nC:%2.2g\nA:%2.2g\nM:%2.2g',...
+                            currentAgent.velocity(1), currentAgent.bankAngle*180/pi,currentAgent.vsink, currentAgent.rulesMag(1),...
+                            currentAgent.rulesMag(2),currentAgent.rulesMag(3),currentAgent.rulesMag(4));
                         if(class(obj.textAnnt) == "double")
                             obj.textAnnt = annotation('textbox');
                             obj.textAnnt.FontName = 'FixedWidth';
-                            obj.textAnnt.BackgroundColor = [1 0 1];
+                            obj.textAnnt.BackgroundColor = [1 1 0];
                             obj.textAnnt.FaceAlpha = 0.75;
                             obj.textAnnt.Position = [0.55 0.75 0.25 0.15];
+                            obj.textAnnt.FitBoxToText = 'on';
                         end
                         obj.textAnnt.String = textStr;
 

@@ -1,5 +1,7 @@
 % Ind S, C, A, M, hPriority, hIgnore, dt, Waggle Str, Waggle Time, NAgents
-ParamMatrix = readmatrix("Params.xlsx","Range","A2:K25");
+clear
+clc
+ParamMatrix = readmatrix("Params.xlsx","Range","A2:K28");
 render  = false;
 plot    = false;
 Write   = true;

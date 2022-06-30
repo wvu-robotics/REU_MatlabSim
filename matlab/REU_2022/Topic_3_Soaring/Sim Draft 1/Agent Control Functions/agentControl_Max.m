@@ -31,12 +31,13 @@ if(numLocalAgents > 0)
         distLocalAgent = norm(diffLocalAgent);
         distances2D(i) = distLocalAgent;
         scaledDist = distLocalAgent/SL.neighborRadius;
-        heightOffset = -3;
-        if(diffHeight > heightOffset)
-            weight = scaledDist * (SL.cohesionHeightMult*(diffHeight-heightOffset)/SL.neighborRadius + 1);
-        else
-            weight = 0;
-        end
+%         heightOffset = -3;
+%         if(diffHeight > heightOffset)
+%             weight = scaledDist * (SL.cohesionHeightMult*(diffHeight-heightOffset)/SL.neighborRadius + 1);
+%         else
+%             weight = 0;
+%         end
+        weight = SL.cohesionHeightMult*localAgents(i).velocity(3);
         centroid = centroid + weight*localAgents(i).savedPosition;
         centroidWeight = centroidWeight + weight;
     end
@@ -136,10 +137,10 @@ currentAgent.rulesDir(2) = atan2(centroidUnit(2), centroidUnit(1));
 currentAgent.rulesDir(3) = atan2(alignmentVector(2), alignmentVector(1));
 currentAgent.rulesDir(4) = atan2(targetUnit(2), targetUnit(1));
 currentAgent.rulesDir(5) = atan2(sideUnit(2), sideUnit(1));
-currentAgent.rulesMag(1) = accelMag_separation;
-currentAgent.rulesMag(2) = accelMag_cohesion;
-currentAgent.rulesMag(3) = accelMag_alignment;
-currentAgent.rulesMag(4) = accelMag_migration;
+currentAgent.rulesMag(1) = norm(accelMag_separation * separationVector);
+currentAgent.rulesMag(2) = norm(accelMag_cohesion   * centroidUnit);
+currentAgent.rulesMag(3) = norm(accelMag_alignment  * alignmentVector);
+currentAgent.rulesMag(4) = norm(accelMag_migration  * targetUnit);
 currentAgent.rulesMag(5) = accelMag_waggle;
 
 forwardUnit = [cos(currentAgent.heading), sin(currentAgent.heading), 0];
@@ -190,7 +191,8 @@ if newPos(3) <= 0
 end
 currentAgent.heading = currentAgent.heading + newVel(2)*SL.dt;
 
-currentAgent.velocity = newVel;
+currentAgent.velocity(1:2) = newVel;
+currentAgent.velocity(3)   = vspeed;
 currentAgent.position = newPos;
 if(isnan(newPos(3)))
     fprintf("NAN\n");

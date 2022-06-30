@@ -54,8 +54,9 @@ if render
 
     %% Setup video and figure
 %     videoPrefix = sprintf('[dt %g, T %g, x%g] ',simLaw.dt, simLaw.totalTime, simLaw.fpsMult);
-    videoPrefix = "COOL";
-    videoSuffix = sprintf('%02g',Param(1));
+    videoPrefix = "A";
+    %videoSuffix = sprintf('%02g',Param(1));
+    videoSuffix = time;
 %    videoSuffix = sprintf('%1.0E, %1.0E, %1.0E', simLaw.separation, simLaw.cohesion, simLaw.alignment);
     videoName = sprintf('%s/%s %s.avi',dateFolder,videoPrefix,videoSuffix);
 
@@ -125,10 +126,10 @@ for step = 1:steps
     
             thermalMap.renderThermals();
             swarm.renderAgents();
-            xlim([swarm.agents(swarm.thisAgent).position(1) - 1000, swarm.agents(swarm.thisAgent).position(1) + 1000]);
-            ylim([swarm.agents(swarm.thisAgent).position(2) - 1000, swarm.agents(swarm.thisAgent).position(2) + 1000]);
-            %xlim(SL.mapSize);
-            %ylim(SL.mapSize);
+            %xlim([swarm.agents(swarm.thisAgent).position(1) - 1000, swarm.agents(swarm.thisAgent).position(1) + 1000]);
+            %ylim([swarm.agents(swarm.thisAgent).position(2) - 1000, swarm.agents(swarm.thisAgent).position(2) + 1000]);
+            xlim(SL.mapSize);
+            ylim(SL.mapSize);
             ax = gca;
             ax.PositionConstraint = 'outerposition';
 
@@ -146,12 +147,12 @@ for step = 1:steps
         
         %% Print
         if mod(step,steps/10) == 0
-            fprintf("%02.2f%%, ",100*step/steps);
+            fprintf("%02g%%, ",100*step/steps);
             fprintf("Run # %g \n", number);
             % fprintf("%g Agents\n ", Living);
         end
     else
-        fprintf("Everybody died\n");
+        fprintf("Everybody died in Run # %g\n", number);
         break
     end
 

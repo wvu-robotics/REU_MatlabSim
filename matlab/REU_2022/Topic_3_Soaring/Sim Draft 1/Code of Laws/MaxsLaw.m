@@ -17,11 +17,12 @@ classdef MaxsLaw
         forwardSpeedMax = 20;       % m/s
         
         % Visuals
-        showArrow = true;          %
+        showArrow = false;          %
         renderScale = [300;300];    % [scaleX; scaleY];
         showNeighbors = true;       %
         showFixedRadius = true;     %
         showRange = true;           %
+        showText  = false;
 
         % Functions to use
         funcName_agentControl     = "agentControl_Max";
@@ -32,8 +33,8 @@ classdef MaxsLaw
         thermalSpeedMax = 20        % m/s
         thermalRadiusMin = 600      % m
         thermalRadiusMax = 1300     % m
-        thermalStrengthMin = 50     % m/s, peak updraft speed
-        thermalStrengthMax = 100    % m/s, peak updraft speed
+        thermalStrengthMin = 20     % m/s, peak updraft speed
+        thermalStrengthMax = 50    % m/s, peak updraft speed
         thermalFadeRate = 0.002     % m/s, rate at which thermals fade in or out 
         thermalMinPlateauTime = 600 % steps at the min strength
         thermalMaxPlateauTime = 1000% steps at the max strength
