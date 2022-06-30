@@ -11,8 +11,8 @@ classdef Agent < handle
 
         isAlive  = true
         accelDir = 0.0;
-        rulesDir = [0.0, 0.0, 0.0, 0.0] % S, C, A, M
-        rulesMag = [0.0, 0.0, 0.0, 0.0] % S, C, A, M
+        rulesDir = [0.0, 0.0, 0.0, 0.0, 0.0] % S, C, A, M
+        rulesMag = [0.0, 0.0, 0.0, 0.0, 0.0] % S, C, A, M
         vsink    = 0                    % m/s
 
         lastWaggle = 0;
