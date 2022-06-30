@@ -3,33 +3,41 @@ classdef AdamsLaw
         %% Variables to save
         % Simulation constraints
         dt = 0.1;        %s
-        totalTime = 60;  %s
+        totalTime = 20;  %s
         fpsMult = 1;
-        mapSize = [-200,200];   %m, bounds of square map
-        numAgents = 10;  %agents
-
+        numAgents = 10;
+        numThermals = 2
+        
+        % Physical Sim Space
+        mapSize = [-2000,2000];     % m, bounds of square map
+        agentCeiling   = 2600;    %m
+        agentFloor     = 0;      %m
+        
         % Initial conditions
-        agentSpawnPosRange = [-200,-200; 200,200];     %m, [xMin,yMin;xMax,yMax]
-        agentSpawnAltiRange = [80,80];             %m, [Min,Max]
-        agentSpawnVelRange = [8,0;13,0];           %m/s,rad/s [forwardMin,omegaMin;forwardMax,omegaMax];
+        agentSpawnPosRange = [-1000,-1000; 1000,1000];  % m, [xMin,yMin;xMax,yMax]
+        agentSpawnAltiRange = [1500,1700];              % m, [Min,Max]
+        agentSpawnVelRange = [8,0;13,0];                % m/s,rad/s [forwardMin,omegaMin;forwardMax,omegaMax];
         g = 9.81;                                  % m/s/s
 
-        % Rule constraints
+        % Rule Parameters
+        % Basic Boids
         separation = 7;
-        separationHeightGap = 10;
         cohesion = 0.008;
-        cohesionHeightMult = 8;
         alignment = 3;
+        
+        % Extra Boids
         migration = 2e-13;
         waggle = 0.5;
-
+        
+        % Height-Dependent
+        separationHeightGap = 10;
+        cohesionHeightMult = 8;
+        
         % Agent constraints
-        neighborRadius = 120;     %m
+        neighborRadius = 2000;     %m
         k = 5; %k-nearest neighbors
-        agentCeiling   = 100;    %m
-        agentFloor     = 0;      %m
-        forwardSpeedMin = 15;     %m/s
-        forwardSpeedMax = 15;    %m/s
+        forwardSpeedMin = 5;     %m/s
+        forwardSpeedMax = 20;    %m/s
         forwardInertia = 10;
         bankMin = -5*pi/12;           %rad
         bankMax = 5*pi/12;            %rad
@@ -44,43 +52,28 @@ classdef AdamsLaw
         agentShape_plane = [-0.5,-0.3,0,0.1,0.2,0.3,0.5,0.3,0.2,0.1,0,-0.3,-0.5;-0.2,-0.1,-0.1,-0.5,-0.5,-0.1,0,0.1,0.5,0.5,0.1,0.1,0.2];
         Arrow = [2 1.5 1.5 0 0 1.5 1.5; 0 .5 .2 .2 -.2 -.2 -.5];
         showArrow = false;
-        renderScale = [15;15]; %[scaleX; scaleY];
-        showNeighbors = true;
-        showFixedRadius = true;
+        renderScale = [150;150]; %[scaleX; scaleY];
+        showNeighbors = false;
+        showFixedRadius = false;
         showRange = false;
         
         % Thermal constraints
         CMColors = [6 42 127; 41 76 247; 102 59 231; 162 41 216; 222 24 200; 255 192 203] / 255;
-        thermalPixels = 200
+        thermalPixels = 100
         
-        numThermals = 1
         thermalSpeedMin = 0         % m/s
         thermalSpeedMax = 0        % m/s
-        thermalRadiusMin = 90       % m
-        thermalRadiusMax = 90       % m
-        thermalStrengthMin = 50     % m/s, peak updraft speed
-        thermalStrengthMax = 100    % m/s, peak updraft speed
-        thermalFadeRate = 5         % m/s, rate at which thermals fade in or out 
-        thermalMinPlateauTime = 75  % steps at the min strength
-        thermalMaxPlateauTime = 100 % steps at the max strength
+        thermalRadiusMin = 600       % m
+        thermalRadiusMax = 1300       % m
+        thermalStrengthMin = 5     % m/s, peak updraft speed
+        thermalStrengthMax = 10    % m/s, peak updraft speed
+        thermalFadeRate = 0.002         % m/s, rate at which thermals fade in or out 
+        thermalMinPlateauTime = 200  % steps at the min strength
+        thermalMaxPlateauTime = 400 % steps at the max strength
 
         % Functions to use
-        funcName_agentControl = "agentControl_KNN";
-        funcName_findNeighborhood = "findNeighborhood_KNNInFixedRadius";
-        
-    end
-    
-    methods
-        function strength = getTempThermalStrength(~,agent)
-            position = agent.position;
-            radius = 50;
-            peakStrength = 20;
-            thermalPos = [-0,-0];
-            
-            dist = norm(position(1:2)-thermalPos);
-            closeStrength = peakStrength*(1-(dist/radius)^2);
-            strength = max(0,closeStrength);
-        end
+        funcName_agentControl = "agentControl_Adam";
+        funcName_findNeighborhood = "findNeighborhood_fixedRadius";
     end
 end
 
