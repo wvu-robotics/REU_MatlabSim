@@ -77,6 +77,8 @@ classdef Agent < handle
             obj.patchObj.YData = globalShape(:,2);
             if ~obj.isAlive
                 obj.patchObj.Visible = 'off';
+            else
+                obj.patchObj.Visible = 'on';
             end
 
         end

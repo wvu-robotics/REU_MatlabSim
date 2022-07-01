@@ -27,6 +27,10 @@ SL.dt                   = Param(8);
 SL.waggle               = Param(9);
 SL.waggleTime           = Param(10);
 SL.numAgents            = Param(11);
+SL.thermalStrengthMin   = Param(12);
+SL.thermalStrengthMax   = Param(13);
+SL.forwardSpeedMin      = Param(14);
+SL.forwardSpeedMax      = Param(15);
 
 swarm = Swarm(SL, thermalMap);
 
@@ -90,7 +94,7 @@ flightTime          = 0;
 ToD           = zeros(1,SL.numAgents);
 
 for step = 1:steps
-    if nnz([swarm.agents.isAlive]) > 0
+    if ~SL.stopWhenDead || nnz([swarm.agents.isAlive]) > 0
         %% Step simulation & Get Data
         thermalMap.staticStep();
     
@@ -126,10 +130,13 @@ for step = 1:steps
     
             thermalMap.renderThermals();
             swarm.renderAgents();
-            %xlim([swarm.agents(swarm.thisAgent).position(1) - 1000, swarm.agents(swarm.thisAgent).position(1) + 1000]);
-            %ylim([swarm.agents(swarm.thisAgent).position(2) - 1000, swarm.agents(swarm.thisAgent).position(2) + 1000]);
-            xlim(SL.mapSize);
-            ylim(SL.mapSize);
+            if SL.followAgent
+                xlim([swarm.agents(swarm.thisAgent).position(1) - SL.neighborRadius, swarm.agents(swarm.thisAgent).position(1) + SL.neighborRadius]);
+                ylim([swarm.agents(swarm.thisAgent).position(2) - SL.neighborRadius, swarm.agents(swarm.thisAgent).position(2) + SL.neighborRadius]);
+            else
+                xlim(SL.mapSize);
+                ylim(SL.mapSize);
+            end
             ax = gca;
             ax.PositionConstraint = 'outerposition';
 
@@ -188,6 +195,8 @@ end
 % Neighborhood Function
 % Speed Min
 % Speed Max
+% Thermal Strength Min
+% Thermal Strength Max
 
 % Surviving
 % Average Z of survivors
@@ -202,7 +211,7 @@ Log = {date, time,...
        SL.cohesionHeightMult, SL.separationHeightGap, SL.waggle, SL.waggleTime, SL.k,...
        SL.dt, SL.totalTime,SL.numAgents, SL.numThermals, SL.neighborRadius,...
        SL.fov, SL.funcName_agentControl, SL.funcName_findNeighborhood, SL.forwardSpeedMin, SL.forwardSpeedMax,...
-       surviving, average, flightTime};
+       SL.thermalStrengthMin, SL.thermalStrengthMax, surviving, average, flightTime};
 
 
 end
