@@ -18,12 +18,12 @@ classdef MaxsLaw
         
         % Visuals
         showArrow = true;          %
-        followAgent = true;        %
+        followAgent = false;        %
         renderScale = [300;300];    % [scaleX; scaleY];
         showNeighbors = true;       %
         showFixedRadius = false;     %
         showRange = false;           %
-        showText  = true;          %
+        showText  = false;          %
         stopWhenDead = true;        %
 
         % Functions to use
@@ -71,6 +71,8 @@ classdef MaxsLaw
         % Visuals
         agentShape_triangle = [-0.5,0.5,-0.5; -0.375,0,0.375];
         agentShape_plane = [-0.5,-0.3,0,0.1,0.2,0.3,0.5,0.3,0.2,0.1,0,-0.3,-0.5;-0.2,-0.1,-0.1,-0.5,-0.5,-0.1,0,0.1,0.5,0.5,0.1,0.1,0.2];
+        agentShape_amogus = [.25 .5 0 0 .5 .5 .15 .15 -.15 -.15 -.5 -.5 -.75 -.75 -.25;
+                             .75 .4 .4 .15 .15 -1 -1 -.6 -.6 -1 -1 -.55 -.25 .25 .75];
         Arrow = [2 1.5 1.5 0 0 1.5 1.5; 0 .5 .1 .1 -.1 -.1 -.5];
         ThermPatch = [0.8660, 0.5000, 0.0000, -0.5000, -0.8660, -1.0000, -0.8660, -0.5000, -0.0000,  0.5000,  0.8660,  1.0000;
                       0.5000, 0.8660, 1.0000,  0.8660,  0.5000,  0.0000, -0.5000, -0.8660, -1.0000, -0.8660, -0.5000, -0.0000];
