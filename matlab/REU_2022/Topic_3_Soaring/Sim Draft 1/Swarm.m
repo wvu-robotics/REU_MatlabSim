@@ -204,13 +204,19 @@ classdef Swarm < handle
                             obj.textAnnt.FaceAlpha = 0.75;
                             obj.textAnnt.Position = [0.55 0.75 0.25 0.15];
                             obj.textAnnt.FitBoxToText = 'on';
+                            obj.textAnnt.FontSize = 10;
                         end
                         obj.textAnnt.String = textStr;
 
                     end
                 end
-                
-                obj.agents(i).render();
+                %% All Agents
+                if ~SL.followAgent || (abs(obj.agents(i).position(1) - currentAgent.position(1)) < SL.neighborRadius...
+                                    && abs(obj.agents(i).position(2) - currentAgent.position(2)) < SL.neighborRadius)
+                    obj.agents(i).render();
+                elseif(class(obj.agents(i).patchObj) ~= "double")
+                    obj.agents(i).patchObj.Visible = 'off';
+                end
             end
         end
         
