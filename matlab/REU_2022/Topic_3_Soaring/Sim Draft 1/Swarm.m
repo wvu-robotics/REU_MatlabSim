@@ -87,7 +87,7 @@ classdef Swarm < handle
             SL = obj.simLaw;
             shownNeighbors = false;
             for i=1:SL.numAgents
-                if(~shownNeighbors && (SL.showFixedRadius || SL.showNeighbors || SL.showRange) && obj.agents(i).isAlive)
+                if(~shownNeighbors && (SL.showFixedRadius || SL.showNeighbors || SL.showRange || SL.showArrow || SL.showText) && obj.agents(i).isAlive)
                     shownNeighbors = true;
                     currentAgent = obj.agents(i);
                     obj.thisAgent = i;
@@ -194,9 +194,9 @@ classdef Swarm < handle
                     
                     %% Text Box
                     if(SL.showText)
-                        textStr = sprintf('Speed: %2.0fm/s\nBank: %+3.0fdeg\nSink: %1.1fm/s\nS:%2.2g\nC:%2.2g\nA:%2.2g\nM:%2.2g',...
-                            currentAgent.velocity(1), currentAgent.bankAngle*180/pi,currentAgent.vsink, currentAgent.rulesMag(1),...
-                            currentAgent.rulesMag(2),currentAgent.rulesMag(3),currentAgent.rulesMag(4));
+                        textStr = sprintf('Speed: %2.0fm/s\nBank: %+3.0fdeg\nVSpeed: %1.1fm/s\nS:%2.2g\nC:%2.2g\nA:%2.2g\nM:%2.2g\nW:%2.2g',...
+                            currentAgent.velocity(1), currentAgent.bankAngle*180/pi,currentAgent.savedVelocity(3), currentAgent.rulesMag(1),...
+                            currentAgent.rulesMag(2),currentAgent.rulesMag(3),currentAgent.rulesMag(4),currentAgent.rulesMag(5));
                         if(class(obj.textAnnt) == "double")
                             obj.textAnnt = annotation('textbox');
                             obj.textAnnt.FontName = 'FixedWidth';
@@ -208,7 +208,6 @@ classdef Swarm < handle
                         obj.textAnnt.String = textStr;
 
                     end
-   
                 end
                 
                 obj.agents(i).render();

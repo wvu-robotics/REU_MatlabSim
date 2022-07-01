@@ -3,13 +3,14 @@ classdef AdamsLaw
         %% Variables to save
         %% Simulation constraints
         dt = 0.1;        %s
-        totalTime = 60;  %s
-        fpsMult = 1;
-        numAgents = 10;
-        numThermals = 2
+        totalTime = 1200;  %s
+        fpsMult = 10;
+        frameSkip = 5;
+        numAgents = 20;
+        numThermals = 3
         
         %% Physical Sim Space
-        mapSize = [-2000,2000];     % m, bounds of square map
+        mapSize = [-3000,3000];     % m, bounds of square map
         agentCeiling   = 2600;    %m
         agentFloor     = 0;      %m
         
@@ -21,41 +22,41 @@ classdef AdamsLaw
 
         %% Rule Parameters
         %% Separation
-        separation = 20;
+        separation = 1E5;
         
-        separationHeightWidth = 10;
+        separationHeightWidth = 100;
         %m, the current agent will try to separate from other agents that
         %are within separationHeightWidth/2 of <current agent height>
         
         %% Alignment
-        alignment = 3;
+        alignment = 1E3;
         
-        alignmentHeightWidth = 10;
+        alignmentHeightWidth = 100;
         %m, the current agent will try to align with other agents that
         %are within alignmentHeightWidth/2 of <current agent height>
         
         %% Cohesion
-        cohesion = 0.005;
+        cohesion = 0.003;
         
         cohesionHeightIgnore = -3;
         %m, other agents below <current agent height + cohesionHeightIgnore> are ignored
         
-        cohesionHeightMult = 5;
+        cohesionHeightMult = 10;
         %Agents at <current agent height + neighborRadius> are weighted
         %this many times more than an agent at <current agent height + cohesionHeightIgnore>
         
-        cohesionAscensionIgnore = 0;
+        cohesionAscensionIgnore = 0.5;
         %m/s, agents with relative ascensions less than this are ignored
         
-        cohesionAscensionMax = 10; %m/s
+        cohesionAscensionMax = 4; %m/s
         
-        cohesionAscensionMult = 5;
+        cohesionAscensionMult = 50;
         %Agents with relative ascensions of <cohesionAscensionMax> or
         %greater are weighted this many times more than an agent with
         %relative ascension of <cohesionAscensionIgnore>
         
         %% Migration
-        migration = 2e-13;
+        migration = 2e-4;
         
         %% Waggle
         waggle = 0.5;
@@ -67,10 +68,10 @@ classdef AdamsLaw
         forwardSpeedMin = 5;     %m/s
         forwardSpeedMax = 15;    %m/s
         forwardInertia = 10;
-        bankMin = -2*pi/12;           %rad
-        bankMax = 2*pi/12;            %rad
+        bankMin = -5*pi/12;           %rad
+        bankMax = 5*pi/12;            %rad
         bankInertia = 1;
-        fov = 3/2*pi;              %rad
+        fov = 11/6*pi;              %rad
         Sink_A = -0.01843;
         Sink_B = 0.3782;
         Sink_C = -2.3782;
@@ -79,12 +80,12 @@ classdef AdamsLaw
         agentShape_triangle = [-0.5,0.5,-0.5; -0.375,0,0.375];
         agentShape_plane = [-0.5,-0.3,0,0.1,0.2,0.3,0.5,0.3,0.2,0.1,0,-0.3,-0.5;-0.2,-0.1,-0.1,-0.5,-0.5,-0.1,0,0.1,0.5,0.5,0.1,0.1,0.2];
         Arrow = [2 1.5 1.5 0 0 1.5 1.5; 0 .5 .2 .2 -.2 -.2 -.5];
-        showArrow = false;
         renderScale = [150;150]; %[scaleX; scaleY];
         showNeighbors = true;
         showFixedRadius = true;
         showRange = false;
-        showText = false;
+        showText = true;
+        showArrow = true;
         
         %% Thermal constraints
         CMColors = [6 42 127; 41 76 247; 102 59 231; 162 41 216; 222 24 200; 255 192 203] / 255;
@@ -92,13 +93,13 @@ classdef AdamsLaw
         
         thermalSpeedMin = 0         % m/s
         thermalSpeedMax = 0        % m/s
-        thermalRadiusMin = 600       % m
-        thermalRadiusMax = 1300       % m
-        thermalStrengthMin = 5     % m/s, peak updraft speed
-        thermalStrengthMax = 10    % m/s, peak updraft speed
-        thermalFadeRate = 0.002         % m/s, rate at which thermals fade in or out 
-        thermalMinPlateauTime = 200  % steps at the min strength
-        thermalMaxPlateauTime = 400 % steps at the max strength
+        thermalRadiusMin = 500       % m
+        thermalRadiusMax = 800       % m
+        thermalStrengthMin = 8     % m/s, peak updraft speed
+        thermalStrengthMax = 8    % m/s, peak updraft speed
+        thermalFadeRate = 0.008         % m/s, rate at which thermals fade in or out 
+        thermalMinPlateauTime = 2000  % steps at the min strength
+        thermalMaxPlateauTime = 4000 % steps at the max strength
 
         %% Functions to use
         funcName_agentControl = "agentControl_Adam";

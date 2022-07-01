@@ -63,9 +63,9 @@ function agentControl_Adam(currentAgent, localAgents, thermalStrength, target, S
                 %Linear interp of relativeAscension from [SL.cohesionAscensionIgnore,SL.cohesionAscensionMax] to [1,SL.cohesionAscensionMult]
                 weightCohesion = (relativeAscension - SL.cohesionAscensionIgnore)/(SL.cohesionAscensionMax - SL.cohesionAscensionIgnore)*(SL.cohesionAscensionMult-1) + 1;
             else
-                weightCohesion = 0;
+                weightCohesion = 1;
             end
-            cohesionSum = cohesionSum + weightCohesion*otherPos2D;
+            cohesionSum = cohesionSum + weightCohesion*diff2D;
             cohesionDiv = cohesionDiv + 1;
         end
         
@@ -84,7 +84,7 @@ function agentControl_Adam(currentAgent, localAgents, thermalStrength, target, S
         %% Cohesion
         if(cohesionDiv ~= 0)
             cohesionSum = cohesionSum / cohesionDiv;
-            vector_cohesion = cohesionSum - currentAgent.savedPosition;
+            vector_cohesion = cohesionSum;
             %vector_cohesion = vector_cohesion * norm(vector_cohesion);
         end
     end
@@ -104,11 +104,17 @@ function agentControl_Adam(currentAgent, localAgents, thermalStrength, target, S
     vector_waggle = sideUnit * currentAgent.waggleSign;    
     
     %% Get Accel
-    newAccel = vector_separation * SL.separation + ...
-               vector_alignment  * SL.alignment + ...
-               vector_cohesion   * SL.cohesion  + ...
-               vector_migration  * SL.migration + ...
-               vector_waggle     * SL.waggle;
+    vector_separation = vector_separation * SL.separation;
+    vector_alignment = vector_alignment * SL.alignment;
+    vector_cohesion = vector_cohesion * SL.cohesion;
+    vector_migration = vector_migration * SL.migration;
+    vector_waggle = vector_waggle * SL.waggle;
+    
+    newAccel = vector_separation + ...
+               vector_alignment + ...
+               vector_cohesion + ...
+               vector_migration + ...
+               vector_waggle;
 
     newAccel(3) = 0; % removes z component
     currentAgent.accelDir = atan2(newAccel(2), newAccel(1));
@@ -116,10 +122,12 @@ function agentControl_Adam(currentAgent, localAgents, thermalStrength, target, S
     currentAgent.rulesDir(2) = atan2(vector_cohesion(2), vector_cohesion(1));
     currentAgent.rulesDir(3) = atan2(vector_alignment(2), vector_alignment(1));
     currentAgent.rulesDir(4) = atan2(vector_migration(2), vector_migration(1));
+    currentAgent.rulesDir(5) = atan2(vector_waggle(2), vector_waggle(1));
     currentAgent.rulesMag(1) = norm(vector_separation);
     currentAgent.rulesMag(2) = norm(vector_cohesion);
     currentAgent.rulesMag(3) = norm(vector_alignment);
     currentAgent.rulesMag(4) = norm(vector_migration);
+    currentAgent.rulesMag(5) = norm(vector_waggle);
 
     forwardUnit = [cos(currentAgent.heading), sin(currentAgent.heading), 0];
     newAccel_forward = dot(newAccel,forwardUnit);
