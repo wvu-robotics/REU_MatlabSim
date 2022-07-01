@@ -215,7 +215,7 @@ classdef Swarm < handle
             end
         end
         
-        function [maxHeight, minHeight, avgHeight] = getHeights(obj)
+        function [maxHeight, minHeight, avgHeight, avgSpeed] = getData(obj)
             SL = obj.simLaw;
             
             maxHeightIndex = 0;
@@ -223,6 +223,7 @@ classdef Swarm < handle
             minHeightIndex = 0;
             minHeight = SL.agentCeiling;
             avgHeight = 0;
+            avgSpeed = 0;
             
             for i=1:SL.numAgents
                 currentHeight = obj.agents(i).position(3);
@@ -235,8 +236,10 @@ classdef Swarm < handle
                     minHeight = currentHeight;
                 end
                 avgHeight = avgHeight + currentHeight;
+                avgSpeed = avgSpeed + obj.agents(i).savedVelocity(1);
             end
             avgHeight = avgHeight / SL.numAgents;
+            avgSpeed = avgSpeed / SL.numAgents;
         end
     end
 end

@@ -1,130 +1,125 @@
-function agentControl_KNN(currentAgent, localAgents, thermalStrength, target, SL)
-    accelMag_separation = 0;
-    accelMag_cohesion = 0;
-    accelMag_alignment = 0;
-    accelMag_migration = 0;
-    accelMag_waggle = 0;
+function agentControl_Adam(currentAgent, localAgents, thermalStrength, target, SL)
     
-    separationVector = [0,0,0];
-    centroidUnit = [0,0,0];
-    alignmentVector = [0,0,0];
-    targetUnit = [0,0,0];
-    sideUnit = [0,0,0];
+    %% Define vectors
+    vector_cohesion = [0,0,0];
+    vector_separation = [0,0,0];
+    vector_alignment = [0,0,0];
+    vector_migration = [0,0,0];
+    vector_waggle = [0,0,0];
     
     numLocalAgents = size(localAgents,2);
+    
+    %% Neighbor Rules
     if(numLocalAgents > 0)
-        %% Get Centroid
-        % Centroid: 2D, scaled linearly by distance
-        centroid = [0,0,0];
-        distances2D = Inf * ones(1,numLocalAgents);
-        centroidWeight = 0;
-        for i = 1:numLocalAgents
-            if localAgents(i).savedPosition(3) <= 0
-                continue;
-            end
-            diffLocalAgent = localAgents(i).savedPosition - currentAgent.position;
-            diffHeight = diffLocalAgent(3);
-            diffLocalAgent(3) = 0;
-            distLocalAgent = norm(diffLocalAgent);
-            distances2D(i) = distLocalAgent;
-            scaledDist = distLocalAgent/SL.neighborRadius;
-            heightOffset = -3;
-            if(diffHeight > heightOffset)
-                weight = scaledDist * (SL.cohesionHeightMult*(diffHeight-heightOffset)/SL.neighborRadius + 1);
-            else
-                weight = 0;
-            end
-            centroid = centroid + weight*localAgents(i).savedPosition;
-            centroidWeight = centroidWeight + weight;
-        end
-        centroid = centroid / centroidWeight;
-
-        %% Get Vectors
         % Cohesion
-        if(centroidWeight ~= 0)
-            diffCentroid = centroid - currentAgent.position;
-            diffCentroid(3) = 0;
-            distToCentroid = norm(diffCentroid);
-            if distToCentroid == 0
-                centroidUnit = [0,0,0];
-            else
-                centroidUnit = diffCentroid / distToCentroid;
-            end
-            
-            accelMag_cohesion   = SL.cohesion * distToCentroid^2;
-        end
+        cohesionSum = [0,0,0];
+        cohesionDiv = 0;
         
-        % Separation and alignment
-        separationVector = [0,0,0];
-        alignmentVector = [0,0,0];
+        % Separation
+        separationSum = [0,0,0];
+        separationDiv = 0;
         
+        % Alignment
+        alignmentSum = [0,0,0];
+        alignmentDiv = 0;
+        
+        % Iterate through neighbors
         for i=1:numLocalAgents
-            otherAgent = localAgents(i);
-            diff = otherAgent.savedPosition - currentAgent.position;
+            %% Set up useful variables
+            localAgent = localAgents(i);
+            
+            otherPos = localAgent.savedPosition;
+            otherPos2D = otherPos;
+            otherPos2D(3) = 0;
+            
+            otherHeading = localAgent.savedHeading;
+            otherVel = localAgent.savedVelocity(1) * [cos(otherHeading),sin(otherHeading),0];
+            
+            diff = localAgent.savedPosition - currentAgent.savedPosition;
             diffHeight = diff(3);
-            diff(3) = 0;
-            dist = norm(diff);
-            distScaled = dist/SL.neighborRadius;
-            diffUnit = diff/dist;
-            otherHeading = otherAgent.savedHeading;
+            diff2D = diff;
+            diff2D(3) = 0;
+            diff2DDist = norm(diff2D);
             
-            velUnitOther = [cos(otherHeading),sin(otherHeading),0];
+            relativeAscension = localAgent.savedVelocity(3) - currentAgent.savedVelocity(3);
             
-            weightSep = 1/distScaled^2 - 1;
-            weightAlign = 1;
-            if(norm(diffHeight) > SL.separationHeightGap)
-                weightSep = 0;
-                weightAlign = 0;
+            %% Separation            
+            if(abs(diffHeight) < SL.separationHeightWidth/2)
+                separationSum = separationSum - diff2D/diff2DDist * 1/diff2DDist^2;
+                separationDiv = separationDiv + 1;
             end
-            separationVector = separationVector - weightSep*diffUnit;
-            alignmentVector = alignmentVector + weightAlign*velUnitOther;
+            
+            %% Alignment            
+            if(abs(diffHeight) < SL.alignmentHeightWidth/2)
+                alignmentSum = alignmentSum + otherVel * 1/diff2DDist^2;
+                alignmentDiv = separationDiv + 1;
+            end
+            
+            %% Cohesion
+            if(relativeAscension > SL.cohesionAscensionIgnore)
+                if(relativeAscension > SL.cohesionAscensionMax)
+                    relativeAscension = SL.cohesionAscensionMax;
+                end
+                %Linear interp of relativeAscension from [SL.cohesionAscensionIgnore,SL.cohesionAscensionMax] to [1,SL.cohesionAscensionMult]
+                weightCohesion = (relativeAscension - SL.cohesionAscensionIgnore)/(SL.cohesionAscensionMax - SL.cohesionAscensionIgnore)*(SL.cohesionAscensionMult-1) + 1;
+            else
+                weightCohesion = 0;
+            end
+            cohesionSum = cohesionSum + weightCohesion*otherPos2D;
+            cohesionDiv = cohesionDiv + 1;
         end
         
-        separationVector = separationVector / numLocalAgents;
-        alignmentVector = alignmentVector / numLocalAgents;
+        %% Separation
+        if(separationDiv ~= 0)
+            separationSum = separationSum/separationDiv;
+            vector_separation = separationSum;
+        end
         
-        accelMag_separation = SL.separation;
-        accelMag_alignment  = SL.alignment;
+        %% Alignment
+        if(alignmentDiv ~= 0)
+            alignmentSum = alignmentSum/alignmentDiv;
+            vector_alignment = alignmentSum;
+        end
+        
+        %% Cohesion
+        if(cohesionDiv ~= 0)
+            cohesionSum = cohesionSum / cohesionDiv;
+            vector_cohesion = cohesionSum - currentAgent.savedPosition;
+            %vector_cohesion = vector_cohesion * norm(vector_cohesion);
+        end
     end
    
-    % Migration
-    diffTarget = target - currentAgent.position;
+    %% Migration
+    diffTarget = target - currentAgent.savedPosition;
     diffTarget(3) = 0;
-    distToTarget = norm(diffTarget);
-    targetUnit = diffTarget / distToTarget;
+    vector_migration = diffTarget;
 
-    % Waggle
-    forwardUnit = [cos(currentAgent.heading), sin(currentAgent.heading), 0];
-    upUnit = [0,0,1];
-    sideUnit = cross(upUnit,forwardUnit);
+    %% Waggle
     if(currentAgent.lastWaggle <= 0)
         currentAgent.waggleSign = 2 * round(rand()) - 1;
-        currentAgent.lastWaggle = Utility.randIR(0.3,0.5); %s
+        currentAgent.lastWaggle = Utility.randIR(SL.waggleDurationRange(1),SL.waggleDurationRange(2)); %s
     end
     currentAgent.lastWaggle = currentAgent.lastWaggle - SL.dt;
-    
-    accelMag_migration  = SL.migration * distToTarget^6;
-    accelMag_waggle     = SL.waggle * currentAgent.waggleSign;
-    
+    sideUnit = [cos(currentAgent.savedHeading + pi/2), sin(currentAgent.savedHeading + pi/2), 0];
+    vector_waggle = sideUnit * currentAgent.waggleSign;    
     
     %% Get Accel
-    newAccel = accelMag_separation * separationVector + ...
-               accelMag_cohesion   * centroidUnit + ...
-               accelMag_alignment  * alignmentVector + ...
-               accelMag_migration  * targetUnit + ... % nets accel vector to add on to current accel
-               accelMag_waggle     * sideUnit;
+    newAccel = vector_separation * SL.separation + ...
+               vector_alignment  * SL.alignment + ...
+               vector_cohesion   * SL.cohesion  + ...
+               vector_migration  * SL.migration + ...
+               vector_waggle     * SL.waggle;
 
     newAccel(3) = 0; % removes z component
     currentAgent.accelDir = atan2(newAccel(2), newAccel(1));
-    currentAgent.rulesDir(1) = atan2(separationVector(2), separationVector(1));
-    currentAgent.rulesDir(2) = atan2(centroidUnit(2), centroidUnit(1));
-    currentAgent.rulesDir(3) = atan2(alignmentVector(2), alignmentVector(1));
-    currentAgent.rulesDir(4) = atan2(targetUnit(2), targetUnit(1));
-    currentAgent.rulesMag(1) = accelMag_separation;
-    currentAgent.rulesMag(2) = accelMag_cohesion;
-    currentAgent.rulesMag(3) = accelMag_alignment;
-    currentAgent.rulesMag(4) = accelMag_migration;
-    
+    currentAgent.rulesDir(1) = atan2(vector_separation(2), vector_separation(1));
+    currentAgent.rulesDir(2) = atan2(vector_cohesion(2), vector_cohesion(1));
+    currentAgent.rulesDir(3) = atan2(vector_alignment(2), vector_alignment(1));
+    currentAgent.rulesDir(4) = atan2(vector_migration(2), vector_migration(1));
+    currentAgent.rulesMag(1) = norm(vector_separation);
+    currentAgent.rulesMag(2) = norm(vector_cohesion);
+    currentAgent.rulesMag(3) = norm(vector_alignment);
+    currentAgent.rulesMag(4) = norm(vector_migration);
 
     forwardUnit = [cos(currentAgent.heading), sin(currentAgent.heading), 0];
     newAccel_forward = dot(newAccel,forwardUnit);

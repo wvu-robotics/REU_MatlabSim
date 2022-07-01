@@ -96,13 +96,13 @@ for step = 1:steps
     Living = nnz([swarm.agents.isAlive]);
     fprintf("%g Agents, ", Living);
     
-    [maxHeight, minHeight, avgHeight] = swarm.getHeights();
+    [maxHeight, minHeight, avgHeight, avgSpeed] = swarm.getData();
     
     maxHeights(step) = maxHeight;
     minHeights(step) = minHeight;
     avgHeights(step) = avgHeight;
     
-    stringTitle = sprintf("Agents Alive: %g\nMax Height: %.1f\nMin Height: %.1f\nAverage Height: %.1f",Living,maxHeight,minHeight,avgHeight);
+    stringTitle = sprintf("Agents Alive: %g\nMax Height: %.1f\nMin Height: %.1f\nAverage Height: %.1f\nAverage Speed: %.1f",Living,maxHeight,minHeight,avgHeight,avgSpeed);
     title(stringTitle);
     
 
