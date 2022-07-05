@@ -25,27 +25,27 @@ if(numLocalAgents > 0)
         if localAgents(i).savedPosition(3) <= 0
             continue;
         end
-        diffLocalAgent = localAgents(i).savedPosition - currentAgent.position;
-        diffHeight = diffLocalAgent(3);
+        diffLocalAgent = localAgents(i).savedPosition - currentAgent.savedPosition;
+%         diffHeight = diffLocalAgent(3);
         diffLocalAgent(3) = 0;
         distLocalAgent = norm(diffLocalAgent);
         distances2D(i) = distLocalAgent;
-        scaledDist = distLocalAgent/SL.neighborRadius;
+%         scaledDist = distLocalAgent/SL.neighborRadius;
 %         heightOffset = -3;
 %         if(diffHeight > heightOffset)
 %             weight = scaledDist * (SL.cohesionHeightMult*(diffHeight-heightOffset)/SL.neighborRadius + 1);
 %         else
 %             weight = 0;
 %         end
-        weight = SL.cohesionHeightMult*localAgents(i).velocity(3);
-        centroid = centroid + weight*localAgents(i).savedPosition;
+        weight = max(0,SL.cohesionHeightMult*localAgents(i).savedVelocity(3));
+        centroid = centroid + weight*(localAgents(i).savedPosition - currentAgent.savedPosition);
         centroidWeight = centroidWeight + weight;
     end
     centroid = centroid / centroidWeight;
 
     %% Cohesion (Centroid)
     if(centroidWeight ~= 0)
-        diffCentroid = centroid - currentAgent.position;
+        diffCentroid = centroid; % - currentAgent.position;
         diffCentroid(3) = 0;
         distToCentroid = norm(diffCentroid);
         if distToCentroid == 0
@@ -60,7 +60,7 @@ if(numLocalAgents > 0)
 
     %% Separation and alignment (KNN)
     % Find k-nearest neighbors(KNN)
-    k = 10;
+    k = 1000;
     if(numLocalAgents < k)
         NNIndices = 1:numLocalAgents;
         numNN = numLocalAgents;

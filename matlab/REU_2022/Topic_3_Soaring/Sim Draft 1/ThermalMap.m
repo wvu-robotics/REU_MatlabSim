@@ -19,6 +19,38 @@ classdef ThermalMap < handle
             
             for i = 1:simLaw.numThermals
                 thermalMap.thermals(i) = Thermal(simLaw);
+                
+                % First thermal can't overlap with anything else
+                if(i == 1)
+                    continue;
+                end
+                triesLeft = simLaw.thermalSpawnAttempts;
+                checkAgain = true;
+                % While loop, to try spawning thermal multiple times
+                while(triesLeft > 0 && checkAgain)
+                    checkAgain = false;
+                    % Check if current thermal i overlaps with any previous thermals
+                    for j=1:i-1
+                        if(thermalMap.isOverlap(i,j))
+                            checkAgain = true;
+                            break;
+                        end
+                    end
+                    % If thermal i does overlap, respawn
+                    if(checkAgain)
+                        %fprintf("Attempted to spawn thermal %g. %g tries left.\n",i,triesLeft);
+                        triesLeft = triesLeft - 1;
+                        thermalMap.thermals(i) = Thermal(simLaw); %Respawn thermal
+                    else
+                        break;
+                    end
+                end
+                if(checkAgain)
+                    fprintf("Was only able to create %g thermals.\n",i-1)
+                    simLaw.numThermals = i-1;
+                    pause(1);
+                    break;
+                end
             end
         end
 
@@ -178,7 +210,14 @@ classdef ThermalMap < handle
                     for column = mapPosMin(1):mapPosMax(1)
                         % For each pixel in the square, find its strength relative
                         % to the thermal
-                        tempThermalMap(row, column) = thermalMap.getStrength([mapY(column),mapX(row)], thermalIndex);
+                        if(row < 0 || column < 0)
+                            fprintf("wtf\n");
+                        end
+                        try
+                            tempThermalMap(row, column) = thermalMap.getStrength([mapY(column),mapX(row)], thermalIndex);
+                        catch
+                            fprintf("wtf\n");
+                        end
                     end
                 end
                 finalThermalMap = finalThermalMap + tempThermalMap;
@@ -213,7 +252,7 @@ classdef ThermalMap < handle
         function [] = staticStep(thermalMap)
             SL = thermalMap.simLaw;
             for thermalIndex = 1:SL.numThermals
-                thermalMap.adjustThermalPositions(0);
+                %thermalMap.adjustThermalPositions(0);
                 thermalMap.fadeThermals();
             end
         end
@@ -221,8 +260,21 @@ classdef ThermalMap < handle
         %% Adjust thermal positions if they overlap
         function [] = adjustThermalPositions(thermalMap, vel)
             SL = thermalMap.simLaw;
-            for i = 1:SL.numThermals
-                i = checkOverlap(thermalMap, i, vel);
+            needToCheckAgain = true;
+            while(needToCheckAgain)
+                needToCheckAgain = false; % Each loop, assume that thermals are good, and wait to be proven otherwise
+                for i=1:SL.numThermals-1 % Iterate through thermals and check for overlaps        
+                    for j=i+1:SL.numThermals
+                        if(thermalMap.isOverlap(i,j)) % Overlap detected! 
+                            thermalMap.reinitWeakThermal(i,j,vel);
+                            needToCheckAgain = true; % Go back and check again
+                            break;
+                        end
+                    end
+                    if(needToCheckAgain) %If an overlap has ALREADY been detected, just go back to beginning...
+                        break;
+                    end
+                end
             end
         end
     end

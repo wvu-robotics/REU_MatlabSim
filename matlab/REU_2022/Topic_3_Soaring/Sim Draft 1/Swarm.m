@@ -87,7 +87,7 @@ classdef Swarm < handle
             SL = obj.simLaw;
             shownNeighbors = false;
             for i=1:SL.numAgents
-                if(~shownNeighbors && (SL.showFixedRadius || SL.showNeighbors || SL.showRange) && obj.agents(i).isAlive)
+                if(~shownNeighbors && (SL.showFixedRadius || SL.showNeighbors || SL.showRange || SL.showArrow || SL.showText) && obj.agents(i).isAlive)
                     shownNeighbors = true;
                     currentAgent = obj.agents(i);
                     obj.thisAgent = i;
@@ -194,9 +194,9 @@ classdef Swarm < handle
                     
                     %% Text Box
                     if(SL.showText)
-                        textStr = sprintf('Speed: %2.0fm/s\nBank: %+3.0fdeg\nSink: %1.1fm/s\nS:%2.2g\nC:%2.2g\nA:%2.2g\nM:%2.2g',...
-                            currentAgent.velocity(1), currentAgent.bankAngle*180/pi,currentAgent.vsink, currentAgent.rulesMag(1),...
-                            currentAgent.rulesMag(2),currentAgent.rulesMag(3),currentAgent.rulesMag(4));
+                        textStr = sprintf('Speed: %2.0fm/s\nBank: %+3.0fdeg\nVSpeed: %1.1fm/s\nS:%2.2g\nC:%2.2g\nA:%2.2g\nM:%2.2g\nW:%2.2g',...
+                            currentAgent.velocity(1), currentAgent.bankAngle*180/pi,currentAgent.savedVelocity(3), currentAgent.rulesMag(1),...
+                            currentAgent.rulesMag(2),currentAgent.rulesMag(3),currentAgent.rulesMag(4),currentAgent.rulesMag(5));
                         if(class(obj.textAnnt) == "double")
                             obj.textAnnt = annotation('textbox');
                             obj.textAnnt.FontName = 'FixedWidth';
@@ -204,18 +204,23 @@ classdef Swarm < handle
                             obj.textAnnt.FaceAlpha = 0.75;
                             obj.textAnnt.Position = [0.55 0.75 0.25 0.15];
                             obj.textAnnt.FitBoxToText = 'on';
+                            obj.textAnnt.FontSize = 10;
                         end
                         obj.textAnnt.String = textStr;
 
                     end
-   
                 end
-                
-                obj.agents(i).render();
+                %% All Agents
+                if ~SL.followAgent || (abs(obj.agents(i).position(1) - currentAgent.position(1)) < SL.neighborRadius...
+                                    && abs(obj.agents(i).position(2) - currentAgent.position(2)) < SL.neighborRadius)
+                    obj.agents(i).render();
+                elseif(class(obj.agents(i).patchObj) ~= "double")
+                    obj.agents(i).patchObj.Visible = 'off';
+                end
             end
         end
         
-        function [maxHeight, minHeight, avgHeight] = getHeights(obj)
+        function [maxHeight, minHeight, avgHeight, avgSpeed] = getData(obj)
             SL = obj.simLaw;
             
             maxHeightIndex = 0;
@@ -223,6 +228,7 @@ classdef Swarm < handle
             minHeightIndex = 0;
             minHeight = SL.agentCeiling;
             avgHeight = 0;
+            avgSpeed = 0;
             
             for i=1:SL.numAgents
                 currentHeight = obj.agents(i).position(3);
@@ -235,8 +241,10 @@ classdef Swarm < handle
                     minHeight = currentHeight;
                 end
                 avgHeight = avgHeight + currentHeight;
+                avgSpeed = avgSpeed + obj.agents(i).savedVelocity(1);
             end
             avgHeight = avgHeight / SL.numAgents;
+            avgSpeed = avgSpeed / SL.numAgents;
         end
     end
 end

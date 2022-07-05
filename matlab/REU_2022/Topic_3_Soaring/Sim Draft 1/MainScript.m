@@ -43,7 +43,7 @@ end
 %% Setup video and figure
 %Create video
 video = VideoWriter(videoName);
-video.FrameRate = 1/SL.dt * SL.fpsMult;
+video.FrameRate = 1/SL.dt * SL.fpsMult / SL.frameSkip;
 open(video);
 
 %Create frame
@@ -72,20 +72,30 @@ timeAxis = SL.dt * (1:steps);
 maxHeights = zeros(1,steps);
 minHeights = zeros(1,steps);
 avgHeights = zeros(1,steps);
+flightScore = 0;
 
+c1 = clock;
 %% Run simulation
 for step = 1:steps
-    c1 = clock;
-    fprintf("Frame %g/%g:  ",step,steps);
-    
-    % Render agents and thermals
-    thermalMap.renderThermals();
-    swarm.renderAgents();
-    
-    % Save video frame
-    currFrame = getframe(simFig);
-    writeVideo(video,currFrame);
-    pause(0.0001);
+    if(mod(step,SL.frameSkip)==0)
+        % Find and print elapsed time
+        c2 = clock;
+        elapsedTime = c2(6)-c1(6);
+        c1 = c2;
+        % If minute advances, elapsedTime will appear negative (1min20sec - 0min50sec = 20sec-50sec = -30sec)
+        if(elapsedTime < 0) 
+            elapsedTime = elapsedTime + 60;
+        end
+        fprintf("Frame %g/%g:  %.3f\n",step,steps,elapsedTime);
+        
+        % Render agents and thermals
+        thermalMap.renderThermals();
+        swarm.renderAgents();
+        
+        % Save video frame
+        currFrame = getframe(simFig);
+        writeVideo(video,currFrame);
+    end
     
     % Step simulation
     thermalMap.staticStep();
@@ -94,26 +104,17 @@ for step = 1:steps
     
     % Print number of Living Agents
     Living = nnz([swarm.agents.isAlive]);
-    fprintf("%g Agents, ", Living);
+    %fprintf("%g Agents, ", Living);
+    flightScore = flightScore + Living * SL.dt;
     
-    [maxHeight, minHeight, avgHeight] = swarm.getHeights();
+    [maxHeight, minHeight, avgHeight, avgSpeed] = swarm.getData();
     
     maxHeights(step) = maxHeight;
     minHeights(step) = minHeight;
     avgHeights(step) = avgHeight;
     
-    stringTitle = sprintf("Agents Alive: %g\nMax Height: %.1f\nMin Height: %.1f\nAverage Height: %.1f",Living,maxHeight,minHeight,avgHeight);
-    title(stringTitle);
-    
-
-    % Find and print elapsed time
-    c2 = clock;
-    elapsedTime = c2(6)-c1(6);
-    % If minute advances, elapsedTime will appear negative (1min20sec - 0min50sec = 20sec-50sec = -30sec)
-    if(elapsedTime < 0) 
-        elapsedTime = elapsedTime + 60;
-    end
-    fprintf("%g sec\n",elapsedTime);
+    stringTitle = sprintf("Agents Alive: %g\nMax Height: %.1f\nMin Height: %.1f\nAverage Height: %.1f\nAverage Speed: %.1f",Living,maxHeight,minHeight,avgHeight,avgSpeed);
+    title(stringTitle);   
 end
 
 simData = figure();
@@ -126,6 +127,7 @@ plot(timeAxis,maxHeights);
 plot(timeAxis,minHeights);
 plot(timeAxis,avgHeights);
 legend("Max Height","Minimum Height","Average Height",'Location','southeast');
+plotTitle = sprintf("Total Flight Score: %.1f",flightScore);
 saveas(simData,picName);
 
 close(video);

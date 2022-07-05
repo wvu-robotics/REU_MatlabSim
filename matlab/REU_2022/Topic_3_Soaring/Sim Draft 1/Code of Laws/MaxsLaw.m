@@ -2,39 +2,42 @@ classdef MaxsLaw
     properties
         %% Variables to be Changed Here
         % Simulation
-        totalTime = 1800;           % s
-        fpsMult = 15;               % x Real Time
+        totalTime = 5400;           % s
+        fpsMult = 10;               % x Real Time
         numThermals = 6;            % thermals
         neighborRadius = 1000;      % m
-        k = 5;                      % number of nearest neighbors
-        frameSkip = 5;              % render every nth frame
-        forwardInertia = 10;        %
+        k = 10;                      % number of nearest neighbors
+        frameSkip = 5;             % render every nth frame
+        forwardInertia = 10;        % <unused>
         bankMin = -2*pi/12;         % rad
         bankMax = 2*pi/12;          % rad
-        bankInertia = 1;            %
+        bankInertia = 1;            % <unused>
         fov = 2*pi;                 % rad
-        forwardSpeedMin = 5;        % m/s
-        forwardSpeedMax = 20;       % m/s
+        forwardSpeedMin = 8;        % m/s
+        forwardSpeedMax = 13;       % m/s
         
         % Visuals
-        showArrow = false;          %
+        showArrow = true;          %
+        followAgent = false;        %
         renderScale = [300;300];    % [scaleX; scaleY];
         showNeighbors = true;       %
-        showFixedRadius = true;     %
-        showRange = true;           %
-        showText  = false;
+        showFixedRadius = false;     %
+        showRange = false;           %
+        showText  = false;          %
+        stopWhenDead = true;        %
 
         % Functions to use
         funcName_agentControl     = "agentControl_Max";
-        funcName_findNeighborhood = "findNeighborhood_KNN";
+        funcName_findNeighborhood = "findNeighborhood_fixedRadius";
 
         % Thermal constraints
-        thermalSpeedMin = 5         % m/s
-        thermalSpeedMax = 20        % m/s
+        thermalPixels = 50
+        thermalSpeedMin = 0         % m/s
+        thermalSpeedMax = 0         % m/s
         thermalRadiusMin = 600      % m
         thermalRadiusMax = 1300     % m
-        thermalStrengthMin = 20     % m/s, peak updraft speed
-        thermalStrengthMax = 50    % m/s, peak updraft speed
+        thermalStrengthMin = 1      % m/s, peak updraft speed
+        thermalStrengthMax = 10     % m/s, peak updraft speed
         thermalFadeRate = 0.002     % m/s, rate at which thermals fade in or out 
         thermalMinPlateauTime = 600 % steps at the min strength
         thermalMaxPlateauTime = 1000% steps at the max strength
@@ -68,36 +71,19 @@ classdef MaxsLaw
         % Visuals
         agentShape_triangle = [-0.5,0.5,-0.5; -0.375,0,0.375];
         agentShape_plane = [-0.5,-0.3,0,0.1,0.2,0.3,0.5,0.3,0.2,0.1,0,-0.3,-0.5;-0.2,-0.1,-0.1,-0.5,-0.5,-0.1,0,0.1,0.5,0.5,0.1,0.1,0.2];
+        agentShape_amogus = [.25 .5 0 0 .5 .5 .15 .15 -.15 -.15 -.5 -.5 -.75 -.75 -.25;
+                             .75 .4 .4 .15 .15 -1 -1 -.6 -.6 -1 -1 -.55 -.25 .25 .75];
         Arrow = [2 1.5 1.5 0 0 1.5 1.5; 0 .5 .1 .1 -.1 -.1 -.5];
         ThermPatch = [0.8660, 0.5000, 0.0000, -0.5000, -0.8660, -1.0000, -0.8660, -0.5000, -0.0000,  0.5000,  0.8660,  1.0000;
                       0.5000, 0.8660, 1.0000,  0.8660,  0.5000,  0.0000, -0.5000, -0.8660, -1.0000, -0.8660, -0.5000, -0.0000];
-
-        % Thermal constraints
         CMColors = [6 42 127; 41 76 247; 102 59 231; 162 41 216; 222 24 200; 255 192 203] / 255;
-        thermalPixels = 50
         
         % Agent Constants
         agentCeiling   = 2600;      % m
         agentFloor     = 0;         % m
-
         Sink_A = -0.01843;          %
         Sink_B = 0.3782;            %
         Sink_C = -2.3782;           %
-
-
-    end
-
-    methods % temporary, remove later
-        function strength = getTempThermalStrength(~,agent)
-            position = agent.position;
-            radius = 600;
-            peakStrength = 20;
-            thermalPos = [-1000,1000];
-            
-            dist = norm(position(1:2)-thermalPos);
-            closeStrength = peakStrength*(1-(dist/radius)^2);
-            strength = max(0,closeStrength);
-        end
     end
 end
 

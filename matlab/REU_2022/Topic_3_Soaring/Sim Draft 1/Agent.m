@@ -31,6 +31,7 @@ classdef Agent < handle
             %% Calculate Agent Orientation Properties
             rotationMatrix = [cos(obj.heading), -sin(obj.heading); sin(obj.heading), cos(obj.heading)];
             shape = SL.agentShape_plane .* SL.renderScale;
+            %shape = SL.agentShape_amogus .* SL.renderScale;
             rotatedShape = rotationMatrix * shape; %[x;y] matrix
             rotatedShape = rotatedShape'; %Convert to [x,y];
             globalShape = rotatedShape + obj.position(1:2); %[x,y] matrix
@@ -77,6 +78,8 @@ classdef Agent < handle
             obj.patchObj.YData = globalShape(:,2);
             if ~obj.isAlive
                 obj.patchObj.Visible = 'off';
+            else
+                obj.patchObj.Visible = 'on';
             end
 
         end
