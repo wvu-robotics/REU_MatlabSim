@@ -96,8 +96,10 @@ if __name__ ==  '__main__':
         x.append(np.array([slice.cohesion[1],slice.alignment[1],slice.separation[1],slice.rotation[1],slice.steer_to_avoid[1]]))
         y.append(np.array(slice.output_vel[1]))
 
+    # double check true loss
 
-    # print("True loss: ",true_loss)
+
+    print("True loss: ",true_loss)
     reg = lr().fit(x,y)
     print("R^2: ",reg.score(x,y))
 
