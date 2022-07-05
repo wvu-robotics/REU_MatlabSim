@@ -1,4 +1,4 @@
-classdef AdamsLaw
+classdef AdamsLaw < handle
     properties
         %% Variables to save
         %% Simulation constraints
@@ -7,7 +7,7 @@ classdef AdamsLaw
         fpsMult = 10;
         frameSkip = 5;
         numAgents = 20;
-        numThermals = 3
+        numThermals = 20
         
         %% Physical Sim Space
         mapSize = [-3000,3000];     % m, bounds of square map
@@ -86,10 +86,12 @@ classdef AdamsLaw
         showRange = false;
         showText = true;
         showArrow = true;
+        followAgent = false;
         
         %% Thermal constraints
         CMColors = [6 42 127; 41 76 247; 102 59 231; 162 41 216; 222 24 200; 255 192 203] / 255;
-        thermalPixels = 20
+        thermalPixels = 200
+        thermalSpawnAttempts = 50; %Number of tries per thermal
         
         thermalSpeedMin = 0         % m/s
         thermalSpeedMax = 0        % m/s
