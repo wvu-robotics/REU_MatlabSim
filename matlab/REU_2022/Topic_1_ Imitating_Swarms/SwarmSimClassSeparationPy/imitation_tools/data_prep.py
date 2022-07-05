@@ -37,7 +37,8 @@ class agentSlice:
     output_vel: np.ndarray
 
 #need to figure out how to pass more things to this, maybe function currying is the way
-def agentSliceFromPosVelSlice(slice,params=sim.SimParams(),neighborCaps=[1,np.inf],ignoreConstrainedMotion=False,ignoreBoundaryData=True):
+def agentSliceFromPosVelSlice(slice,params=sim.SimParams(),neighborCaps=[0,np.inf],ignoreConstrainedMotion=False,ignoreBoundaryData=True):
+    # if ignoreConstrainedMotion: print("IGNORING CONSTRAINED MOTION")
     agentSlices = []
     for agent in range(params.num_agents):
         #calculate all relevant derivate metrics, repackage
@@ -58,10 +59,11 @@ def agentSliceFromPosVelSlice(slice,params=sim.SimParams(),neighborCaps=[1,np.in
 
         
         if ignoreConstrainedMotion:
-            if np.linalg.norm(agentVel) >= params.agent_max_vel:
+            if np.linalg.norm(agentVel) >= params.agent_max_vel or np.isclose(np.linalg.norm(agentVel),params.agent_max_vel,atol=0.3):
+                # print("ignoring at max vel")
                 continue
             
-            if np.linalg.norm(agentNextVel) >= params.agent_max_accel:
+            if abs(np.linalg.norm(agentNextVel)-np.linalg.norm(agentVel)) >= params.agent_max_accel*params.dt:
                 continue
     
             vel_new_angle = np.arctan2(agentNextVel[1],agentNextVel[0])

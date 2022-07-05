@@ -1,7 +1,6 @@
 # import sys
 # sys.path.append("..")
 import numpy as np
-from sqlalchemy import false
 import sim_tools.sim as sim
 import sim_tools.media_export as export
 import copy
@@ -110,8 +109,13 @@ if __name__ ==  '__main__':
         x.append(np.array([slice.cohesion[1],slice.alignment[1],slice.separation[1],slice.steer_to_avoid[1], slice.rotation[1]]))
         y.append(np.array(slice.output_vel[1]))
 
+    true_loss = 0
+    for i in range(len(x)):
+        pred = cohesion_gain*x[i][0] + align_gain*x[i][1] + separation_gain*x[i][2] + steer_to_avoid_gain*x[i][3] + rotation_gain*x[i][4]
+        true_loss += np.sum(np.abs(pred - y[i]))
+    print("True loss: ",true_loss/len(x))
 
-    # print("True loss: ",true_loss)
+    np.savez("linearSuperSetDataForRegression",x=x,y=y)
 
     print("First pass linear regression: ")
     reg = lr(fit_intercept=False).fit(x,y) #lr = least squares regression, rr = ridge regression (l2 penalization)

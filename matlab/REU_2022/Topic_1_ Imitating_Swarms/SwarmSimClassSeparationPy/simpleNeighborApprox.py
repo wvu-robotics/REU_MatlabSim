@@ -2,7 +2,6 @@ from imitation_tools.data_prep import posVelSlice
 from sim_tools import sim
 from sim_tools import media_export as export
 from imitation_tools import data_prep
-import math
 
 from models.Boids import Boids
 import numpy as np
@@ -17,7 +16,7 @@ params = sim.SimParams(
     init_pos_max= None, #if None, then defaults to enclosure_size
     agent_max_vel=9.23,
     init_vel_max = None,
-    agent_max_accel=2,
+    agent_max_accel=1,
     agent_max_turn_rate=10*np.pi,
     neighbor_radius=2,
     periodic_boundary=False
@@ -72,7 +71,7 @@ if __name__ ==  '__main__':
 
                 #note currently done by magnitude, should really do it in 2D the correct way
                 velChange = np.linalg.norm(previousVel)-np.linalg.norm(back2Vel)
-                accel = velChange/shortSimParams.dt
+                accel = velChange
                 if accel>maxAccel:
                     maxAccel = accel
                 
@@ -107,4 +106,4 @@ if __name__ ==  '__main__':
 
     print("Estimated neighbor radius: ", neighborRadius) #good
     print("Estimated Max Velocity: ", maxVel) # good
-    print("Estimated Max Acceleration: ", maxAccel)
+    print("Estimated Max Acceleration: ", maxAccel) # still some big problems
