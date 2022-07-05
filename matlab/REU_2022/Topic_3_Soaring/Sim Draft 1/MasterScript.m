@@ -1,9 +1,9 @@
 % Ind S, C, A, M, hPriority, hIgnore, dt, Waggle Str, Waggle Time, NAgents
 clear
 clc
-ParamMatrix = readmatrix("Params.xlsx","Range","A2:O7");
-render  = true;
-plot    = false;
+ParamMatrix = readmatrix("Params.xlsx","Range","A2:O9");
+render  = false;
+plotters    = true;
 Write   = true;
 
 N = size(ParamMatrix,1);
@@ -12,28 +12,35 @@ surviving = average;
 Time      = surviving;%             \/ index for N_Agents
 ToD       = zeros(max(ParamMatrix(:,11)),N);
 Log       = cell(N, 26);
+data      = cell(1,N);
 tic
-
 % parfor if render is false, for if render is true
 for i = 1:N
-    [average(i), surviving(i), Time(i), ToD(:,i), Log(i,:)] = MainScriptFunction(ParamMatrix(i,:), render);
+    [outData, average(i), surviving(i), Time(i), Log(i,:)] = MainScriptFunction(ParamMatrix(i,:), render);
+    data(i) = {outData};
 end
 if render
     close all
 end
-load gong.mat;
-sound(y)
+[y,Fs] = audioread("microwave.mp3");
+%load gong.mat;
+sound(y,Fs)
 toc
 
 %% Plot
-if plot
+if plotters
     clf
     hold on
-    yyaxis left
-    plot(average);
-    yyaxis right
-    plot(surviving);
-    legend('Average Height','Number Surviving')
+%     yyaxis left
+%     plot(average);
+%     yyaxis right
+%     plot(surviving);
+%     legend('Average Height','Number Surviving')
+    for i = 1:N
+        figure(i)
+        plot(cell2mat(data(i))')
+        title(sprintf("Run # %g",i))
+    end
 end
 
 %% Write

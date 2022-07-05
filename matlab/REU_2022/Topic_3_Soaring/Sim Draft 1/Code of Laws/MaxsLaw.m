@@ -2,7 +2,7 @@ classdef MaxsLaw
     properties
         %% Variables to be Changed Here
         % Simulation
-        totalTime = 5400;           % s
+        totalTime = 7200;           % s
         fpsMult = 10;               % x Real Time
         numThermals = 6;            % thermals
         neighborRadius = 4000;      % m
@@ -21,7 +21,7 @@ classdef MaxsLaw
         followAgent = false;        %
         followRadius = 1000;
         renderScale = [200;200];    % [scaleX; scaleY];
-        showNeighbors = false;       %
+        showNeighbors = true;       %
         showFixedRadius = false;     %
         showRange = false;           %
         showText  = false;          %
@@ -29,7 +29,7 @@ classdef MaxsLaw
 
         % Functions to use
         funcName_agentControl     = "agentControl_Max";
-        funcName_findNeighborhood = "findNeighborhood_fixedRadius";
+        funcName_findNeighborhood = "findNeighborhood_KNNInFixedRadius";
 
         % Thermal constraints
         thermalPixels = 50
@@ -40,7 +40,7 @@ classdef MaxsLaw
         thermalStrengthMin = 1      % m/s, peak updraft speed
         thermalStrengthMax = 10     % m/s, peak updraft speed
         thermalFadeRate = 0.001     % m/s, rate at which thermals fade in or out 
-        thermalMinPlateauTime = 600 % steps at the min strength
+        thermalMinPlateauTime = 1600% steps at the min strength
         thermalMaxPlateauTime = 1000% steps at the max strength
         thermalSpawnAttempts = 75;  % number of attempts
 

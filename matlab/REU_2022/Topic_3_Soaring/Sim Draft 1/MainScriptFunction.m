@@ -1,4 +1,4 @@
-function [average, surviving, flightTime, ToD, Log] = MainScriptFunction(Param, render)
+function [data, average, surviving, flightTime, Log] = MainScriptFunction(Param, render)
 % Main script: loads parameter variables and runs swarm step function
 %% Clear
 close all
@@ -87,43 +87,50 @@ end
 %% Run simulation...
 steps  = SL.totalTime/SL.dt;
 Living = SL.numAgents;
-maxHeight     = -1;
-minHeight     = 1E6;
 averageHeight = 0;
+data = zeros(3,steps/SL.frameSkip);
 flightTime          = 0;
-ToD           = zeros(1,SL.numAgents);
+% ToD           = zeros(1,SL.numAgents);
 
 for step = 1:steps
+maxHeight     = -1;
+minHeight     = 1E6;
     if ~SL.stopWhenDead || nnz([swarm.agents.isAlive]) > 0
-        %% Step simulation & Get Data
+        %% Step simulation
         thermalMap.staticStep();
-    
         swarm.saveAgentData();
         swarm.stepSimulation();
-        averageHeight = 0;
-        for i=1:SL.numAgents
-            if swarm.agents(i).isAlive
-                currentHeight = swarm.agents(i).position(3);
-                maxHeight = max(maxHeight,currentHeight);
-                minHeight = min(minHeight,currentHeight);
-                averageHeight = averageHeight + currentHeight;
+
+        %% Read Data
+        if mod(step,SL.frameSkip)==0
+            averageHeight = 0;
+            for i=1:SL.numAgents
+                if swarm.agents(i).isAlive
+                    currentHeight = swarm.agents(i).position(3);
+                    maxHeight = max(maxHeight,currentHeight);
+                    minHeight = min(minHeight,currentHeight);
+                    averageHeight = averageHeight + currentHeight;
+                end
             end
+            averageHeight = averageHeight / nnz([swarm.agents.isAlive]);
+            
+            data(1,step/SL.frameSkip) = maxHeight;
+            data(2,step/SL.frameSkip) = minHeight;
+            data(3,step/SL.frameSkip) = averageHeight;
+            hours   =     floor(step*SL.dt/3600);
+            minutes = mod(floor(step*SL.dt/60  ),60);
+            seconds = mod(floor(step*SL.dt     ),60);
+%             if Living ~= nnz([swarm.agents.isAlive])
+%                 % if living is suddenly 39/40, update number 1 to whatever time it
+%                 % is now.
+%                 % if multiple agents die, update that number of elements.
+%                 % Living should always be >= nnz of isAlive; isAlive updates first.
+%                 ToD((SL.numAgents - Living + 1) : (SL.numAgents - nnz([swarm.agents.isAlive]))) = minutes;
+%             end
+            Living  = nnz([swarm.agents.isAlive]);
+            flightTime    = flightTime + Living * SL.dt;
         end
-        averageHeight = averageHeight / nnz([swarm.agents.isAlive]);
-        minutes = floor(step*SL.dt/60);
-        seconds = mod(floor(step*SL.dt),60);
-        if Living ~= nnz([swarm.agents.isAlive])
-            % if living is suddenly 39/40, update number 1 to whatever time it
-            % is now.
-            % if multiple agents die, update that number of elements.
-            % Living should always be >= nnz of isAlive; isAlive updates first.
-            ToD((SL.numAgents - Living + 1) : (SL.numAgents - nnz([swarm.agents.isAlive]))) = minutes;
-        end
-    
-        Living  = nnz([swarm.agents.isAlive]);
-        flightTime    = flightTime + Living * SL.dt;
-    
-        
+
         %% Render
         if render && mod(step,SL.frameSkip)==0
             hold on
@@ -147,17 +154,15 @@ for step = 1:steps
     
     %         stringTitle = sprintf("Agents Alive: %g\nMax Height: %.1f\nMin Height: %.1f\nAverage Height: %.1f",Living,maxHeight,minHeight,averageHeight);
     %         stringTitle = sprintf("Minutes: %g\nAgents Alive: %g\nAverage Height: %.1f",minutes,Living,averageHeight);
-            stringTitle = sprintf("Number %g, T+%02g:%02g, Total Time = %5.0f\nAgents Alive: %g  Average Height: %.1f", ...
-                number, minutes, seconds,flightTime, Living,averageHeight);
+            stringTitle = sprintf("Number %g, T+%01g:%02g:%02g, Score = %5.0fs\nLiving: %g  Avg: %.0f Min: %.0f Max: %.0f", ...
+                number, hours, minutes, seconds,flightTime, Living,averageHeight, minHeight, maxHeight);
             title(stringTitle);
             hold off
         end
         
         %% Print
         if mod(step,steps/10) == 0
-            fprintf("%02g%%, ",100*step/steps);
-            fprintf("Run # %g \n", number);
-            % fprintf("%g Agents\n ", Living);
+            fprintf("%02g%% through Run #  %g \n",100*step/steps, number);
         end
     else
         fprintf("Everybody died in Run # %g\n", number);
@@ -170,7 +175,6 @@ surviving = Living;
 if render 
     close(video); 
 end
-
 %% Write to Log
 
 % Date
