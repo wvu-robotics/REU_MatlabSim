@@ -131,8 +131,9 @@ for step = 1:steps
             thermalMap.renderThermals();
             swarm.renderAgents();
             if SL.followAgent
-                xlim([swarm.agents(swarm.thisAgent).position(1) - SL.neighborRadius, swarm.agents(swarm.thisAgent).position(1) + SL.neighborRadius]);
-                ylim([swarm.agents(swarm.thisAgent).position(2) - SL.neighborRadius, swarm.agents(swarm.thisAgent).position(2) + SL.neighborRadius]);
+                 xlim([swarm.agents(swarm.thisAgent).position(1) - SL.followRadius, swarm.agents(swarm.thisAgent).position(1) + SL.followRadius]);
+                 ylim([swarm.agents(swarm.thisAgent).position(2) - SL.followRadius, swarm.agents(swarm.thisAgent).position(2) + SL.followRadius]);
+
             else
                 xlim(SL.mapSize);
                 ylim(SL.mapSize);

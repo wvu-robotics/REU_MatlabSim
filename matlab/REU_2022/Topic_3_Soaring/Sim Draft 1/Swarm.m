@@ -211,8 +211,8 @@ classdef Swarm < handle
                     end
                 end
                 %% All Agents
-                if ~SL.followAgent || (abs(obj.agents(i).position(1) - currentAgent.position(1)) < SL.neighborRadius...
-                                    && abs(obj.agents(i).position(2) - currentAgent.position(2)) < SL.neighborRadius)
+                if ~SL.followAgent || (abs(obj.agents(i).position(1) - obj.agents(obj.thisAgent).position(1)) < SL.followRadius ...
+                                    && abs(obj.agents(i).position(2) - obj.agents(obj.thisAgent).position(2)) < SL.followRadius)
                     obj.agents(i).render();
                 elseif(class(obj.agents(i).patchObj) ~= "double")
                     obj.agents(i).patchObj.Visible = 'off';

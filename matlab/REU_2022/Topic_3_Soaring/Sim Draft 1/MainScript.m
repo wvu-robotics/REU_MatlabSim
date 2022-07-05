@@ -47,7 +47,7 @@ video.FrameRate = 1/SL.dt * SL.fpsMult / SL.frameSkip;
 open(video);
 
 %Create frame
-simFig = figure('Visible','on');
+simFig = figure('Visible','off');
 xlim(SL.mapSize);
 ylim(SL.mapSize);
 daspect([1 1 1])
@@ -76,6 +76,7 @@ flightScore = 0;
 
 c1 = clock;
 %% Run simulation
+simFig.Visible = 'on';
 for step = 1:steps
     if(mod(step,SL.frameSkip)==0)
         % Find and print elapsed time
