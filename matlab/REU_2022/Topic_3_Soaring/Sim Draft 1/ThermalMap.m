@@ -200,8 +200,8 @@ classdef ThermalMap < handle
                 thermalSquareMax = [thermalPos(1)+thermalRad,thermalPos(2)+thermalRad];
                 
                 % Calculate the position of the thermal square on the map
-                mapPosMin = [round((thermalSquareMin(1)-SL.mapSize(1))/mapDiff),round((thermalSquareMin(2)-SL.mapSize(1))/mapDiff)];
-                mapPosMax = [round((thermalSquareMax(1)-SL.mapSize(1))/mapDiff),round((thermalSquareMax(2)-SL.mapSize(1))/mapDiff)];
+                mapPosMin = [round((thermalSquareMin(1)-SL.mapSize(1))/mapDiff)+1,round((thermalSquareMin(2)-SL.mapSize(1))/mapDiff)+1];
+                mapPosMax = [round((thermalSquareMax(1)-SL.mapSize(1))/mapDiff)+1,round((thermalSquareMax(2)-SL.mapSize(1))/mapDiff)+1];
                 
                 % Create temporary empty matrix to hold strengths around this thermal
                 tempThermalMap = zeros(thermalMap.thermalPixels);
