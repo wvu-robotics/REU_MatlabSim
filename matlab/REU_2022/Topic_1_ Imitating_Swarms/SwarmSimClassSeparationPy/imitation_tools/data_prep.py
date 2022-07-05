@@ -59,10 +59,10 @@ def agentSliceFromPosVelSlice(slice,params=sim.SimParams(),neighborCaps=[0,np.in
 
         
         if ignoreConstrainedMotion:
-            if np.linalg.norm(agentVel) >= params.agent_max_vel or np.isclose(np.linalg.norm(agentVel),params.agent_max_vel,atol=0.3):
+            if np.linalg.norm(agentNextVel) >= params.agent_max_vel or np.isclose(np.linalg.norm(agentNextVel),params.agent_max_vel,atol=.1):
                 # print("ignoring at max vel")
                 continue
-            
+            # if np.linalg.norm(agentNextVel) > 6.7: print("Let",np.linalg.norm(agentNextVel),"get through")
             if abs(np.linalg.norm(agentNextVel)-np.linalg.norm(agentVel)) >= params.agent_max_accel*params.dt:
                 continue
     
@@ -74,6 +74,7 @@ def agentSliceFromPosVelSlice(slice,params=sim.SimParams(),neighborCaps=[0,np.in
     
             if abs(angleDeviation) >= params.agent_max_turn_rate*params.dt:
                 continue
+        
 
         adjacent = 0
         for otherAgent in range(params.num_agents):
@@ -129,7 +130,7 @@ def agentSliceFromPosVelSlice(slice,params=sim.SimParams(),neighborCaps=[0,np.in
             collision = other.buffer(collision_distance)
             if velLine.intersects(collision):
                 dist = np.linalg.norm(position-agentPos)
-                if(dist < closestDist):
+                if(dist < closestDist and closestDist != 0):
                     closestDist = dist
                     closest = position
         
