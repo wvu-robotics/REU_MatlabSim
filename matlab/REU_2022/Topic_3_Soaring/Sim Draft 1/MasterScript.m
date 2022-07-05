@@ -1,7 +1,7 @@
 % Ind S, C, A, M, hPriority, hIgnore, dt, Waggle Str, Waggle Time, NAgents
 clear
 clc
-ParamMatrix = readmatrix("Params.xlsx","Range","A2:O2");
+ParamMatrix = readmatrix("Params.xlsx","Range","A2:O7");
 render  = true;
 plot    = false;
 Write   = true;

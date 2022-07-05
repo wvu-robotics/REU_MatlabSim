@@ -22,13 +22,20 @@ if(numLocalAgents > 0)
     distances2D = 1E6 * ones(1,numLocalAgents);
     centroidWeight = 0;
     for i = 1:numLocalAgents
-        if localAgents(i).savedPosition(3) <= 0
+        if ~localAgents(i).isAlive
             continue;
         end
         diffLocalAgent = localAgents(i).savedPosition - currentAgent.savedPosition;
+        adistLocalAgent = norm(diffLocalAgent);
 %         diffHeight = diffLocalAgent(3);
         diffLocalAgent(3) = 0;
         distLocalAgent = norm(diffLocalAgent);
+        if adistLocalAgent < 4
+            currentAgent.isAlive = false;
+            localAgents(i).isAlive = false;
+            continue;
+        end
+
         distances2D(i) = distLocalAgent;
 %         scaledDist = distLocalAgent/SL.neighborRadius;
 %         heightOffset = -3;
@@ -38,6 +45,8 @@ if(numLocalAgents > 0)
 %             weight = 0;
 %         end
         weight = max(0,SL.cohesionHeightMult*localAgents(i).savedVelocity(3));
+        % weight doubled at 0 altitude, and 0 at max altitude.
+        weight = weight*(2-currentAgent.savedPosition(3)/(SL.agentCeiling - SL.agentFloor));
         centroid = centroid + weight*(localAgents(i).savedPosition - currentAgent.savedPosition);
         centroidWeight = centroidWeight + weight;
     end

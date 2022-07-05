@@ -5,7 +5,7 @@ classdef MaxsLaw
         totalTime = 5400;           % s
         fpsMult = 10;               % x Real Time
         numThermals = 6;            % thermals
-        neighborRadius = 1000;      % m
+        neighborRadius = 4000;      % m
         k = 10;                      % number of nearest neighbors
         frameSkip = 5;             % render every nth frame
         forwardInertia = 10;        % <unused>
@@ -17,10 +17,11 @@ classdef MaxsLaw
         forwardSpeedMax = 13;       % m/s
         
         % Visuals
-        showArrow = true;          %
+        showArrow = false;          %
         followAgent = false;        %
-        renderScale = [300;300];    % [scaleX; scaleY];
-        showNeighbors = true;       %
+        followRadius = 1000;
+        renderScale = [200;200];    % [scaleX; scaleY];
+        showNeighbors = false;       %
         showFixedRadius = false;     %
         showRange = false;           %
         showText  = false;          %
@@ -38,9 +39,10 @@ classdef MaxsLaw
         thermalRadiusMax = 1300     % m
         thermalStrengthMin = 1      % m/s, peak updraft speed
         thermalStrengthMax = 10     % m/s, peak updraft speed
-        thermalFadeRate = 0.002     % m/s, rate at which thermals fade in or out 
+        thermalFadeRate = 0.001     % m/s, rate at which thermals fade in or out 
         thermalMinPlateauTime = 600 % steps at the min strength
         thermalMaxPlateauTime = 1000% steps at the max strength
+        thermalSpawnAttempts = 75;  % number of attempts
 
         %% Variables that get changed in the Excel Doc
         separation = 1;
