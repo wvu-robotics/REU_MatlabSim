@@ -85,10 +85,12 @@ if __name__ ==  '__main__':
         y.append(np.array(slice.output_vel))
         x_flat.append(np.array([slice.cohesion[0],slice.alignment[0],slice.separation[0],slice.steer_to_avoid[0], slice.rotation[0]]))
         y_flat.append(np.array(slice.output_vel[0]))
-        x_flat.append(np.array([slice.cohesion[1],slice.alignment[1],slice.separation[1],slice.steer_to_avoid[1], slice.rotation[1]]))
-        y_flat.append(np.array(slice.output_vel[1]))
+        # x_flat.append(np.array([slice.cohesion[1],slice.alignment[1],slice.separation[1],slice.steer_to_avoid[1], slice.rotation[1]]))
+        # y_flat.append(np.array(slice.output_vel[1]))
 
     print("x_length",len(x))
+    x_flat = np.array(x_flat)
+    y_flat = np.array(y_flat)
 
     true_loss = 0
     for i in range(len(x)):
@@ -134,12 +136,27 @@ if __name__ ==  '__main__':
     px.scatter(direction_df,x="x",y="y",color="type",title="Predicted(Using true gains) vs Actual").show()
 
     #difference overall
-    y_mag = np.array([np.sqrt(np.sum(np.square(y_i))) for y_i in y])
+    y_mag = np.array([np.linalg.norm(y_i) for y_i in y])
     diff = y_pred_true - y
     diff_mag = np.linalg.norm(diff,axis=1)
     px.scatter(x=np.arange(len(diff_mag)),y=diff_mag,title="Difference vs index").show()
 
     # velocity mag per agent(check for capping)
     px.scatter(x=np.arange(len(y_mag)),y=y_mag,title="True V_mag vs index").show()
+    
+    #3d graph to see linearity
+    px.scatter_3d(x=x_flat[:,0],y=x_flat[:,1],z=y_flat,title="coh x align x v_out",size_max=5,opacity=.7).show()
 
-    # he had a collinearity graph, let me look more
+
+    #get rid of cycling(there is a better way)
+    x_flat = x_flat[:int(len(x_flat)/10)]
+    # #and most certainly a better way to plot collinearity
+
+    # # he had a collinearity graph
+    features_df = pd.DataFrame({
+        "x":np.tile(np.arange(len(x_flat)),5),
+        "y":np.concatenate([x_flat[:,0],x_flat[:,1],x_flat[:,2],x_flat[:,3],x_flat[:,4]]),
+        "type":np.repeat(["cohesion","alignment","separation","steer_to_avoid","rotation"],len(x_flat))
+        })
+    px.line(features_df,x="x",y="y",color="type",title="Features").show()
+
