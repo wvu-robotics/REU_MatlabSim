@@ -1,7 +1,7 @@
 % Main script: loads parameter variables and runs swarm step function
 %% Clear
 close all
-clear
+%clear
 clc
 
 %% Add search paths for sim laws and agent functions
@@ -10,7 +10,8 @@ addpath("Agent Control Functions");
 addpath("Find Neighborhood Functions");
 
 %% Load simulation parameters
-SL = AdamsLaw();
+%SL = AdamsLaw();
+SL = BigSL(1);
 
 %% setup output folder
 rootFolder = "Output Media";
