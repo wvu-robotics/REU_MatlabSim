@@ -10,6 +10,7 @@ classdef Agent < handle
         patchObj = NaN
 
         isAlive  = true
+        markedForDeath = false
         accelDir = 0.0;
         rulesDir = [0.0, 0.0, 0.0, 0.0, 0.0] % S, C, A, M
         rulesMag = [0.0, 0.0, 0.0, 0.0, 0.0] % S, C, A, M

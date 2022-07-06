@@ -67,10 +67,8 @@ classdef AdamsLaw < handle
         k = 5; %k-nearest neighbors
         forwardSpeedMin = 5;     %m/s
         forwardSpeedMax = 15;    %m/s
-        forwardInertia = 10;
         bankMin = -5*pi/12;           %rad
         bankMax = 5*pi/12;            %rad
-        bankInertia = 1;
         fov = 11/6*pi;              %rad
         Sink_A = -0.01843;
         Sink_B = 0.3782;

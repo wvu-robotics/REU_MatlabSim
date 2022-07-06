@@ -7,6 +7,8 @@ classdef Swarm < handle
         funcHandle_findNeighborhood
         thisAgent = 0;
         thermalMap
+        simFig
+        video
         
         lineCircle = NaN
         lineNeighbors = NaN
@@ -18,6 +20,14 @@ classdef Swarm < handle
         patchWag = NaN
 
         textAnnt = NaN
+        number  = 0                 % 
+        Elapsed = [0.0 0.0 0.0]     % hours, minutes, seconds
+        flightTime = 0.0            % Agent-Seconds
+        Living = 0                  %
+        avgHeight = 0           % m
+        minHeight = 0               % m
+        maxHeight = 0               % m
+        avgSpeed  = 0               % m/s
     end
     
     methods
@@ -78,6 +88,11 @@ classdef Swarm < handle
                     
                     %Update currentAgent
                     obj.funcHandle_agentControl(currentAgent,localAgents,thermalStrength,[0,0,0], SL);
+                end
+            end
+            for i=1:numAgents
+                if obj.agents(i).markedForDeath
+                    obj.agents(i).isAlive = false;
                 end
             end
         end
@@ -220,6 +235,7 @@ classdef Swarm < handle
             end
         end
         
+        % Get Data (probably outdated but dont want to delete
         function [maxHeight, minHeight, avgHeight, avgSpeed] = getData(obj)
             SL = obj.simLaw;
             
@@ -245,6 +261,109 @@ classdef Swarm < handle
             end
             avgHeight = avgHeight / SL.numAgents;
             avgSpeed = avgSpeed / SL.numAgents;
+        end
+        
+        % Updated Update Data Function
+        function obj = updateData(obj,step)
+            SL = obj.simLaw;
+            
+            obj.Elapsed(1) =     floor(step*SL.dt/3600);
+            obj.Elapsed(2) = mod(floor(step*SL.dt/60  ),60);
+            obj.Elapsed(3) = mod(floor(step*SL.dt     ),60);
+
+            obj.maxHeight = SL.agentFloor;
+            obj.minHeight = SL.agentCeiling;
+            obj.avgHeight = 0;
+            obj.avgSpeed = 0;
+            
+%             if Living ~= nnz([swarm.agents.isAlive])
+%                 % if living is suddenly 39/40, update number 1 to whatever time it
+%                 % is now.
+%                 % if multiple agents die, update that number of elements.
+%                 % Living should always be >= nnz of isAlive; isAlive updates first.
+%                 ToD((SL.numAgents - Living + 1) : (SL.numAgents - nnz([swarm.agents.isAlive]))) = minutes;
+%             end
+            obj.Living  = nnz([obj.agents.isAlive]);
+            obj.flightTime    = obj.flightTime + obj.Living * SL.dt;
+
+            for i=1:SL.numAgents
+                currentHeight = obj.agents(i).position(3);
+                if(currentHeight > obj.maxHeight)
+                    obj.maxHeight = currentHeight;
+                end
+                if(currentHeight < obj.minHeight)
+                    obj.minHeight = currentHeight;
+                end
+                obj.avgHeight = obj.avgHeight + currentHeight;
+                obj.avgSpeed = obj.avgSpeed + obj.agents(i).savedVelocity(1);
+            end
+            % THIS
+            % obj.avgHeight = obj.avgHeight / SL.numAgents;
+            % obj.avgSpeed = obj.avgSpeed / SL.numAgents;
+            % OR THIS
+            obj.avgHeight = obj.avgHeight / nnz([obj.agents.isAlive]);
+            obj.avgSpeed = obj.avgSpeed / nnz([obj.agents.isAlive]);
+        end
+        
+        % Render EVERYTHING
+        function renderAll(obj)
+%             obj.thermalMap = thermalMap;
+            SL = obj.simLaw;
+            hold on
+    
+            obj.thermalMap.renderThermals();
+            obj.renderAgents();
+            if SL.followAgent
+                 xlim([obj.agents(swarm.thisAgent).position(1) - SL.followRadius, obj.agents(swarm.thisAgent).position(1) + SL.followRadius]);
+                 ylim([obj.agents(swarm.thisAgent).position(2) - SL.followRadius, obj.agents(swarm.thisAgent).position(2) + SL.followRadius]);
+            else
+                xlim(SL.mapSize);
+                ylim(SL.mapSize);
+            end
+            ax = gca;
+            ax.PositionConstraint = 'outerposition';
+
+            currFrame = getframe(obj.simFig);
+            writeVideo(obj.video,currFrame);
+            pause(0.0001);
+    
+    %         stringTitle = sprintf("Agents Alive: %g\nMax Height: %.1f\nMin Height: %.1f\nAverage Height: %.1f",Living,maxHeight,minHeight,averageHeight);
+    %         stringTitle = sprintf("Minutes: %g\nAgents Alive: %g\nAverage Height: %.1f",minutes,Living,averageHeight);
+            stringTitle = sprintf("Number %g, T+%01g:%02g:%02g, Score = %5.0fs\nLiving: %g  Avg: %.0f Min: %.0f Max: %.0f", ...
+                obj.number, obj.Elapsed(1), obj.Elapsed(2), obj.Elapsed(3),obj.flightTime, obj.Living, obj.avgHeight, obj.minHeight, obj.maxHeight);
+            title(stringTitle);
+            hold off
+
+        end
+
+        % Initialize Video
+        function obj = initVideo(obj,videoName)
+            
+            SL = obj.simLaw;
+            obj.video = VideoWriter(videoName);
+            obj.video.FrameRate = 1/SL.dt * SL.fpsMult / SL.frameSkip;
+            open(obj.video);
+            
+            obj.simFig = figure('Visible','on');
+        
+            % Initialize map background
+            clf
+            xlim(SL.mapSize);
+            ylim(SL.mapSize);
+            daspect([1 1 1]);
+            colorbar;
+            cbLimits = [-1,SL.thermalStrengthMax];
+            colors = [6 42 127; 41 76 247; 102 59 231; 162 41 216; 222 24 200; 255 192 203] / 255;
+            x = [0:obj.thermalMap.thermalPixels/(length(colors)-1):obj.thermalMap.thermalPixels];
+            map = interp1(x/obj.thermalMap.thermalPixels,colors,linspace(0,1,obj.thermalMap.thermalPixels)); % Creates a color gradient for the map
+            colormap();%map);
+            set(gca,'clim',cbLimits);
+
+        end
+        
+        % Close Video
+        function closeVideo(obj)
+            close(obj.video);
         end
     end
 end
