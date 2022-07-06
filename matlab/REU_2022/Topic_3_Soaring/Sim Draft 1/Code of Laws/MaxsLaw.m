@@ -3,7 +3,7 @@ classdef MaxsLaw
         %% Variables to be Changed Here
         % Simulation
         totalTime = 7200;           % s
-        fpsMult = 10;               % x Real Time
+        fpsMult = 60;               % x Real Time
         numThermals = 6;            % thermals
         neighborRadius = 4000;      % m
         k = 10;                      % number of nearest neighbors

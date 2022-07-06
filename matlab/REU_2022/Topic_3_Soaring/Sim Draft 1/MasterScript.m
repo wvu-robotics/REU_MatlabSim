@@ -1,9 +1,9 @@
 % Ind S, C, A, M, hPriority, hIgnore, dt, Waggle Str, Waggle Time, NAgents
 clear
 clc
-ParamMatrix = readmatrix("Params.xlsx","Range","A2:O9");
-render  = false;
-plotters    = true;
+ParamMatrix = readmatrix("Params.xlsx","Range","A2:O2");
+render  = true;
+plotters    = false;
 Write   = true;
 
 N = size(ParamMatrix,1);
@@ -13,6 +13,7 @@ Time      = surviving;%             \/ index for N_Agents
 ToD       = zeros(max(ParamMatrix(:,11)),N);
 Log       = cell(N, 26);
 data      = cell(1,N);
+
 tic
 % parfor if render is false, for if render is true
 for i = 1:N
