@@ -49,7 +49,7 @@ outputTitlePos = sprintf('A%d',outputTitleRow);
 % Write label 'OUTPUT'
 xlswrite(outputExcelName,{'OUTPUT'},sheetNum,outputTitlePos);
 outputRow = outputTitleRow + 1;
-outputVariables = ["timeStart";"timeEnd";"surviving";"flightTime";"finalHeightMax";"finalHeightMin";"finalHeightAvg"];
+outputVariables = ["simNumber";"timeStart";"timeEnd";"surviving";"flightTime";"finalHeightMax";"finalHeightMin";"finalHeightAvg"];
 outputLabelPos = sprintf('A%d',outputRow);
 % Write labels of output variables
 xlswrite(outputExcelName,outputVariables,sheetNum,outputLabelPos);
@@ -87,7 +87,7 @@ for sim = 1:numSims
     videoName = sprintf('%s/%d SimRender.avi',simBatchFolder,simNumber);
     outputData = MainScriptFunction(SL, simNumber, videoName, render);
     
-    %% Store sim output data
+    %% Store sim output data in Excel sheet
     fprintf("Storing results of sim %d.\n",simNumber);
     for varIndex = 1:length(outputVariables)
         varValue = outputData.(outputVariables(varIndex));
@@ -99,7 +99,13 @@ for sim = 1:numSims
         xlswrite(outputExcelName,{varValue},sheetNum,varPos);
     end
     fprintf("Finished storing results of sim %d.\n",simNumber);
+    
+    %% Save outputData to .mat file
+    bigOutputData(sim) = outputData;
+    outputDataName = sprintf("%s/%d OutputData.mat",simBatchFolder,simNumber);
+    save(outputDataName,'-struct','outputData');
 end
+fprintf("Finished.\n");
 
 
 

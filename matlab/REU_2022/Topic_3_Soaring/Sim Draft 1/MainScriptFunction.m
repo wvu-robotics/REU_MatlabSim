@@ -56,6 +56,7 @@ function outputData = MainScriptFunction(SL, simNumber, videoName, render)
     end
 
     %% Save more output data
+    outputData.simNumber = simNumber;
     outputData.timeEnd = datestr(now,"HH:MM:SS");
     outputData.surviving = swarm.Living;
     outputData.flightTime = swarm.flightTime;
