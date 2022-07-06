@@ -5,6 +5,7 @@ classdef ThermalMap < handle
         thermalVelLims = [20 50];
         thermals
         thermalPixels = 200;
+        numThermals
         simLaw
         
         thermalMapImg = NaN
@@ -16,6 +17,7 @@ classdef ThermalMap < handle
             thermalMap.simLaw = simLaw;
             thermalMap.thermalPixels = simLaw.thermalPixels;
             thermalMap.thermals = Thermal.empty(0,simLaw.numThermals);
+            thermalMap.numThermals = simLaw.numThermals;
             
             for i = 1:simLaw.numThermals
                 thermalMap.thermals(i) = Thermal(simLaw);
@@ -47,7 +49,7 @@ classdef ThermalMap < handle
                 end
                 if(checkAgain)
                     fprintf("Was only able to create %g thermals.\n",i-1)
-                    simLaw.numThermals = i-1;
+                    thermalMap.numThermals = i-1;
                     pause(1);
                     break;
                 end
@@ -63,7 +65,7 @@ classdef ThermalMap < handle
         %% Check for overlap between one thermal and all the thermals following it
         function index = checkOverlap(thermalMap, index, vel)
             SL = thermalMap.simLaw;
-            for i = (index + 1):SL.numThermals
+            for i = (index + 1):thermalMap.numThermals
                 if isOverlap(thermalMap, index, i)
                     reinitWeakThermal(thermalMap, index, i, vel);
                     index = 1;
@@ -94,7 +96,7 @@ classdef ThermalMap < handle
         function thermalIndex = findThermalIndex(thermalMap, position)
             SL = thermalMap.simLaw;
             thermalIndex = 0;
-            for i = 1:SL.numThermals
+            for i = 1:thermalMap.numThermals
                 % If the distance from the thermal center to the point
                 % is less than the radius, the point is in the thermal
                 distance = norm(thermalMap.thermals(i).position - position(1:2));
@@ -130,7 +132,7 @@ classdef ThermalMap < handle
         %% Fade the thermals in or out depending on the time
         function [] = fadeThermals(thermalMap)
             SL = thermalMap.simLaw;
-            for i = 1:SL.numThermals
+            for i = 1:thermalMap.numThermals
                 % If the current strength is at the thermal's max, determine the step count
                 if thermalMap.thermals(i).curStrength >= (thermalMap.thermals(i).maxStrength - 1E-5)
                     % If the step count is at the plateau time, reset it to 0 and increment the
@@ -190,7 +192,7 @@ classdef ThermalMap < handle
             
             finalThermalMap = zeros(thermalMap.thermalPixels);
             % Iterate through thermals
-            for thermalIndex = 1:SL.numThermals
+            for thermalIndex = 1:thermalMap.numThermals
                 thermalPos = thermalMap.thermals(thermalIndex).position;
                 thermalRad = thermalMap.thermals(thermalIndex).radius;
                 
@@ -235,7 +237,7 @@ classdef ThermalMap < handle
         % Step for location varying simulation
         function [] = step(thermalMap, dt)
             SL = thermalMap.simLaw;
-            for thermalIndex = 1:SL.numThermals
+            for thermalIndex = 1:thermalMap.numThermals
                 thermalMap.adjustThermalPositions(thermalMap.thermals(thermalIndex).velocity);
                 thermalMap.fadeThermals();
                 thermalList = thermalMap.thermals;
@@ -251,7 +253,7 @@ classdef ThermalMap < handle
         % Step for non-location varying map
         function [] = staticStep(thermalMap)
             SL = thermalMap.simLaw;
-            for thermalIndex = 1:SL.numThermals
+            for thermalIndex = 1:thermalMap.numThermals
                 %thermalMap.adjustThermalPositions(0);
                 thermalMap.fadeThermals();
             end
@@ -263,8 +265,8 @@ classdef ThermalMap < handle
             needToCheckAgain = true;
             while(needToCheckAgain)
                 needToCheckAgain = false; % Each loop, assume that thermals are good, and wait to be proven otherwise
-                for i=1:SL.numThermals-1 % Iterate through thermals and check for overlaps        
-                    for j=i+1:SL.numThermals
+                for i=1:thermalMap.numThermals-1 % Iterate through thermals and check for overlaps        
+                    for j=i+1:thermalMap.numThermals
                         if(thermalMap.isOverlap(i,j)) % Overlap detected! 
                             thermalMap.reinitWeakThermal(i,j,vel);
                             needToCheckAgain = true; % Go back and check again

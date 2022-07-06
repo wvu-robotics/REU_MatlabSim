@@ -90,6 +90,11 @@ classdef Swarm < handle
                     obj.funcHandle_agentControl(currentAgent,localAgents,thermalStrength,[0,0,0], SL);
                 end
             end
+            for i=1:numAgents
+                if obj.agents(i).markedForDeath
+                    obj.agents(i).isAlive = false;
+                end
+            end
         end
         
         % Render
