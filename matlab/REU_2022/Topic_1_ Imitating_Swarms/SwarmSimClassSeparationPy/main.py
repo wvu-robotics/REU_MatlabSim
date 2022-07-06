@@ -1,6 +1,7 @@
 import numpy as np
 import sim_tools.sim as sim
 import sim_tools.media_export as export
+import copy
 
 #model imports
 from models import LennardJones as lj
@@ -9,12 +10,16 @@ from models import PFSM
 from models import Dance
 from models import SteerControl as sc
 from models import linearSuperSet as lss
+from models.featureCombo import FeatureCombo as fc
+
+#feature imports
+from features.features import *
 
 #all parameters for simulation
 params = sim.SimParams(
     num_agents=40, 
-    dt=0.01, 
-    overall_time = 30, 
+    dt=0.05, 
+    overall_time = 15, 
     enclosure_size = 15, 
     init_pos_max= None, #if None, then defaults to enclosure_size
     agent_max_vel=9,
@@ -27,7 +32,16 @@ params = sim.SimParams(
 
 if __name__ ==  '__main__':
     #define list of controllers
-    controllers= [lss.SuperSet(5,5,5,5,5,params=params) for i in range(params.num_agents)]
+    features = [
+        Cohesion(), # on their own, seems tigther and less spread
+        Alignment(), # good
+        SeparationInv2(),
+        SteerToAvoid(params.neighbor_radius/4,params.neighbor_radius), 
+        Rotation()
+    ]
+    orig = fc([1,1,1,1,1],features)
+    # orig = lss.SuperSet(1,1,0,3,0)
+    controllers= [copy.deepcopy(orig) for i in range(params.num_agents)]
 
     #if you want to do coloring by agent
     for controller in controllers:
@@ -44,6 +58,3 @@ if __name__ ==  '__main__':
 
     export.export(media_type,"new",agentPositions,agentVels,controllers=controllers,params=params,vision_mode=False,progress_bar=True)
     print("Media generated")
-
-    filename="sim_data"
-    export.toCVS(filename,agentPositions,agentVels,params)

@@ -47,7 +47,7 @@ def agentSliceFromPosVelSlice(slice,params=sim.SimParams(),neighborCaps=[0,np.in
         agentPos = slice.pos[agent]
 
         agentVel = slice.vel[agent]
-        agentNextVel = slice.next_vel[agent]
+        agentNextVel = slice.next_vel[agent] #- agentVel
         separation = np.zeros(2)
 
         if ignoreBoundaryData:
