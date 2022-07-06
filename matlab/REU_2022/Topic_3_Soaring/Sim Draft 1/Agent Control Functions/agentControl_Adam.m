@@ -39,9 +39,16 @@ function agentControl_Adam(currentAgent, localAgents, thermalStrength, target, S
             diffHeight = diff(3);
             diff2D = diff;
             diff2D(3) = 0;
+            diffDist = norm(diff);
             diff2DDist = norm(diff2D);
             
             relativeAscension = localAgent.savedVelocity(3) - currentAgent.savedVelocity(3);
+            
+            %% Collision Death
+            if(diffDist < SL.collisionKillDistance)
+                currentAgent.markedForDeath = true;
+                return;
+            end
             
             %% Separation            
             if(abs(diffHeight) < SL.separationHeightWidth/2)
@@ -173,7 +180,8 @@ function agentControl_Adam(currentAgent, localAgents, thermalStrength, target, S
         newPos (3) = SL.agentFloor; % Tera-Jank
     end
     if newPos(3) <= 0
-        currentAgent.isAlive = false;
+        currentAgent.markedForDeath = true;
+        return;
     end
     currentAgent.heading = currentAgent.heading + newVel(2)*SL.dt;
 

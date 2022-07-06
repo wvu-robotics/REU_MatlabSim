@@ -28,6 +28,7 @@ classdef Swarm < handle
         minHeight = 0               % m
         maxHeight = 0               % m
         avgSpeed  = 0               % m/s
+        ToD
     end
     
     methods
@@ -40,6 +41,7 @@ classdef Swarm < handle
             
             obj.funcHandle_agentControl = str2func(SL.funcName_agentControl);
             obj.funcHandle_findNeighborhood = str2func(SL.funcName_findNeighborhood);
+            obj.ToD = zeros(1,SL.numAgents);
             
             %% Generate agents
             numAgents = SL.numAgents;   %Get total number of agents
@@ -236,32 +238,32 @@ classdef Swarm < handle
         end
         
         % Get Data (probably outdated but dont want to delete
-        function [maxHeight, minHeight, avgHeight, avgSpeed] = getData(obj)
-            SL = obj.simLaw;
-            
-            maxHeightIndex = 0;
-            maxHeight = SL.agentFloor;
-            minHeightIndex = 0;
-            minHeight = SL.agentCeiling;
-            avgHeight = 0;
-            avgSpeed = 0;
-            
-            for i=1:SL.numAgents
-                currentHeight = obj.agents(i).position(3);
-                if(currentHeight > maxHeight)
-                    maxHeightIndex = i;
-                    maxHeight = currentHeight;
-                end
-                if(currentHeight < minHeight)
-                    minHeightIndex = i;
-                    minHeight = currentHeight;
-                end
-                avgHeight = avgHeight + currentHeight;
-                avgSpeed = avgSpeed + obj.agents(i).savedVelocity(1);
-            end
-            avgHeight = avgHeight / SL.numAgents;
-            avgSpeed = avgSpeed / SL.numAgents;
-        end
+%         function [maxHeight, minHeight, avgHeight, avgSpeed] = getData(obj)
+%             SL = obj.simLaw;
+%             
+%             maxHeightIndex = 0;
+%             maxHeight = SL.agentFloor;
+%             minHeightIndex = 0;
+%             minHeight = SL.agentCeiling;
+%             avgHeight = 0;
+%             avgSpeed = 0;
+%             
+%             for i=1:SL.numAgents
+%                 currentHeight = obj.agents(i).position(3);
+%                 if(currentHeight > maxHeight)
+%                     maxHeightIndex = i;
+%                     maxHeight = currentHeight;
+%                 end
+%                 if(currentHeight < minHeight)
+%                     minHeightIndex = i;
+%                     minHeight = currentHeight;
+%                 end
+%                 avgHeight = avgHeight + currentHeight;
+%                 avgSpeed = avgSpeed + obj.agents(i).savedVelocity(1);
+%             end
+%             avgHeight = avgHeight / SL.numAgents;
+%             avgSpeed = avgSpeed / SL.numAgents;
+%         end
         
         % Updated Update Data Function
         function obj = updateData(obj,step)
@@ -276,26 +278,28 @@ classdef Swarm < handle
             obj.avgHeight = 0;
             obj.avgSpeed = 0;
             
-%             if Living ~= nnz([swarm.agents.isAlive])
-%                 % if living is suddenly 39/40, update number 1 to whatever time it
-%                 % is now.
-%                 % if multiple agents die, update that number of elements.
-%                 % Living should always be >= nnz of isAlive; isAlive updates first.
-%                 ToD((SL.numAgents - Living + 1) : (SL.numAgents - nnz([swarm.agents.isAlive]))) = minutes;
-%             end
+            if obj.Living ~= nnz([obj.agents.isAlive])
+                % if living is suddenly 39/40, update number 1 to whatever time it
+                % is now.
+                % if multiple agents die, update that number of elements.
+                % Living should always be >= nnz of isAlive; isAlive updates first.
+                obj.ToD((SL.numAgents - obj.Living + 1) : (SL.numAgents - nnz([obj.agents.isAlive]))) = obj.Elapsed(2) + 60*obj.Elapsed(1);
+            end
             obj.Living  = nnz([obj.agents.isAlive]);
             obj.flightTime    = obj.flightTime + obj.Living * SL.dt;
 
             for i=1:SL.numAgents
-                currentHeight = obj.agents(i).position(3);
-                if(currentHeight > obj.maxHeight)
-                    obj.maxHeight = currentHeight;
+                if obj.agents(i).isAlive
+                    currentHeight = obj.agents(i).position(3);
+                    if(currentHeight > obj.maxHeight)
+                        obj.maxHeight = currentHeight;
+                    end
+                    if(currentHeight < obj.minHeight)
+                        obj.minHeight = currentHeight;
+                    end
+                    obj.avgHeight = obj.avgHeight + currentHeight;
+                    obj.avgSpeed = obj.avgSpeed + obj.agents(i).savedVelocity(1);
                 end
-                if(currentHeight < obj.minHeight)
-                    obj.minHeight = currentHeight;
-                end
-                obj.avgHeight = obj.avgHeight + currentHeight;
-                obj.avgSpeed = obj.avgSpeed + obj.agents(i).savedVelocity(1);
             end
             % THIS
             % obj.avgHeight = obj.avgHeight / SL.numAgents;
@@ -344,7 +348,7 @@ classdef Swarm < handle
             obj.video.FrameRate = 1/SL.dt * SL.fpsMult / SL.frameSkip;
             open(obj.video);
             
-            obj.simFig = figure('Visible','on');
+            obj.simFig = figure('Visible','off');
         
             % Initialize map background
             clf

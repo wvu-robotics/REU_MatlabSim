@@ -4,7 +4,7 @@ classdef MaxsLaw
         % Simulation
         totalTime = 7200;           % s
         fpsMult = 60;               % x Real Time
-        numThermals = 6;            % thermals
+        numThermals = 12;            % thermals
         neighborRadius = 4000;      % m
         k = 10;                      % number of nearest neighbors
         frameSkip = 5;             % render every nth frame
@@ -20,7 +20,7 @@ classdef MaxsLaw
         showArrow = false;          %
         followAgent = false;        %
         followRadius = 1000;
-        renderScale = [200;200];    % [scaleX; scaleY];
+        renderScale = [400;400];    % [scaleX; scaleY];
         showNeighbors = true;       %
         showFixedRadius = false;     %
         showRange = false;           %
@@ -32,7 +32,7 @@ classdef MaxsLaw
         funcName_findNeighborhood = "findNeighborhood_KNNInFixedRadius";
 
         % Thermal constraints
-        thermalPixels = 50
+        thermalPixels = 100
         thermalSpeedMin = 0         % m/s
         thermalSpeedMax = 0         % m/s
         thermalRadiusMin = 600      % m
@@ -64,8 +64,8 @@ classdef MaxsLaw
 
         %% Not to Change
         % Initial conditions
-        mapSize = [-4000,4000];     % m, bounds of square map
-        agentSpawnPosRange = [-3000,-3000; 3000,3000];  % m, [xMin,yMin;xMax,yMax]
+        mapSize = [-8000,8000];     % m, bounds of square map
+        agentSpawnPosRange = [-6000,-6000; 6000,6000];  % m, [xMin,yMin;xMax,yMax]
         agentSpawnAltiRange = [1600,1600];              % m, [Min,Max]
         agentSpawnVelRange = [8,0;13,0];                % m/s,rad/s [forwardMin,omegaMin;forwardMax,omegaMax];
         g = 9.81;   
