@@ -18,11 +18,11 @@ from features.features import *
 #all parameters for simulation
 params = sim.SimParams(
     num_agents=40, 
-    dt=0.05, 
-    overall_time = 15, 
+    dt=0.01, 
+    overall_time = 20, 
     enclosure_size = 15, 
     init_pos_max= None, #if None, then defaults to enclosure_size
-    agent_max_vel=9,
+    agent_max_vel=7,
     init_vel_max = None,
     agent_max_accel=np.inf,
     agent_max_turn_rate=np.inf,
@@ -39,7 +39,7 @@ if __name__ ==  '__main__':
         SteerToAvoid(params.neighbor_radius/4,params.neighbor_radius), 
         Rotation()
     ]
-    orig = fc([1,1,1,1,1],features)
+    orig = fc([5,5,5,5,5],features)
     # orig = lss.SuperSet(1,1,0,3,0)
     controllers= [copy.deepcopy(orig) for i in range(params.num_agents)]
 

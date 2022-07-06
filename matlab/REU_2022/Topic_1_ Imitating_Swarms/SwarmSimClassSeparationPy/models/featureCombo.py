@@ -18,4 +18,4 @@ class FeatureCombo(GenericSwarmController):
             # print("Component",component)
             # print("i",i)
             v_gain += component
-        return v_gain + (v*self.inertia)
+        return v_gain + (v*self.inertia)#, getting rid of inertia worked ALOT

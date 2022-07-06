@@ -1,6 +1,6 @@
 #thoughts - get rid of inertia, have them follow last heading if no interaction
 import numpy as np
-import sim_tools.sim as sim
+from sim_tools.sim import SimParams,neighborHood
 import sim_tools.media_export as export
 from shapely import geometry
 from multiprocessing import Pool
@@ -9,13 +9,15 @@ from tqdm import tqdm
 
 from dataclasses import dataclass
 
+
+
 @dataclass
 class posVelSlice:
     pos: np.ndarray
     vel: np.ndarray
     next_vel: np.ndarray
 
-def toPosVelSlices(agentPositions,params=sim.SimParams()):
+def toPosVelSlices(agentPositions,params=SimParams()):
     #includes velocity calculation--I don't fully understand how to abstract this out yet
     # would really like to remove this dt
     return [posVelSlice(agentPositions[i],
@@ -23,7 +25,78 @@ def toPosVelSlices(agentPositions,params=sim.SimParams()):
         (agentPositions[i+1]-agentPositions[i])/params.dt)
     for i in range(1,len(agentPositions)-1)]
 
-#will need to be expanded for each nonlinear feature(there might be a nice way to generalize)
+@dataclass
+class featureSlice:
+    features: dict
+    last_vel: np.ndarray
+    output_vel: np.ndarray
+
+#rewriting this to generalized
+def featuresFromPosVelSlice(slice,params=SimParams(),features={},neighborCaps=[0,np.inf],ignoreConstrainedMotion=False,ignoreBoundaryData=True):
+    featureSlices = []
+    for agent in range(params.num_agents):
+        agentPos = slice.pos[agent]
+        agentVel = slice.vel[agent]
+        agentNextVel = slice.next_vel[agent]
+
+        # reject on boundary or motion constraints
+        if ignoreBoundaryData:
+                    #throw out data near the boundary, only needed with bounce
+                    if(agentPos[0] > params.enclosure_size or agentPos[0] < -params.enclosure_size 
+                    or agentPos[1] > params.enclosure_size or agentPos[1] < -params.enclosure_size):
+                        continue
+
+        if ignoreConstrainedMotion:
+            if np.linalg.norm(agentNextVel) >= params.agent_max_vel or np.isclose(np.linalg.norm(agentNextVel),params.agent_max_vel,atol=.1):
+                # print("ignoring at max vel")
+                continue
+            # if np.linalg.norm(agentNextVel) > 6.7: print("Let",np.linalg.norm(agentNextVel),"get through")
+            if abs(np.linalg.norm(agentNextVel)-np.linalg.norm(agentVel)) >= params.agent_max_accel*params.dt:
+                continue
+    
+            vel_new_angle = np.arctan2(agentNextVel[1],agentNextVel[0])
+            vel_angle = np.arctan2(agentVel[1],agentVel[0])
+            angleDeviation = vel_new_angle - vel_angle
+            if angleDeviation > np.pi or angleDeviation < -np.pi:
+                angleDeviation = -2*np.pi + angleDeviation
+    
+            if abs(angleDeviation) >= params.agent_max_turn_rate*params.dt:
+                continue
+        
+        relevantPositions,relevantVelocities = neighborHood(agentPos,params.neighbor_radius,slice.pos,slice.vel)
+
+        # reject on neighbor counts
+        if len(relevantPositions) < neighborCaps[0] or len(relevantPositions) > neighborCaps[1]:
+            continue
+
+        computed_features = {name:feature.compute(relevantPositions,relevantVelocities,agentPos,agentVel) for name,feature in features.items()}
+        featureSlices.append(featureSlice(computed_features,agentVel,agentNextVel))
+    return featureSlices
+
+def toFeatureSlices(posVelSlices,features={},params=SimParams(),threads = 8,neighborCaps=[1,np.inf],ignoreConstrainedMotion=False,ignoreBoundaryData=True,verbose=True):
+    #multiprocessing
+    pool = Pool(threads)
+    
+    #partial eval to pass in params, normal function currying doesn't work
+    clumpedSlices = []
+    if verbose:
+        clumpedSlices = tqdm(pool.imap(
+            partial(featuresFromPosVelSlice,features=features,params=params,neighborCaps=neighborCaps,ignoreConstrainedMotion=ignoreConstrainedMotion,ignoreBoundaryData=ignoreBoundaryData),
+            posVelSlices),total=len(posVelSlices))
+    else:
+        clumpedSlices = pool.map(
+            partial(featuresFromPosVelSlice,features=features,params=params,neighborCaps=neighborCaps,ignoreConstrainedMotion=ignoreConstrainedMotion,
+            ignoreBoundaryData=ignoreBoundaryData),
+            posVelSlices)
+
+    featuresSlices = []
+    for clump in clumpedSlices:
+        featuresSlices.extend(clump)
+
+    if verbose:
+        print("Ignored ",(len(posVelSlices)*params.num_agents)-len(featuresSlices),"/",len(posVelSlices)*params.num_agents," slices")
+    return featuresSlices
+
 @dataclass
 class agentSlice:
     #inputs
@@ -37,7 +110,7 @@ class agentSlice:
     output_vel: np.ndarray
 
 #need to figure out how to pass more things to this, maybe function currying is the way
-def agentSliceFromPosVelSlice(slice,params=sim.SimParams(),neighborCaps=[0,np.inf],ignoreConstrainedMotion=False,ignoreBoundaryData=True):
+def agentSliceFromPosVelSlice(slice,params=SimParams(),neighborCaps=[0,np.inf],ignoreConstrainedMotion=False,ignoreBoundaryData=True):
     # if ignoreConstrainedMotion: print("IGNORING CONSTRAINED MOTION")
     agentSlices = []
     for agent in range(params.num_agents):
@@ -155,7 +228,7 @@ def agentSliceFromPosVelSlice(slice,params=sim.SimParams(),neighborCaps=[0,np.in
     return agentSlices
 
 #this can be multiprocessed, maybe also allow turning off certain slices
-def toAgentSlices(posVelSlices,params=sim.SimParams(),threads = 8,neighborCaps=[1,np.inf],ignoreConstrainedMotion=False,ignoreBoundaryData=True,verbose=True):
+def toAgentSlices(posVelSlices,params=SimParams(),threads = 8,neighborCaps=[1,np.inf],ignoreConstrainedMotion=False,ignoreBoundaryData=True,verbose=True):
     #multiprocessing
     pool = Pool(threads)
     
