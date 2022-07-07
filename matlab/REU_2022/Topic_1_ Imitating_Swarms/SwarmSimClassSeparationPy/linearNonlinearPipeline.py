@@ -137,9 +137,17 @@ if __name__ == '__main__':
         return fitness
 
     fitness_function = sliceBasedFitness(x)
-    solution = optimize.minimize(fitness_function,(linear_gains[0], linear_gains[1], linear_gains[2], linear_gains[3], linear_gains[4]), method='SLSQP')
+    #if np.all(linear_gains) == True:
+    solution = optimize.minimize(fitness_function,(linear_gains), method='SLSQP')
     print("Parameters of the best solution : {params}".format(params=solution.x))
-
+    #else:
+        #zero_ind = np.where(linear_gains == 0)[0]
+        #nonzero_gains = linear_gains[linear_gains != 0]
+        #for i in range (len(linear_gains)):
+            
+        #solution = optimize.minimize(fitness_function,(linear_gains), method='SLSQP')
+        #print("Parameters of the best solution : {params}".format(params=solution.x))
+    
     controllers_imitated = [fc(linear_gains, (list(learning_features.values()))) for i in
                             range(params.num_agents)]
     for controller in controllers_imitated:
