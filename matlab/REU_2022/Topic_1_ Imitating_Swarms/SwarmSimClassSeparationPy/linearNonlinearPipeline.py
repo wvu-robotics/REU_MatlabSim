@@ -122,7 +122,7 @@ if __name__ == '__main__':
                             range(params.num_agents)]
     for controller in controllers_imitated:
         controller.setColor('red')
-    agentPositions_imitated, agentVels_imitated = sim.runSim(controllers_imitated, params, progress_bar=True)
+    agentPositions_imitated, agentVels_imitated = sim.runSim(controllers_imitated, params, progress_bar=True, initial_positions=agentPositions[0], initial_velocities=agentVels[0])
     export.export(export.ExportType.GIF, "linearNonlinearOutput/Imitated", agentPositions_imitated, agentVels_imitated,
                   controllers=controllers_imitated, params=params, progress_bar=True)
     
