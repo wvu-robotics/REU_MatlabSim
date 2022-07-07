@@ -98,6 +98,13 @@ if __name__ == '__main__':
         x.append(np.array(list(slice.features.values()))[:,1])
         y.append(slice.output_vel[1] - slice.last_vel[1])
     
+    true_loss = 0
+    for i in range(len(x)):
+        v_pred = np.dot(x[i].transpose(),true_gains)
+        # v_pred = x[i][0]*true_gains[0] + x[i][1]*true_gains[1] + x[i][2]*true_gains[2]
+        v_actual = y[i]
+        true_loss += np.sum(np.abs(v_pred-v_actual))
+    print("True loss on avg: ",true_loss/len(x))
 
     print("First pass linear regression: ")
     reg = ElasticNetCV(cv=10).fit(x,y) 
@@ -107,17 +114,10 @@ if __name__ == '__main__':
     # #create some visuals with the imitated swarm
     #     #maybe do an imposter(sus) pretending to be within the original swarm
     linear_gains = reg.coef_.tolist()
-    print(linear_gains)
+    print("Linear gains",linear_gains)
 
-    true_loss = 0
-    for i in range(len(x)):
-        v_pred = np.dot(x[i].transpose(),true_gains)
-        # v_pred = x[i][0]*true_gains[0] + x[i][1]*true_gains[1] + x[i][2]*true_gains[2]
-        v_actual = y[i]
-        true_loss += np.sum(np.abs(v_pred-v_actual))
-    print("True loss on avg: ",true_loss/len(x))
 
-    print("Running imitated visual: ")
+
 
     def sliceBasedFitness(x):
         def fitness(linear_gains):
@@ -136,10 +136,32 @@ if __name__ == '__main__':
 
         return fitness
 
-    fitness_function = sliceBasedFitness(x)
+    filter = np.bitwise_not(np.isclose(np.array(linear_gains),0,atol=0.005))
+    print("Filter",filter)
+    filter_same_dim = np.tile(filter,len(x))
+
+    x_filtered = np.extract(filter_same_dim,x).reshape(len(x),-1) #let non-linear only learn off of features with non-zero gains
+    linear_gains_filtered = np.extract(filter,linear_gains)
+    
+    fitness_function = sliceBasedFitness(x_filtered)
     #if np.all(linear_gains) == True:
-    solution = optimize.minimize(fitness_function,(linear_gains), method='SLSQP')
-    print("Parameters of the best solution : {params}".format(params=solution.x))
+    solution = optimize.minimize(fitness_function,(linear_gains_filtered), method='SLSQP')
+    nl_gains = np.array(solution.x)
+
+    # adding zeros back into output gains
+    sol_gains = [] #can't think of a shorter way to write this rn
+    nl_cursor = 0
+    for bool in filter:
+        if bool:
+            sol_gains.append(nl_gains[nl_cursor])
+            nl_cursor += 1
+        else:
+            sol_gains.append(0)
+
+    print("Solution gains after NL step",sol_gains)
+
+
+    # print("Parameters of the best solution : {params}".format(params=solution.x))
     #else:
         #zero_ind = np.where(linear_gains == 0)[0]
         #nonzero_gains = linear_gains[linear_gains != 0]
@@ -148,7 +170,8 @@ if __name__ == '__main__':
         #solution = optimize.minimize(fitness_function,(linear_gains), method='SLSQP')
         #print("Parameters of the best solution : {params}".format(params=solution.x))
     
-    controllers_imitated = [fc(linear_gains, (list(learning_features.values()))) for i in
+    print("Running imitated visual: ")
+    controllers_imitated = [fc(sol_gains, (list(learning_features.values()))) for i in
                             range(params.num_agents)]
     for controller in controllers_imitated:
         controller.setColor('red')
@@ -169,7 +192,7 @@ if __name__ == '__main__':
     original_agents = [fc(true_gains, list(learning_features.values())) for i in range(int(params.num_agents * mix_factor))]
     for controller in original_agents:
         controller.setColor("rgb(99, 110, 250)")
-    imitated_agents = [fc(linear_gains, list(learning_features.values())) for i in
+    imitated_agents = [fc(sol_gains, list(learning_features.values())) for i in
                        range(int(params.num_agents * (1 - mix_factor)))]
     for controller in imitated_agents:
         controller.setColor("red")
