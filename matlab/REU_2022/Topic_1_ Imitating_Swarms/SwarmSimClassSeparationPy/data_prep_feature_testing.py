@@ -15,7 +15,7 @@ from models.featureCombo import FeatureCombo as fc
 
 params = sim.SimParams(
     num_agents=50,
-    dt=0.05,
+    dt=0.001,
     overall_time = 10,
     enclosure_size = 15,
     init_pos_max = None, #if None, then defaults to enclosure_size
@@ -54,7 +54,7 @@ if __name__ == '__main__':
     }
 
 
-    featureSlices = automation.runSimsForFeatures(controllers,learning_features,num_sims=1000,params=shortSimParams,ignoreMC=True)
+    featureSlices = automation.runSimsForFeatures(controllers,learning_features,num_sims=10,params=shortSimParams,ignoreMC=True,threads=10)
     print(featureSlices[0])
     print(featureSlices[0].features["coh"])
     print(np.array(list(featureSlices[0].features.values())))

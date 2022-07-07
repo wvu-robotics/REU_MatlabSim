@@ -48,13 +48,16 @@ def featuresFromPosVelSlice(slice,params=SimParams(),features={},neighborCaps=[0
             under = agentPos + params.enclosure_size
             
             # comparing both coordinates in a variety of ways
-            above = over>=0
             # figure out how to set tolerances reasonably
             v_mag_current = np.linalg.norm(agentVel)
             v_mag_next = np.linalg.norm(agentNextVel)
-            stepsInFuturePast = 7 #idk why it needs to be this much
+
+            # 7 is the standard for 0.05 dt, just projecting linearly for other dts
+            # yes this needs to be investigated further, but over rejection is ok for now
+            stepsInFuturePast = 7 * (0.05/params.dt)
 
             tol = max(v_mag_current,v_mag_next)*params.dt*stepsInFuturePast
+            above = over>=0
             closeTop = np.isclose(over,0,atol=tol)
             closeBot = np.isclose(under,0,atol=tol)
             below = under<=0
