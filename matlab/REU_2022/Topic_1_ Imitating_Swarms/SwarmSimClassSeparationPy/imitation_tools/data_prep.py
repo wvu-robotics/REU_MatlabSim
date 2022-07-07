@@ -5,6 +5,7 @@ import sim_tools.media_export as export
 from shapely import geometry
 from multiprocessing import Pool
 from functools import partial
+from functools import reduce
 from tqdm import tqdm
 
 from dataclasses import dataclass
@@ -41,10 +42,27 @@ def featuresFromPosVelSlice(slice,params=SimParams(),features={},neighborCaps=[0
 
         # reject on boundary or motion constraints
         if ignoreBoundaryData:
-                    #throw out data near the boundary, only needed with bounce
-                    if(agentPos[0] > params.enclosure_size or agentPos[0] < -params.enclosure_size 
-                    or agentPos[1] > params.enclosure_size or agentPos[1] < -params.enclosure_size):
-                        continue
+            #throw out data near the boundary, only needed with bounce
+            # not throwing out enough
+            over = agentPos - params.enclosure_size
+            under = agentPos + params.enclosure_size
+            
+            # comparing both coordinates in a variety of ways
+            above = over>=0
+            # figure out how to set tolerances reasonably
+            v_mag_current = np.linalg.norm(agentVel)
+            v_mag_next = np.linalg.norm(agentNextVel)
+            stepsInFuturePast = 7 #idk why it needs to be this much
+
+            tol = max(v_mag_current,v_mag_next)*params.dt*stepsInFuturePast
+            closeTop = np.isclose(over,0,atol=tol)
+            closeBot = np.isclose(under,0,atol=tol)
+            below = under<=0
+
+            #elementiwise or of all the above boolean arrays
+            if reduce(np.bitwise_or,[above,closeTop,below,closeBot]).any():
+                #print("boundary rejection via complex method")
+                continue
 
         if ignoreConstrainedMotion:
             if np.linalg.norm(agentNextVel) >= params.agent_max_vel or np.isclose(np.linalg.norm(agentNextVel),params.agent_max_vel,atol=.1):

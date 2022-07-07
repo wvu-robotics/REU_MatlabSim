@@ -3,10 +3,13 @@ from sim_tools import sim
 from sim_tools import media_export as export
 from imitation_tools import data_prep
 
-from models.Boids import Boids
+from models.featureCombo import FeatureCombo as fc
 import numpy as np
 import copy
 import os
+
+from features.features import *
+
 
 params = sim.SimParams(
     num_agents=40, 
@@ -14,21 +17,23 @@ params = sim.SimParams(
     overall_time = 10, 
     enclosure_size = 10, 
     init_pos_max= None, #if None, then defaults to enclosure_size
-    agent_max_vel=9.23,
+    agent_max_vel=5,
     init_vel_max = None,
-    agent_max_accel=1,
-    agent_max_turn_rate=10*np.pi,
-    neighbor_radius=2,
+    agent_max_accel=np.inf,
+    agent_max_turn_rate=np.inf,
+    neighbor_radius=3,
     periodic_boundary=False
     )
 
 
 if __name__ ==  '__main__':
-    k_coh = 3
-    k_align = 1
-    k_sep = .2
+    orig_features = [
+        Cohesion(),
+        Alignment(),
+        SeparationInv2()
+    ]
 
-    orig_controller = Boids(k_coh,k_align,k_sep,1)
+    orig_controller = fc([1,1,1],orig_features)
     # really should clean up this interface too
     controllers = [copy.deepcopy(orig_controller) for i in range(params.num_agents)]
     agentPositions, agentVels = sim.runSim(controllers,params,progress_bar=True)
@@ -36,7 +41,7 @@ if __name__ ==  '__main__':
     if not os.path.exists("SimpleNeighbor"):
         os.makedirs("SimpleNeighbor")
 
-    export.export(export.ExportType.GIF,"SimpleNeighbor/Initial",agentPositions,agentVels,params=params,vision_mode=False,progress_bar=True)
+    # export.export(export.ExportType.GIF,"SimpleNeighbor/Initial",agentPositions,agentVels,params=params,vision_mode=False,progress_bar=True)
 
 
     shortSimParams = copy.deepcopy(params)
@@ -65,15 +70,7 @@ if __name__ ==  '__main__':
                 previousVel = previous.vel[agent]
                 back2Vel = back2.vel[agent]
                 
-                #currently moves by dt..., .1 dt will give original, need to figure out why
-                if np.linalg.norm(back2Vel)>maxVel:
-                    maxVel = np.linalg.norm(back2Vel)
 
-                #note currently done by magnitude, should really do it in 2D the correct way
-                velChange = np.linalg.norm(previousVel)-np.linalg.norm(back2Vel)
-                accel = velChange
-                if accel>maxAccel:
-                    maxAccel = accel
                 
                 currentPos = current.pos[agent]
                 previousPos = previous.pos[agent]
@@ -87,6 +84,16 @@ if __name__ ==  '__main__':
                         break
                 if boundaryBroken: continue
 
+                #currently moves by dt..., .1 dt will give original, need to figure out why
+                if np.linalg.norm(back2Vel)>maxVel:
+                    maxVel = np.linalg.norm(back2Vel)
+
+                #note currently done by magnitude, should really do it in 2D the correct way
+                velChange = abs(np.linalg.norm(previousVel)-np.linalg.norm(back2Vel))
+                accel = velChange
+                if accel>maxAccel:
+                    maxAccel = accel
+
                 # was moving in straight line before, now changed
                 # maybe need to add a larger tolerance
                 if (np.isclose(previousVel, back2Vel)).all() and not (np.isclose(previousVel,currentVel)).all():
@@ -98,9 +105,6 @@ if __name__ ==  '__main__':
                                 minDist = dist
                     if minDist != np.inf and minDist > neighborRadius:
                         neighborRadius = minDist
-                        # print("Last Deviation",np.linalg.norm(previousVel-back2Vel))
-                        # print("Recent Deviation",np.linalg.norm(currentVel-previousVel))
-                        # print("new neighbor radius: ", neighborRadius)
 
 
 

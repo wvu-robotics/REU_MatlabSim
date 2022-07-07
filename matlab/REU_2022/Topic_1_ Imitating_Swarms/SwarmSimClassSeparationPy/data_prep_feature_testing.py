@@ -19,7 +19,7 @@ params = sim.SimParams(
     overall_time = 10,
     enclosure_size = 15,
     init_pos_max = None, #if None, then defaults to enclosure_size
-    agent_max_vel=7,
+    agent_max_vel=9,
     init_vel_max = 2,
     agent_max_accel=np.inf,
     agent_max_turn_rate=np.inf,
@@ -54,7 +54,7 @@ if __name__ == '__main__':
     }
 
 
-    featureSlices = automation.runSimsForFeatures(controllers,learning_features,num_sims=10,params=shortSimParams,ignoreMC=True)
+    featureSlices = automation.runSimsForFeatures(controllers,learning_features,num_sims=1000,params=shortSimParams,ignoreMC=True)
     print(featureSlices[0])
     print(featureSlices[0].features["coh"])
     print(np.array(list(featureSlices[0].features.values())))
@@ -71,7 +71,10 @@ if __name__ == '__main__':
         v_pred = np.dot(x[i].transpose(),true_gains)
         # v_pred = x[i][0]*true_gains[0] + x[i][1]*true_gains[1] + x[i][2]*true_gains[2]
         v_actual = y[i]
-        true_loss += np.sum(np.abs(v_pred-v_actual))
+        if (np.sum(np.abs(v_pred-v_actual)) >= 1):
+            print("Pred(true gains)",v_pred,"Actual",v_actual)
+            print("Features",x[i])
+        true_loss += np.sum(np.abs(v_pred-v_actual)) # sign issues sometimes
     print("True loss on avg",true_loss/len(x))
 
 
