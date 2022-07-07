@@ -6,6 +6,7 @@ function outputData = MainScriptFunction(SL, simNumber, videoName, render)
 
     %% Load simulation parameters
     % Initialize thermals as a matrix of Thermals
+
     thermalMap = ThermalMap(SL);
     swarm = Swarm(SL, thermalMap);
 
