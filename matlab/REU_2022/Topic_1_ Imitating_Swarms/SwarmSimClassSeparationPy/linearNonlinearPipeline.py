@@ -11,6 +11,7 @@ import plotly.express as px
 import pandas as pd
 from features.features import *
 from models.featureCombo import FeatureCombo as fc
+from scipy import optimize
 
 from sklearn.linear_model import (
     Lasso,
@@ -118,6 +119,27 @@ if __name__ == '__main__':
 
     print("Running imitated visual: ")
 
+    def sliceBasedFitness(x):
+        def fitness(linear_gains):
+            linear_gains = np.array(linear_gains)
+            # print("Gains",est_gains)
+            loss = 0.0
+            for i in range(len(x)):
+                
+                vel_pred = np.dot(x[i].transpose(),linear_gains)
+                #vel_pred = sim.motionConstraints(vel_pred, slice.last_vel, params)
+                err = (vel_pred - y[i])
+                loss += np.linalg.norm(err)  # could change to MSE, but I like accounting for direction better
+            if len(x) == 0:
+                return np.inf
+            return loss / len(x)  # normalized between runs
+
+        return fitness
+
+    fitness_function = sliceBasedFitness(x)
+    solution = optimize.minimize(fitness_function,(linear_gains[0], linear_gains[1], linear_gains[2], linear_gains[3], linear_gains[4]), method='SLSQP')
+    print("Parameters of the best solution : {params}".format(params=solution.x))
+
     controllers_imitated = [fc(linear_gains, (list(learning_features.values()))) for i in
                             range(params.num_agents)]
     for controller in controllers_imitated:
@@ -169,5 +191,4 @@ if __name__ == '__main__':
         "y":np.concatenate([y_pred_true_vy,y_vy]),
         "type":np.concatenate([["predicted"]*len(y_pred_true_vx),["actual"]*len(y_vx)])
         })
-"""
-    
+"""   
