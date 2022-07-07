@@ -5,7 +5,7 @@ classdef MaxsLaw
         totalTime = 7200;           % s
         fpsMult = 60;               % x Real Time
         numThermals = 12;            % thermals
-        neighborRadius = 4000;      % m
+        neighborRadius = 1000;      % m
         k = 10;                      % number of nearest neighbors
         frameSkip = 5;             % render every nth frame
         forwardInertia = 10;        % <unused>
