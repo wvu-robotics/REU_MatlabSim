@@ -52,7 +52,7 @@ if __name__ == '__main__':
         Rotation()
     ]
     
-    true_gains = np.array([1,1,1,0,1])
+    true_gains = np.array([2,2,2,2,-1])
 
     orig = fc(true_gains,orig_features)
     controllers = [copy.deepcopy(orig) for i in range(params.num_agents)]
