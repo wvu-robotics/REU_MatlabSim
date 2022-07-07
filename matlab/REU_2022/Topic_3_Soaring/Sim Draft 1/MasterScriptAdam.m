@@ -54,17 +54,13 @@ outputLabelPos = sprintf('A%d',outputRow);
 % Write labels of output variables
 xlswrite(outputExcelName,outputVariables,sheetNum,outputLabelPos);
 
-%{
-fprintf("Done!\n");
-pause(5);
-pause(1000);
-%}
-
 %% Iterate for each simulation excel column
-for sim = 1:numSims
+%bigOutputData(1:numSims) = struct();
+parfor sim = 1:numSims
     % Parse current SimLaw
     simColumn = startingColumn+sim-1;
-    for varRow = startingRow:size(RAW,1)
+    SL = struct();
+    for varRow = 1:size(RAW,1)
         varLabel = RAW{varRow,varLabelColumn};
         if(isnan(varLabel))
             continue;
@@ -86,26 +82,32 @@ for sim = 1:numSims
     render = true;
     videoName = sprintf('%s/%d SimRender.avi',simBatchFolder,simNumber);
     outputData = MainScriptFunction(SL, simNumber, videoName, render);
-    
-    %% Store sim output data in Excel sheet
-    fprintf("Storing results of sim %d.\n",simNumber);
+    bigOutputData(sim) = outputData;
+    fprintf("Finished sim %d.\n",simNumber);
+end
+
+%% Save data
+storeData = cell(length(outputVariables),numSims);
+for sim = 1:numSims
+    %% Parse bigOutputData into cell array
+    outputData = bigOutputData(sim);
+    simNumber = outputData.simNumber;
     for varIndex = 1:length(outputVariables)
         varValue = outputData.(outputVariables(varIndex));
-        
-        varColumn = char(simColumn + 64);
-        varRow = outputRow + varIndex - 1;
-        varPos = sprintf("%s%d",varColumn,varRow);
-        
-        xlswrite(outputExcelName,{varValue},sheetNum,varPos);
+        storeData(varIndex,sim) = {varValue};
     end
-    fprintf("Finished storing results of sim %d.\n",simNumber);
     
-    %% Save outputData to .mat file
-    bigOutputData(sim) = outputData;
+    %% Save sim outputData to .mat file
     outputDataName = sprintf("%s/%d OutputData.mat",simBatchFolder,simNumber);
     save(outputDataName,'-struct','outputData');
 end
-fprintf("Finished.\n");
+
+%% Save cell array to excel sheet
+storeColumn = char(startingColumn + 64);
+storeRow = outputRow;
+storePos = sprintf("%s%d",storeColumn,storeRow);
+xlswrite(outputExcelName,storeData,sheetNum,storePos);    
+fprintf("Finished storing results.\n");
 
 
 
