@@ -98,7 +98,7 @@ if(numLocalAgents > 0)
         
         weightSep = 1/distNNAgentScaled^2 - 1;
         weightAlign = 1;
-        if(norm(diffNNHeight) > SL.separationHeightGap)
+        if(norm(diffNNHeight) > SL.separationHeightWidth)
             weightSep = 0;
             weightAlign = 0;
         end
@@ -124,7 +124,7 @@ upUnit = [0,0,1];
 sideUnit = cross(upUnit,forwardUnit);
 if(currentAgent.lastWaggle <= 0)
     currentAgent.waggleSign = 2 * round(rand()) - 1;
-    currentAgent.lastWaggle = Utility.randIR(SL.waggleTime,1.5*SL.waggleTime); %s
+    currentAgent.lastWaggle = Utility.randIR(SL.waggleDurationRange(1),SL.waggleDurationRange(1)); %s
 end
 currentAgent.lastWaggle = currentAgent.lastWaggle - SL.dt;
 

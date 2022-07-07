@@ -17,8 +17,7 @@ data      = cell(1,N);
 tic
 % parfor if render is false, for if render is true
 for i = 1:N
-    [outData, average(i), surviving(i), Time(i), Log(i,:)] = MainScriptFunction(ParamMatrix(i,:), render);
-    data(i) = {outData};
+    MainScriptFunction(ParamMatrix(i,:), render);
 end
 if render
     close all

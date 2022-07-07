@@ -32,7 +32,7 @@ if(~exist(simBatchFolder,'dir'))
 end
 
 %% Set up input Excel sheet
-simLawExcel = "AdamsLaw.xlsx";
+simLawExcel = "MaxsLaw.xlsx";
 sheetNum = 1;
 [~,~,RAW] = xlsread(simLawExcel,sheetNum);
 varLabelColumn = 2;
@@ -106,8 +106,3 @@ for sim = 1:numSims
     save(outputDataName,'-struct','outputData');
 end
 fprintf("Finished.\n");
-
-
-
-
-
