@@ -1,4 +1,4 @@
-function localAgents = findNeighborhood_fixedRadius(swarm, agentIndex, SL, debugState)
+function localAgents = findNeighborhood_fixedRadius(swarm, agentIndex, SL)
     currentAgent = swarm.agents(agentIndex);
     numAgents = SL.numAgents;
 

@@ -86,8 +86,8 @@ if __name__ == '__main__':
         return fitness
 
     fitness_function = sliceBasedFitness(agentSlices)
-    boundary = [(0,5),(0,5),(0,5)]
-    solution = optimize.minimize(fitness_function, (2.5,1.5,.5), method='TNC', bounds=boundary, options = {'maxiter':300000})
+    #boundary = [(0,5),(0,5),(0,5)]
+    solution = optimize.minimize(fitness_function, (2,1,0), method='SLSQP', options={'ftol': 1e-08, 'iprint': 1, 'eps': 1.5e-12, 'maxiter': 10000})
     print("Parameters of the best solution : {params}".format(params=solution.x))
 
     controllers_imitated = [bo.Boids(solution.x[0],solution.x[1],solution.x[2],k_inertia) for i in range(params.num_agents)]

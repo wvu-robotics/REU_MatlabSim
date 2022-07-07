@@ -23,9 +23,9 @@ function localAgents = findNeighborhood_KNNAndFixedRadius(swarm, agentIndex, SL)
             end
         end
         
-        distances(j) = distance;
+        distances(j) = dist;
         
-        if(distance <= SL.neighborRadius)
+        if(dist <= SL.neighborRadius)
             numWithinRadius = numWithinRadius + 1;
         end
         numValidAgents = numValidAgents + 1;

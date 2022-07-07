@@ -96,7 +96,7 @@ class SuperSet(GenericSwarmController.GenericSwarmController):
             if np.linalg.norm(remaining) > 0:
                 remaining = remaining/np.linalg.norm(remaining)
             steerToAvoid = remaining*mag
-        v_gain = v_gain+steerToAvoid*self.steer_to_avoid_gain
+        v_gain += steerToAvoid*self.steer_to_avoid_gain
 
         v_out = (v*self.inertia) + v_gain
 

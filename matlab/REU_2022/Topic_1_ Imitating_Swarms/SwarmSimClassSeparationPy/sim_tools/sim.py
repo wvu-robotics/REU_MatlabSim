@@ -77,6 +77,16 @@ def motionConstraints(vel_new,vel_last,params=SimParams()):
 
     return vel_new
 
+#note agentPositions and Vels at a single time
+def neighborHood(pos,radius,agentPositions,agentVelocities):
+    # fanciness might be unnessecary and slower, but it's short
+    rel_pos = agentPositions - pos
+    dist = np.linalg.norm(rel_pos,axis=1)
+    inRadius = np.bitwise_and(dist <= radius, dist>0) #boolean array
+   
+    inRadius = np.repeat(inRadius,2) #make dimensions match with agentPositions and vels
+    return np.extract(inRadius,agentPositions).reshape(-1,2),np.extract(inRadius,agentVelocities).reshape(-1,2)
+
 #closed function to run whole sim and spit out vels and positions
 def runSim(controllers=[],params=SimParams(),initial_positions=None,initial_velocities=None,progress_bar=False):
     steps = int(params.overall_time/params.dt)
@@ -108,16 +118,7 @@ def runSim(controllers=[],params=SimParams(),initial_positions=None,initial_velo
             agentPos = agentPositions[step,agent]
             agentVel = agentVels[step,agent]
 
-            relevantPositions = []
-            relevantVels = []
-
-            #only pass agent local information(within radius)
-            for other_agent in range(0,params.num_agents):
-                if agent == other_agent or np.linalg.norm(agentPos-agentPositions[step,other_agent]) > params.neighbor_radius:
-                    continue
-                relevantPositions.append(agentPositions[step,other_agent])
-                relevantVels.append(agentVels[step,other_agent])
-
+            # next step is to abstract out BCs -- but not that important rn 
             if params.periodic_boundary == True:
                 pass
             else:
@@ -149,6 +150,8 @@ def runSim(controllers=[],params=SimParams(),initial_positions=None,initial_velo
                         agentPos[1] += 2 * params.enclosure_size
                     elif agentVel[1] > 0 and agentPos[1] > params.enclosure_size:
                         agentPos[1] += -2 * params.enclosure_size
+
+            relevantPositions, relevantVels = neighborHood(agentPos,params.neighbor_radius,agentPositions[step],agentVels[step])
 
             vel_new = controllers[agent].vel(relevantPositions,relevantVels,agentPos,agentVel)
 

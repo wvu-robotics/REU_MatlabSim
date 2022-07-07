@@ -10,6 +10,8 @@ import enum
 import io
 from tqdm import tqdm
 import imageio
+import multiprocessing as mp
+from functools import partial
 
 class ExportType(enum.Enum):
     NONE = 0
@@ -72,6 +74,15 @@ def plot(i,df,params=sim.SimParams(),vision_mode=False,write=False):
     if write: fig.write_image("frames/fig"+str(i).zfill(5)+".png")
     return fig
 
+def plotToBytes(i,df,params=sim.SimParams(),vision_mode=False,write=False):
+    fig = plot(i,df,params,vision_mode,write)
+    fig_bytes = fig.to_image(format='png')
+    buf = io.BytesIO(fig_bytes)
+    img = Image.open(buf)
+    im = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+    return im
+
+# can also be multiprocessed
 def toGIF(name,agentPositions,params=sim.SimParams(),colors=[],vision_mode=False,progress_bar=False):
     df= toPandasFrame(agentPositions,colors=colors,params=params)
     maxGifRate = 20
@@ -96,28 +107,47 @@ def toGIF(name,agentPositions,params=sim.SimParams(),colors=[],vision_mode=False
                 frames.append(img)
     imageio.mimsave(name+'.gif',frames,fps = min(1/params.dt,maxGifRate)) # implement fps capping if this is good
 
-def toMP4(name,agentPositions,params=sim.SimParams(),colors=[],vision_mode=False,progress_bar=False,framecap=60):
+# should be able to multithread the frame creations
+def toMP4(name,agentPositions,params=sim.SimParams(),colors=[],vision_mode=False,progress_bar=False,framecap=60,threads=8):
+    pool = mp.Pool(threads)
     df= toPandasFrame(agentPositions,colors=colors,params=params)
+
+
     video = cv2.VideoWriter(name+'.mp4',cv2.VideoWriter_fourcc(*'mp4v'), min(1/params.dt,framecap), (500,500), True)
-    
-    if (1/params.dt) < framecap:
-        for i in (tqdm(range(0,len(agentPositions))) if progress_bar else range(0,len(agentPositions))):
-            fig = plot(i,df,params,vision_mode,write=False)
-            fig_bytes = fig.to_image(format='png') #getting rid of file writes,slightly faster
-            buf = io.BytesIO(fig_bytes)
-            img = Image.open(buf) #would like a way to go from bytes to cv2 image immediately, haven't found yet
-            im = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-            video.write(im)
-    else:
-        n_sample_frame = int(1/(params.dt*framecap)) # neeed to think about this math, there may be a better way to interp
-        for i in (tqdm(range(0,len(agentPositions))) if progress_bar else range(0,len(agentPositions))):
-            if (i%n_sample_frame ==0):
-                fig = plot(i,df,params,vision_mode,write=False)
-                fig_bytes = fig.to_image(format='png') #getting rid of file writes,slightly faster
-                buf = io.BytesIO(fig_bytes)
-                img = Image.open(buf) #would like a way to go from bytes to cv2 image immediately, haven't found yet
-                im = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-                video.write(im)
+
+    n_sample_frame = 1
+    if (1/params.dt) < framecap: n_sample_frame = int(1/(params.dt*framecap))    
+    # next step is to try writes to files, and see if that's faster bc less memory passing around
+
+    # might be more speed related to minimizing size of dfs passed to each process
+    ims = pool.map(partial(plotToBytes,df=df,params=params,vision_mode=vision_mode,write=False),range(0,len(agentPositions),n_sample_frame))
+
+    for im in ims:
+        video.write(im)
+
+    # for i in range(0,len(agentPositions),n_sample_frame):
+    #     im = Image.open("frames/fig"+str(i).zfill(5)+".png")
+    #     im = cv2.cvtColor(np.array(im), cv2.COLOR_RGB2BGR)
+    #     video.write(im)
+
+    # if (1/params.dt) < framecap:
+    #     for i in (tqdm(range(0,len(agentPositions))) if progress_bar else range(0,len(agentPositions))):
+    #         fig = plot(i,df,params,vision_mode,write=False)
+    #         fig_bytes = fig.to_image(format='png') #getting rid of file writes,slightly faster
+    #         buf = io.BytesIO(fig_bytes)
+    #         img = Image.open(buf) #would like a way to go from bytes to cv2 image immediately, haven't found yet
+    #         im = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+    #         video.write(im)
+    # else:
+    #     n_sample_frame = int(1/(params.dt*framecap)) # neeed to think about this math, there may be a better way to interp
+    #     for i in (tqdm(range(0,len(agentPositions))) if progress_bar else range(0,len(agentPositions))):
+    #         if (i%n_sample_frame ==0):
+    #             fig = plot(i,df,params,vision_mode,write=False)
+    #             fig_bytes = fig.to_image(format='png') #getting rid of file writes,slightly faster
+    #             buf = io.BytesIO(fig_bytes)
+    #             img = Image.open(buf) #would like a way to go from bytes to cv2 image immediately, haven't found yet
+    #             im = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+    #             video.write(im)
 
 def toCVS(name,agentPositions,agentVels,params=sim.SimParams()):
     path="./data/"
