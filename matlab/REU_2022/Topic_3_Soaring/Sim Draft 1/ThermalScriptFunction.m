@@ -16,21 +16,21 @@ SL = ColesLaw();
 thermalMap = ThermalMap(SL);
 
 
-number                  = Param(1);
-SL.separation           = 10^Param(2);
-SL.cohesion             = 10^Param(3);
-SL.alignment            = 10^Param(4);
-SL.migration            = 10^Param(5);
-SL.cohesionHeightMult   = Param(6);
-SL.separationHeightGap  = Param(7);
-SL.dt                   = Param(8);
-SL.waggle               = Param(9);
-SL.waggleTime           = Param(10);
-SL.numAgents            = Param(11);
-SL.thermalStrengthMin   = Param(12);
-SL.thermalStrengthMax   = Param(13);
-SL.forwardSpeedMin      = Param(14);
-SL.forwardSpeedMax      = Param(15);
+number                   = Param(1);
+SL.separation            = 10^Param(2);
+SL.cohesion              = 10^Param(3);
+SL.alignment             = 10^Param(4);
+SL.migration             = 10^Param(5);
+SL.cohesionHeightMult    = Param(6);
+SL.separationHeightWidth = Param(7);
+SL.dt                    = Param(8);
+SL.waggle                = Param(9);
+SL.waggleTime            = Param(10);
+SL.numAgents             = Param(11);
+SL.thermalStrengthMin    = Param(12);
+SL.thermalStrengthMax    = Param(13);
+SL.forwardSpeedMin       = Param(14);
+SL.forwardSpeedMax       = Param(15);
 
 swarm = Swarm(SL, thermalMap);
 

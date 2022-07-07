@@ -11,6 +11,7 @@ import plotly.express as px
 import pandas as pd
 from features.features import *
 from models.featureCombo import FeatureCombo as fc
+from scipy import optimize
 
 from sklearn.linear_model import (
     Lasso,
@@ -31,11 +32,11 @@ from sklearn.pipeline import Pipeline
 params = sim.SimParams(
     num_agents=50,
     dt=0.05,
-    overall_time = 10,
+    overall_time = 15,
     enclosure_size = 15,
     init_pos_max = None, #if None, then defaults to enclosure_size
     agent_max_vel=7,
-    init_vel_max = 2,
+    init_vel_max = None,
     agent_max_accel=np.inf,
     agent_max_turn_rate=np.inf,
     neighbor_radius=3,
@@ -63,13 +64,13 @@ if __name__ == '__main__':
     if not os.path.exists("linearNonlinearOutput"):
         os.makedirs("linearNonlinearOutput")
 
-    export.export(export.ExportType.GIF,"linearNonlinear/Initial",agentPositions,agentVels,params=params,vision_mode=False,progress_bar=True)
+    export.export(export.ExportType.GIF,"linearNonlinearOutput/Initial",agentPositions,agentVels,params=params,vision_mode=False,progress_bar=True)
 
-    # no exports rn, just testing correlation and such
+    #shortsim params
     shortSimParams = copy.deepcopy(params)
     print("Running short sims")
     shortSimParams.num_agents = 20
-    shortSimParams.enclosure_size = 1*shortSimParams.num_agents #strong effect on learning separation
+    shortSimParams.enclosure_size = 20 #strong effect on learning separation
     shortSimParams.overall_time = 2
     shortSimParams.init_pos_max = shortSimParams.enclosure_size
     shortSimParams.agent_max_vel = 7
@@ -77,7 +78,9 @@ if __name__ == '__main__':
     learning_features = {
         "coh": Cohesion(),
         "align": Alignment(),
-        "sep": SeparationInv2()
+        "sep": SeparationInv2(),
+        "steer": SteerToAvoid(params.neighbor_radius/4,params.neighbor_radius),
+        "rot": Rotation()
     }
 
 
@@ -90,9 +93,9 @@ if __name__ == '__main__':
     y = []
     for slice in featureSlices:
         f = slice.features
-        x.append(np.array([f["coh"][0],f["align"][0],f["sep"][0]]))
+        x.append(np.array(list(slice.features.values()))[:,0])
         y.append(slice.output_vel[0] - slice.last_vel[0])
-        x.append(np.array([f["coh"][1],f["align"][1],f["sep"][1]]))
+        x.append(np.array(list(slice.features.values()))[:,1])
         y.append(slice.output_vel[1] - slice.last_vel[1])
     
 
@@ -103,8 +106,8 @@ if __name__ == '__main__':
 
     # #create some visuals with the imitated swarm
     #     #maybe do an imposter(sus) pretending to be within the original swarm
-    gains = reg.coef_.tolist()
-    print(gains)
+    linear_gains = reg.coef_.tolist()
+    print(linear_gains)
 
     true_loss = 0
     for i in range(len(x)):
@@ -113,6 +116,61 @@ if __name__ == '__main__':
         v_actual = y[i]
         true_loss += np.sum(np.abs(v_pred-v_actual))
     print("True loss on avg: ",true_loss/len(x))
+
+    print("Running imitated visual: ")
+
+    def sliceBasedFitness(x):
+        def fitness(linear_gains):
+            linear_gains = np.array(linear_gains)
+            # print("Gains",est_gains)
+            loss = 0.0
+            for i in range(len(x)):
+                
+                vel_pred = np.dot(x[i].transpose(),linear_gains)
+                #vel_pred = sim.motionConstraints(vel_pred, slice.last_vel, params)
+                err = (vel_pred - y[i])
+                loss += np.linalg.norm(err)  # could change to MSE, but I like accounting for direction better
+            if len(x) == 0:
+                return np.inf
+            return loss / len(x)  # normalized between runs
+
+        return fitness
+
+    fitness_function = sliceBasedFitness(x)
+    solution = optimize.minimize(fitness_function,(linear_gains[0], linear_gains[1], linear_gains[2], linear_gains[3], linear_gains[4]), method='SLSQP')
+    print("Parameters of the best solution : {params}".format(params=solution.x))
+
+    controllers_imitated = [fc(linear_gains, (list(learning_features.values()))) for i in
+                            range(params.num_agents)]
+    for controller in controllers_imitated:
+        controller.setColor('red')
+    agentPositions_imitated, agentVels_imitated = sim.runSim(controllers_imitated, params, progress_bar=True, initial_positions=agentPositions[0], initial_velocities=agentVels[0])
+    export.export(export.ExportType.GIF, "linearNonlinearOutput/Imitated", agentPositions_imitated, agentVels_imitated,
+                  controllers=controllers_imitated, params=params, progress_bar=True)
+    
+    # now create some hybrid visualizations
+    print("Running hybrid visual: ")
+    # some parameters for hybrid visualization
+    mix_factor = 0.5
+    params.num_agents = 50
+    params.enclosure_size = 20
+    params.overall_time = 15
+    params.init_pos_max = params.enclosure_size
+    params.agent_max_vel = 7
+
+    original_agents = [fc(true_gains, list(learning_features.values())) for i in range(int(params.num_agents * mix_factor))]
+    for controller in original_agents:
+        controller.setColor("rgb(99, 110, 250)")
+    imitated_agents = [fc(linear_gains, list(learning_features.values())) for i in
+                       range(int(params.num_agents * (1 - mix_factor)))]
+    for controller in imitated_agents:
+        controller.setColor("red")
+
+    all_controllers = original_agents + imitated_agents
+
+    agentPositions_hybrid, agentVels_hybrid = sim.runSim(all_controllers, params, progress_bar=True)
+    export.export(export.ExportType.GIF, "linearNonlinearOutput/Hybrid", agentPositions_hybrid, agentVels_hybrid,
+                  controllers=all_controllers, params=params, vision_mode=False, progress_bar=True)
 
 
 """
@@ -133,5 +191,4 @@ if __name__ == '__main__':
         "y":np.concatenate([y_pred_true_vy,y_vy]),
         "type":np.concatenate([["predicted"]*len(y_pred_true_vx),["actual"]*len(y_vx)])
         })
-"""
-    
+"""   
