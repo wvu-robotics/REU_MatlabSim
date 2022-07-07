@@ -2,17 +2,17 @@ classdef ColesLaw
     properties
          %% Variables to be Changed Here
         % Simulation
-        totalTime = 500;            % s
+        totalTime = 5400;           % s
         fpsMult = 10;               % x Real Time
         numThermals = 6;            % thermals
-        neighborRadius = 4000;      % m
+        neighborRadius = 2000;      % m
         k = 10;                     % number of nearest neighbors
         frameSkip = 5;              % render every nth frame
         forwardInertia = 10;        % <unused>
         bankMin = -2*pi/12;         % rad
         bankMax = 2*pi/12;          % rad
         bankInertia = 1;            % <unused>
-        fov = 2*pi;                 % rad
+        fov = 11*pi/6;               % rad
         forwardSpeedMin = 8;        % m/s
         forwardSpeedMax = 13;       % m/s
         
@@ -21,7 +21,7 @@ classdef ColesLaw
         followAgent = false;        %
         followRadius = 1000;
         renderScale = [200;200];    % [scaleX; scaleY];
-        showNeighbors = false;       %
+        showNeighbors = true;       %
         showFixedRadius = false;     %
         showRange = false;           %
         showText  = false;          %
@@ -29,15 +29,15 @@ classdef ColesLaw
 
         % Functions to use
         funcName_agentControl     = "agentControl_Max";
-        funcName_findNeighborhood = "findNeighborhood_fixedRadius";
+        funcName_findNeighborhood = "findNeighborhood_KNNInFixedRadius";
 
         % Thermal constraints
         thermalPixels = 50
         thermalSpeedMin = 0         % m/s
         thermalSpeedMax = 0         % m/s
         thermalRadiusMin = 600      % m
-        thermalRadiusMax = 1300     % m
-        thermalStrengthMin = 1      % m/s, peak updraft speed
+        thermalRadiusMax = 600      % m
+        thermalStrengthMin = 10     % m/s, peak updraft speed
         thermalStrengthMax = 10     % m/s, peak updraft speed
         thermalFadeRate = 0.001     % m/s, rate at which thermals fade in or out 
         thermalMinPlateauTime = 600 % steps at the min strength
@@ -54,13 +54,13 @@ classdef ColesLaw
         cohesionHeightMult = 5;     % For agentControl_KNN 
         % these two are not at all the same
         heightIgnore = 0.2;         % For agentControl_Update
-        separationHeightGap = 2;    % For agentControl_KNN
+        separationHeightWidth = 2;    % For agentControl_KNN
         
         dt = .1;                    % s
         waggle = pi/48;             % Radians of bank
         waggleTime = 1;             % Seconds of waggle bank        
         numAgents = 40;             % agents
-        
+        waggleDurationRange = [0.3,0.5]; 
 
         %% Not to Change
         % Initial conditions
