@@ -28,7 +28,7 @@ function outputData = MainScriptFunction(SL, simNumber, videoName, render)
             %% Step simulation
             thermalMap.staticStep();
             swarm.saveAgentData();
-            swarm.stepSimulation();
+            swarm.stepSimulation(step);
 
             %% Read Data
             swarm.updateData(step);

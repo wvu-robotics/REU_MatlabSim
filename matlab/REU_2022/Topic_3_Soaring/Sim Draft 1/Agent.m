@@ -9,12 +9,18 @@ classdef Agent < handle
         velocity = [0.0, 0.0, 0.0]           %m/s, rad/s, [forward,omega]
         patchObj = NaN
 
+        cVEC = [0.0, 0.0]
+        sVEC = [0.0, 0.0]
+        aVEC = [0.0, 0.0]
+
         isAlive  = true
         markedForDeath = false
         accelDir = 0.0;
         rulesDir = [0.0, 0.0, 0.0, 0.0, 0.0] % S, C, A, M
         rulesMag = [0.0, 0.0, 0.0, 0.0, 0.0] % S, C, A, M
         vsink    = 0                    % m/s
+        clearance = 0
+        neighbors
 
         lastWaggle = 0;
         waggleSign = 0;

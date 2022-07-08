@@ -1,209 +1,170 @@
-function agentControl_Max(currentAgent, localAgents, thermalStrength, target, SL)
+function agentControl_Max(thisAgent, localAgents, thermalStrength, target, SL)
 %% Define Items
-accelMag_separation = 0;
-accelMag_cohesion = 0;
-accelMag_alignment = 0;
-accelMag_migration = 0;
-accelMag_waggle = 0;
-
-separationVector = [0,0,0];
-centroidUnit = [0,0,0];
-alignmentVector = [0,0,0];
-targetUnit = [0,0,0];
-sideUnit = [0,0,0];
-
-numLocalAgents = size(localAgents,2);
+numNeighbors = size(localAgents,2);
+thisPos = thisAgent.savedPosition;
+thisVelFTZ = thisAgent.savedVelocity;
+thisVelXY  = thisVelFTZ(1).*[cos(thisAgent.heading), sin(thisAgent.heading)];
+cohesionVEC   = thisAgent.cVEC;
+separationVEC = thisAgent.sVEC;
+alignmentVEC  = thisAgent.aVEC;
 
 %% Get SCA Vectors...
-if(numLocalAgents > 0)
-    %% Get Centroid
-    % Centroid: 2D, scaled linearly by distance
-    centroid = [0,0,0];
-    distances2D = 1E6 * ones(1,numLocalAgents);
-    centroidWeight = 0;
-    for i = 1:numLocalAgents
-        if ~localAgents(i).isAlive
-            continue;
-        end
-        diffLocalAgent = localAgents(i).savedPosition - currentAgent.savedPosition;
-        adistLocalAgent = norm(diffLocalAgent);
-%         diffHeight = diffLocalAgent(3);
-        diffLocalAgent(3) = 0;
-        distLocalAgent = norm(diffLocalAgent);
-        if adistLocalAgent < 4
-            currentAgent.isAlive = false;
-            localAgents(i).isAlive = false;
-            continue;
-        end
-
-        distances2D(i) = distLocalAgent;
-%         scaledDist = distLocalAgent/SL.neighborRadius;
-%         heightOffset = -3;
-%         if(diffHeight > heightOffset)
-%             weight = scaledDist * (SL.cohesionHeightMult*(diffHeight-heightOffset)/SL.neighborRadius + 1);
-%         else
-%             weight = 0;
-%         end
-        weight = max(0,SL.cohesionHeightMult*localAgents(i).savedVelocity(3));
-        % weight doubled at 0 altitude, and 0 at max altitude.
-        weight = weight*(2-currentAgent.savedPosition(3)/(SL.agentCeiling - SL.agentFloor));
-        centroid = centroid + weight*(localAgents(i).savedPosition - currentAgent.savedPosition);
-        centroidWeight = centroidWeight + weight;
-    end
-    centroid = centroid / centroidWeight;
-
-    %% Cohesion (Centroid)
-    if(centroidWeight ~= 0)
-        diffCentroid = centroid; % - currentAgent.position;
-        diffCentroid(3) = 0;
-        distToCentroid = norm(diffCentroid);
-        if distToCentroid == 0
-            centroidUnit = [0,0,0];
-        else
-            centroidUnit = diffCentroid / distToCentroid;
-        end
-        
-        accelMag_cohesion   = SL.cohesion * distToCentroid^2;
-    end
+if (numNeighbors > 0)% && (convertCharsToStrings(class(localAgents))=="Agent")
+    %% Define More Items
+    theirPos     = NaN(numNeighbors,3);
+    theirHeading = NaN(numNeighbors,1);
+    theirVelFTZ  = NaN(numNeighbors,3); %Forward Turning Z
+    separationVecs = NaN(numNeighbors,2);
+    alignmentVecs = NaN(numNeighbors,2);
     
 
-    %% Separation and alignment (KNN)
-    % Find k-nearest neighbors(KNN)
-    k = 1000;
-    if(numLocalAgents < k)
-        NNIndices = 1:numLocalAgents;
-        numNN = numLocalAgents;
-    else
-        [~,distSortIndices] = sort(distances2D);
-        NNIndices = distSortIndices(1:k);
-        numNN = k;
+    %% Collect Data from Neighbors
+    for i = 1:numNeighbors
+        theirPos(i,:) = localAgents(i).savedPosition;
+        theirHeading(i) = localAgents(i).savedHeading;
+        theirVelFTZ(i,:) = localAgents(i).savedVelocity;
+%         assert(localAgents(i).isAlive,"Neighborhood function bronk")
     end
     
+    diff = theirPos(:,1:3) - thisPos(1:3); % vectorized, this to them
+    diff2D = diff(:,1:2);
 
-    separationVector = [0,0,0];
-    alignmentVector = [0,0,0];
+    dist = vecnorm(diff,2,2); % 2-norm (Euclidean), 2nd dimension
+    thisAgent.clearance = min(dist);
+    dist2D = vecnorm(diff2D,2,2);
+%     ndiff = diff./dist;
+    ndiff2D = diff2D./dist2D;
     
-    for i=1:numNN
-        NNIndex = NNIndices(i);
-        NNAgent = localAgents(NNIndex);
-        diffNNAgent = NNAgent.savedPosition - currentAgent.position;
-        diffNNHeight = diffNNAgent(3);
-        diffNNAgent(3) = 0;
-        distNNAgent = norm(diffNNAgent);
-        distNNAgentScaled = distNNAgent/SL.neighborRadius;
-        diffUnitNNAgent = diffNNAgent/distNNAgent;
-        NNAgentHeading = NNAgent.savedHeading;
-        
-        velUnitNNAgent = [cos(NNAgentHeading),sin(NNAgentHeading),0];
-        
-        weightSep = 1/distNNAgentScaled^2 - 1;
-        weightAlign = 1;
-        if(norm(diffNNHeight) > SL.separationHeightWidth)
-            weightSep = 0;
-            weightAlign = 0;
-        end
-        separationVector = separationVector - weightSep*diffUnitNNAgent;
-        alignmentVector = alignmentVector + weightAlign*velUnitNNAgent;
+    theirVelXY = theirVelFTZ(:,1).*[cos(theirHeading), sin(theirHeading)];
+
+    theirRelVelZ = theirVelFTZ(:,3) - thisVelFTZ(:,3);
+    
+    %% Collision Death
+
+    if any(dist < SL.collisionKillDistance)
+        thisAgent.markedForDeath = true;
+        return;
     end
     
-    separationVector = separationVector / numNN;
-    alignmentVector = alignmentVector / numNN;
+    %% Cohesion
+    ascendCaringFactor = SL.cohesionAscensionMult*(1 - (thisAgent.savedPosition(3)/SL.agentCeiling));
+
+    % Cap relative Z
+    theirRelVelZ(theirRelVelZ > SL.cohesionAscensionMax) = SL.cohesionAscensionMax;
+   
+    %Linear interp from [SL.cohesionAscensionIgnore,SL.cohesionAscensionMax] 
+    %                to [1                         ,ascendCaringFactor]
+    weightCohesion = (theirRelVelZ - SL.cohesionAscensionIgnore)*(ascendCaringFactor-1)/(SL.cohesionAscensionMax - SL.cohesionAscensionIgnore) + 1;
+    % Set weights of sinking/weakly thermalling agents to 1
+    weightCohesion(theirRelVelZ <= SL.cohesionAscensionIgnore) = 1;
+    % at some point lower weights based on altitude pls
+    cohesionVecs = weightCohesion.*ndiff2D.*dist2D.^1;
+    cohesionVEC  = sum(cohesionVecs,1) / numNeighbors;
+    thisAgent.cVEC = cohesionVEC;
     
-    accelMag_separation = SL.separation;
-    accelMag_alignment  = SL.alignment;
+    %% Separation and Alignment
+    seenSA = abs(diff(:,3)) < SL.separationHeightWidth/2;
+    separationVecs(seenSA,:) = - ndiff2D(seenSA,:)./dist2D(seenSA,:).^2;
+    separationVecs(~seenSA,:) = [];
+    separationVEC = sum(separationVecs,1);
+    thisAgent.sVEC = separationVEC;
+
+    alignmentVecs(seenSA,:) = (theirVelXY(seenSA,:)-thisVelXY)./dist2D(seenSA,:).^2;
+    alignmentVecs(~seenSA,:) = [];
+    alignmentVEC = sum(alignmentVecs,1);
+    thisAgent.aVEC = alignmentVEC;
 end
 
-%% Migration & Waggle
-diffTarget = target - currentAgent.position;
-diffTarget(3) = 0;
-distToTarget = norm(diffTarget);
-targetUnit = diffTarget / distToTarget;
+%% Migration
+diffTarget = target - thisPos;
+diffTarget(3) = [];
+distTarget = norm(diffTarget);
+migrationVEC = diffTarget*distTarget^5;
 
-forwardUnit = [cos(currentAgent.heading), sin(currentAgent.heading), 0];
-upUnit = [0,0,1];
-sideUnit = cross(upUnit,forwardUnit);
-if(currentAgent.lastWaggle <= 0)
-    currentAgent.waggleSign = 2 * round(rand()) - 1;
-    currentAgent.lastWaggle = Utility.randIR(SL.waggleDurationRange(1),SL.waggleDurationRange(1)); %s
+%% Waggle
+if(thisAgent.lastWaggle <= 0)
+    thisAgent.waggleSign = 2 * round(rand()) - 1;
+    thisAgent.lastWaggle = Utility.randIR(SL.waggleDurationRange(1),SL.waggleDurationRange(2)); %s
 end
-currentAgent.lastWaggle = currentAgent.lastWaggle - SL.dt;
-
-accelMag_migration  = SL.migration * distToTarget^6;
-accelMag_waggle     = SL.waggle * currentAgent.waggleSign;
+thisAgent.lastWaggle = thisAgent.lastWaggle - SL.dt;
+sideUnit = [cos(thisAgent.savedHeading + pi/2), sin(thisAgent.savedHeading + pi/2)];
+waggleVEC = sideUnit * thisAgent.waggleSign;    
 
 
 %% Get Accel
-newAccel = accelMag_separation * separationVector + ...
-           accelMag_cohesion   * centroidUnit + ...
-           accelMag_alignment  * alignmentVector + ...
-           accelMag_migration  * targetUnit + ... % nets accel vector to add on to current accel
-           accelMag_waggle     * sideUnit;
+newAccel = separationVEC * SL.separation + ...
+           cohesionVEC   * SL.cohesion   + ...
+           alignmentVEC  * SL.alignment  + ...
+           migrationVEC  * SL.migration  + ... 
+           waggleVEC     * SL.waggle;
 
-newAccel(3) = 0; % removes z component
-currentAgent.accelDir = atan2(newAccel(2), newAccel(1));
-currentAgent.rulesDir(1) = atan2(separationVector(2), separationVector(1));
-currentAgent.rulesDir(2) = atan2(centroidUnit(2), centroidUnit(1));
-currentAgent.rulesDir(3) = atan2(alignmentVector(2), alignmentVector(1));
-currentAgent.rulesDir(4) = atan2(targetUnit(2), targetUnit(1));
-currentAgent.rulesDir(5) = atan2(sideUnit(2), sideUnit(1));
-currentAgent.rulesMag(1) = norm(accelMag_separation * separationVector);
-currentAgent.rulesMag(2) = norm(accelMag_cohesion   * centroidUnit);
-currentAgent.rulesMag(3) = norm(accelMag_alignment  * alignmentVector);
-currentAgent.rulesMag(4) = norm(accelMag_migration  * targetUnit);
-currentAgent.rulesMag(5) = accelMag_waggle;
+thisAgent.accelDir = atan2(newAccel(2), newAccel(1));
 
-forwardUnit = [cos(currentAgent.heading), sin(currentAgent.heading), 0];
+thisAgent.rulesDir(1) = atan2(separationVEC(2), separationVEC(1));
+thisAgent.rulesDir(2) = atan2(cohesionVEC(2)  , cohesionVEC(1)  );
+thisAgent.rulesDir(3) = atan2(alignmentVEC(2) , alignmentVEC(1) );
+thisAgent.rulesDir(4) = atan2(migrationVEC(2) , migrationVEC(1) );
+thisAgent.rulesDir(5) = atan2(waggleVEC(2)    , waggleVEC(1)    );
+
+thisAgent.rulesMag(1) = norm(separationVEC * SL.separation);
+thisAgent.rulesMag(2) = norm(cohesionVEC   * SL.cohesion  );
+thisAgent.rulesMag(3) = norm(alignmentVEC  * SL.alignment );
+thisAgent.rulesMag(4) = norm(migrationVEC  * SL.migration );
+thisAgent.rulesMag(5) = norm(waggleVEC     * SL.waggle    );
+
+forwardUnit = [cos(thisAgent.heading), sin(thisAgent.heading)];
 newAccel_forward = dot(newAccel,forwardUnit);
 if(norm(newAccel) - norm(newAccel_forward) < 1E-6)
     newAccel_circ = 0;
 else
     newAccel_circ = 1.0 * sqrt((norm(newAccel))^2-newAccel_forward^2);
 end
-turningCrossProduct = cross(forwardUnit,newAccel);
+turningCrossProduct = cross([forwardUnit, 0],[newAccel, 0]);
 newAccel_circ = newAccel_circ * sign(turningCrossProduct(3));
 
 newAccel = [newAccel_forward; newAccel_circ];
 
 %% Get Vel
-newVel(1) = currentAgent.velocity(1) + newAccel(1)*SL.dt/10;
+newVel(1) = thisAgent.velocity(1) + newAccel(1)*SL.dt/10;
 if(newVel(1) > SL.forwardSpeedMax)
     newVel(1) = SL.forwardSpeedMax;
 elseif(newVel(1) < SL.forwardSpeedMin)
     newVel(1) = SL.forwardSpeedMin;
 end
 % a = omega * v
-currentAgent.bankAngle = atan(newAccel(2)/SL.g);
+thisAgent.bankAngle = atan(newAccel(2)/SL.g);
 
-if(currentAgent.bankAngle > SL.bankMax)
-    currentAgent.bankAngle = SL.bankMax;
+if(thisAgent.bankAngle > SL.bankMax)
+    thisAgent.bankAngle = SL.bankMax;
 end
-if(currentAgent.bankAngle < SL.bankMin)
-    currentAgent.bankAngle = SL.bankMin;
+if(thisAgent.bankAngle < SL.bankMin)
+    thisAgent.bankAngle = SL.bankMin;
 end
-newAccel(2) = tan(currentAgent.bankAngle)*SL.g;
+newAccel(2) = tan(thisAgent.bankAngle)*SL.g;
 newVel(2) = newAccel(2)/newVel(1);
 
-currentAgent.vsink = (SL.Sink_A*newVel(1).^2 + SL.Sink_B*newVel(1) + SL.Sink_C)...
-        / sqrt(cos(currentAgent.bankAngle));
-vspeed = currentAgent.vsink + thermalStrength;
+thisAgent.vsink = (SL.Sink_A*newVel(1).^2 + SL.Sink_B*newVel(1) + SL.Sink_C)...
+        / sqrt(cos(thisAgent.bankAngle));
+vspeed = thisAgent.vsink + thermalStrength;
 
 %% Get Pos
-newPos(1:2) = currentAgent.position(1:2) + newVel(1)*forwardUnit(1:2)*SL.dt;
-newPos(3) = currentAgent.position(3) + vspeed*SL.dt;
+newPos(1:2) = thisAgent.position(1:2) + newVel(1)*forwardUnit(1:2)*SL.dt;
+newPos(3) = thisAgent.position(3) + vspeed*SL.dt;
 if newPos(3) > SL.agentCeiling
     newPos(3) = SL.agentCeiling;
 elseif newPos(3) < SL.agentFloor % not Giga-Jank
+    if newPos(3) <= 0
+        thisAgent.markedForDeath = true;
+        %thisAgent.causeOfDeath = 'Ground';
+        return;
+    end
     newPos (3) = SL.agentFloor; % Tera-Jank
 end
-if newPos(3) <= 0
-    currentAgent.isAlive = false;
-end
-currentAgent.heading = currentAgent.heading + newVel(2)*SL.dt;
 
-currentAgent.velocity(1:2) = newVel;
-currentAgent.velocity(3)   = vspeed;
-currentAgent.position = newPos;
-if(isnan(newPos(3)))
-    fprintf("NAN\n");
-end
+thisAgent.heading = thisAgent.heading + newVel(2)*SL.dt;
+
+thisAgent.velocity(1:2) = newVel;
+thisAgent.velocity(3)   = vspeed;
+thisAgent.position = newPos;
+assert(~isnan(newPos(3)),'ur a nan')
 end

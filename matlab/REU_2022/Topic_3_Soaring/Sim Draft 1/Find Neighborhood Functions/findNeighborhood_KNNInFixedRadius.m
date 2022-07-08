@@ -12,11 +12,13 @@ function localAgents = findNeighborhood_KNNInFixedRadius(swarm, agentIndex, SL)
         end
         otherAgent = swarm.agents(j);
         diff = otherAgent.savedPosition - currentAgent.savedPosition;
+        
         if(abs(diff(1)) > SL.neighborRadius || abs(diff(2)) > SL.neighborRadius)
             continue; 
         end
         %diff(3) = 0;
         dist = norm(diff);
+        assert(~isnan(dist),'no')
         if(dist > SL.neighborRadius)
             continue;
         end
@@ -30,6 +32,7 @@ function localAgents = findNeighborhood_KNNInFixedRadius(swarm, agentIndex, SL)
         
         distances(j) = dist;
         numValidAgents = numValidAgents + 1;
+        assert(swarm.agents(j).isAlive,"Neighborhood function bronk")
     end
     
     [~,distIndices] = sort(distances);
@@ -41,4 +44,8 @@ function localAgents = findNeighborhood_KNNInFixedRadius(swarm, agentIndex, SL)
     end
     
     localAgents(1:numLocalAgents) = swarm.agents(distIndices(1:numLocalAgents));
+    debugNN = size(localAgents,2);
+    for N = 1:debugNN
+        assert(localAgents(N).isAlive,"Neighborhood function bronk")
+    end
 end
