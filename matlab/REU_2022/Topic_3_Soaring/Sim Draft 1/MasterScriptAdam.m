@@ -39,6 +39,13 @@ varLabelColumn = 2;
 startingColumn = 3;
 startingRow = 1;
 numSims = size(RAW,2) - startingColumn + 1;
+nanCount = 0;
+for col = 1:numSims
+    if isnan(RAW{1,col+startingColumn-1})
+        nanCount = nanCount + 1;
+    end
+end
+numSims = numSims - nanCount;
 
 %% Set up output Excel sheet
 outputExcelName = sprintf('%s/SimData %s.xlsx',simBatchFolder,simBatchCode);
@@ -108,8 +115,3 @@ storeRow = outputRow;
 storePos = sprintf("%s%d",storeColumn,storeRow);
 xlswrite(outputExcelName,storeData,sheetNum,storePos);    
 fprintf("Finished storing results.\n");
-
-
-
-
-

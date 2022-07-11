@@ -86,7 +86,7 @@ for sim = 1:numSims
     
     %% Run Simulation
     simNumber = SL.simIDNum;
-    render = false;
+    render = true;
     videoName = sprintf('%s/%d SimRender.avi',simBatchFolder,simNumber);
     outputData = MainScriptFunction(SL, simNumber, videoName, render);
     bigOutputData(sim) = outputData;
@@ -115,3 +115,9 @@ storeRow = outputRow;
 storePos = sprintf("%s%d",storeColumn,storeRow);
 xlswrite(outputExcelName,storeData,sheetNum,storePos);    
 fprintf("Finished storing results.\n");
+
+%% microwave
+
+[y,Fs] = audioread("microwave.mp3");
+%load gong.mat;
+sound(y,Fs)

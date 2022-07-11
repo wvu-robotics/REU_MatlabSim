@@ -6,6 +6,7 @@ classdef Swarm < handle
         funcHandle_agentControl
         funcHandle_findNeighborhood
         thisAgent = 0;
+        heroAgent
         thermalMap
         simFig
         video
@@ -38,7 +39,7 @@ classdef Swarm < handle
             obj.simLaw = simLaw;
             obj.thermalMap = thermalMap;
             SL = obj.simLaw;
-            
+
             obj.funcHandle_agentControl = str2func(SL.funcName_agentControl);
             obj.funcHandle_findNeighborhood = str2func(SL.funcName_findNeighborhood);
             obj.ToD = zeros(1,SL.numAgents);
@@ -47,7 +48,8 @@ classdef Swarm < handle
             numAgents = SL.numAgents;   %Get total number of agents
             obj.agents = Agent.empty(0,SL.numAgents);
             obj.agents(1,numAgents) = Agent();  %Fill agents with default constructors of Agent
-            
+            obj.heroAgent = obj.agents(1); % hero is number one
+
             %Iterate through all agents
             posRange = SL.agentSpawnPosRange;
             velRange = SL.agentSpawnVelRange;
@@ -75,15 +77,19 @@ classdef Swarm < handle
         end
         
         % Step Function
-        function obj = stepSimulation(obj)
+        function obj = stepSimulation(obj, frame)
             SL = obj.simLaw;
             numAgents = SL.numAgents;   %Get total number of agents
             for i=1:numAgents
                 if obj.agents(i).isAlive
                     currentAgent = obj.agents(i);
-                    
-                    %Find localAgents
-                    localAgents = obj.funcHandle_findNeighborhood(obj,i,SL);
+                    if frame==1 || mod(frame,SL.neighborFrameSkip)==0
+                        %Find localAgents
+                        localAgents = obj.funcHandle_findNeighborhood(obj,i,SL);
+                        obj.agents(i).neighbors = localAgents;
+                    else
+                        localAgents = obj.agents(i).neighbors;
+                    end
                     
                     %Find thermal strength from ThermalMap
                     thermalStrength = obj.thermalMap.getStrength(currentAgent.position);
@@ -211,9 +217,9 @@ classdef Swarm < handle
                     
                     %% Text Box
                     if(SL.showText)
-                        textStr = sprintf('Speed: %2.0fm/s\nBank: %+3.0fdeg\nVSpeed: %1.1fm/s\nS:%2.2g\nC:%2.2g\nA:%2.2g\nM:%2.2g\nW:%2.2g',...
+                        textStr = sprintf('Speed: %2.0fm/s\nBank: %+3.0fdeg\nVSpeed: %1.1fm/s\nS:%2.2g\nC:%2.2g\nA:%2.2g\nM:%2.2g\nClearance:%5.1f',...
                             currentAgent.velocity(1), currentAgent.bankAngle*180/pi,currentAgent.savedVelocity(3), currentAgent.rulesMag(1),...
-                            currentAgent.rulesMag(2),currentAgent.rulesMag(3),currentAgent.rulesMag(4),currentAgent.rulesMag(5));
+                            currentAgent.rulesMag(2),currentAgent.rulesMag(3),currentAgent.rulesMag(4),currentAgent.clearance);
                         if(class(obj.textAnnt) == "double")
                             obj.textAnnt = annotation('textbox');
                             obj.textAnnt.FontName = 'FixedWidth';
@@ -221,7 +227,7 @@ classdef Swarm < handle
                             obj.textAnnt.FaceAlpha = 0.75;
                             obj.textAnnt.Position = [0.55 0.75 0.25 0.15];
                             obj.textAnnt.FitBoxToText = 'on';
-                            obj.textAnnt.FontSize = 10;
+                            obj.textAnnt.FontSize = 8;
                         end
                         obj.textAnnt.String = textStr;
 
@@ -230,40 +236,12 @@ classdef Swarm < handle
                 %% All Agents
                 if ~SL.followAgent || (abs(obj.agents(i).position(1) - obj.agents(obj.thisAgent).position(1)) < SL.followRadius ...
                                     && abs(obj.agents(i).position(2) - obj.agents(obj.thisAgent).position(2)) < SL.followRadius)
-                    obj.agents(i).render();
+                    obj.agents(i).render(obj);
                 elseif(class(obj.agents(i).patchObj) ~= "double")
                     obj.agents(i).patchObj.Visible = 'off';
                 end
             end
         end
-        
-        % Get Data (probably outdated but dont want to delete
-%         function [maxHeight, minHeight, avgHeight, avgSpeed] = getData(obj)
-%             SL = obj.simLaw;
-%             
-%             maxHeightIndex = 0;
-%             maxHeight = SL.agentFloor;
-%             minHeightIndex = 0;
-%             minHeight = SL.agentCeiling;
-%             avgHeight = 0;
-%             avgSpeed = 0;
-%             
-%             for i=1:SL.numAgents
-%                 currentHeight = obj.agents(i).position(3);
-%                 if(currentHeight > maxHeight)
-%                     maxHeightIndex = i;
-%                     maxHeight = currentHeight;
-%                 end
-%                 if(currentHeight < minHeight)
-%                     minHeightIndex = i;
-%                     minHeight = currentHeight;
-%                 end
-%                 avgHeight = avgHeight + currentHeight;
-%                 avgSpeed = avgSpeed + obj.agents(i).savedVelocity(1);
-%             end
-%             avgHeight = avgHeight / SL.numAgents;
-%             avgSpeed = avgSpeed / SL.numAgents;
-%         end
         
         % Updated Update Data Function
         function obj = updateData(obj,step)
@@ -314,12 +292,16 @@ classdef Swarm < handle
 %             obj.thermalMap = thermalMap;
             SL = obj.simLaw;
             hold on
-    
+    %         stringTitle = sprintf("Agents Alive: %g\nMax Height: %.1f\nMin Height: %.1f\nAverage Height: %.1f",Living,maxHeight,minHeight,averageHeight);
+    %         stringTitle = sprintf("Minutes: %g\nAgents Alive: %g\nAverage Height: %.1f",minutes,Living,averageHeight);
+            stringTitle = sprintf("Number %g, T+%01g:%02g:%02g, Score = %5.0fs\nLiving: %g  Avg: %.0f Min: %.0f Max: %.0f", ...
+                obj.number, obj.Elapsed(1), obj.Elapsed(2), obj.Elapsed(3),obj.flightTime, obj.Living, obj.avgHeight, obj.minHeight, obj.maxHeight);
+            title(stringTitle);
             obj.thermalMap.renderThermals();
             obj.renderAgents();
             if SL.followAgent
-                 xlim([obj.agents(swarm.thisAgent).position(1) - SL.followRadius, obj.agents(swarm.thisAgent).position(1) + SL.followRadius]);
-                 ylim([obj.agents(swarm.thisAgent).position(2) - SL.followRadius, obj.agents(swarm.thisAgent).position(2) + SL.followRadius]);
+                 xlim([obj.agents(obj.thisAgent).position(1) - SL.followRadius, obj.agents(obj.thisAgent).position(1) + SL.followRadius]);
+                 ylim([obj.agents(obj.thisAgent).position(2) - SL.followRadius, obj.agents(obj.thisAgent).position(2) + SL.followRadius]);
             else
                 xlim(SL.mapSize);
                 ylim(SL.mapSize);
@@ -331,11 +313,7 @@ classdef Swarm < handle
             writeVideo(obj.video,currFrame);
             pause(0.0001);
     
-    %         stringTitle = sprintf("Agents Alive: %g\nMax Height: %.1f\nMin Height: %.1f\nAverage Height: %.1f",Living,maxHeight,minHeight,averageHeight);
-    %         stringTitle = sprintf("Minutes: %g\nAgents Alive: %g\nAverage Height: %.1f",minutes,Living,averageHeight);
-            stringTitle = sprintf("Number %g, T+%01g:%02g:%02g, Score = %5.0fs\nLiving: %g  Avg: %.0f Min: %.0f Max: %.0f", ...
-                obj.number, obj.Elapsed(1), obj.Elapsed(2), obj.Elapsed(3),obj.flightTime, obj.Living, obj.avgHeight, obj.minHeight, obj.maxHeight);
-            title(stringTitle);
+
             hold off
 
         end
@@ -348,7 +326,7 @@ classdef Swarm < handle
             obj.video.FrameRate = 1/SL.dt * SL.fpsMult / SL.frameSkip;
             open(obj.video);
             
-            obj.simFig = figure('Visible','off');
+            obj.simFig = figure('Visible','on');
         
             % Initialize map background
             clf

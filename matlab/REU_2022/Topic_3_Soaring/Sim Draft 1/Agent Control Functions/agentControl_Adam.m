@@ -9,6 +9,13 @@ function agentControl_Adam(currentAgent, localAgents, thermalStrength, target, S
     
     numLocalAgents = size(localAgents,2);
     
+    %% Non-neighbor Factors
+    % Height desire
+    height = currentAgent.savedPosition(3);
+    height = min(max(height,SL.heightDesireBounds(1)),SL.heightDesireBounds(2));
+    factor_heightDesire = interp1(SL.heightDesireBounds,SL.heightDesireMagBounds,height);
+    
+        
     %% Neighbor Rules
     if(numLocalAgents > 0)
         % Cohesion
@@ -34,6 +41,7 @@ function agentControl_Adam(currentAgent, localAgents, thermalStrength, target, S
             
             otherHeading = localAgent.savedHeading;
             otherVel = localAgent.savedVelocity(1) * [cos(otherHeading),sin(otherHeading),0];
+            otherVelUnit = otherVel/norm(otherVel);
             
             diff = localAgent.savedPosition - currentAgent.savedPosition;
             diffHeight = diff(3);
@@ -41,39 +49,56 @@ function agentControl_Adam(currentAgent, localAgents, thermalStrength, target, S
             diff2D(3) = 0;
             diffDist = norm(diff);
             diff2DDist = norm(diff2D);
-            
-            relativeAscension = localAgent.savedVelocity(3) - currentAgent.savedVelocity(3);
+            diff2DUnit = diff2D/diff2DDist;
             
             %% Collision Death
             if(diffDist < SL.collisionKillDistance)
                 currentAgent.markedForDeath = true;
+                fprintf("Agent collided and died. :(\n");
                 return;
             end
             
-            %% Separation            
-            if(abs(diffHeight) < SL.separationHeightWidth/2)
-                separationSum = separationSum - diff2D/diff2DDist * 1/diff2DDist^2;
-                separationDiv = separationDiv + 1;
-            end
+            %% Set up factors
+            % Relative ascension
+            relativeAscension = localAgent.savedVelocity(3) - currentAgent.savedVelocity(3);
+            relativeAscension = min(max(relativeAscension,SL.relativeAscensionBounds(1)),SL.relativeAscensionBounds(2));
+            factor_relativeAscension = interp1(SL.relativeAscensionBounds,SL.relativeAscensionMagBounds,relativeAscension);
             
-            %% Alignment            
-            if(abs(diffHeight) < SL.alignmentHeightWidth/2)
-                alignmentSum = alignmentSum + otherVel * 1/diff2DDist^2;
-                alignmentDiv = separationDiv + 1;
-            end
+            % Relative height
+            relativeHeight = diffHeight;
+            relativeHeight = min(max(relativeHeight,-SL.neighborRadius),SL.neighborRadius);
+            factor_relativeHeight = interp1([-SL.neighborRadius,SL.neighborRadius],SL.relativeHeightMagBounds,relativeHeight);
+            
+            % Distance
+            factor_distance = diff2DDist / SL.neighborRadius;
             
             %% Cohesion
-            if(relativeAscension > SL.cohesionAscensionIgnore)
-                if(relativeAscension > SL.cohesionAscensionMax)
-                    relativeAscension = SL.cohesionAscensionMax;
-                end
-                %Linear interp of relativeAscension from [SL.cohesionAscensionIgnore,SL.cohesionAscensionMax] to [1,SL.cohesionAscensionMult]
-                weightCohesion = (relativeAscension - SL.cohesionAscensionIgnore)/(SL.cohesionAscensionMax - SL.cohesionAscensionIgnore)*(SL.cohesionAscensionMult-1) + 1;
-            else
-                weightCohesion = 1;
-            end
-            cohesionSum = cohesionSum + weightCohesion*diff2D;
+            weight_cohesion = interp1(SL.relativeAscensionMagBounds,SL.coh_relativeAscension,factor_relativeAscension) * ...
+                              interp1(SL.heightDesireMagBounds,SL.coh_heightDesire,factor_heightDesire) * ...
+                              factor_distance;
+            cohesionSum = cohesionSum + weight_cohesion*diff2DUnit;
             cohesionDiv = cohesionDiv + 1;
+            
+            %% Separation
+            weight_separation = interp1(SL.relativeHeightMagBounds,SL.sep_relativeHeight,factor_relativeHeight) * ...
+                                interp1(SL.heightDesireMagBounds,SL.sep_heightDesire,factor_heightDesire) * ...
+                                (1 - factor_distance)^2;
+            separationSum = separationSum - weight_separation*diff2DUnit;
+            separationDiv = separationDiv + 1;
+            
+            %% Alignment  
+            weight_alignment = interp1(SL.relativeHeightMagBounds,SL.align_relativeHeight,factor_relativeHeight) * ...
+                                interp1(SL.heightDesireMagBounds,SL.align_heightDesire,factor_heightDesire) * ...
+                                (1 - factor_distance)^2;
+            alignmentSum = alignmentSum - weight_alignment*otherVelUnit;
+            alignmentDiv = alignmentDiv + 1;
+        end
+        
+        %% Cohesion
+        if(cohesionDiv ~= 0)
+            cohesionSum = cohesionSum / cohesionDiv;
+            vector_cohesion = cohesionSum;
+            %vector_cohesion = vector_cohesion * norm(vector_cohesion);
         end
         
         %% Separation
@@ -87,19 +112,17 @@ function agentControl_Adam(currentAgent, localAgents, thermalStrength, target, S
             alignmentSum = alignmentSum/alignmentDiv;
             vector_alignment = alignmentSum;
         end
-        
-        %% Cohesion
-        if(cohesionDiv ~= 0)
-            cohesionSum = cohesionSum / cohesionDiv;
-            vector_cohesion = cohesionSum;
-            %vector_cohesion = vector_cohesion * norm(vector_cohesion);
-        end
     end
    
     %% Migration
     diffTarget = target - currentAgent.savedPosition;
     diffTarget(3) = 0;
-    vector_migration = diffTarget;
+    distTarget = norm(diffTarget);
+    diffTargetUnit = diffTarget/distTarget;
+    
+    weight_migration = interp1(SL.heightDesireMagBounds,SL.mig_heightDesire,factor_heightDesire) * ...
+                       distTarget^2;
+    vector_migration = weight_migration * diffTargetUnit;
 
     %% Waggle
     if(currentAgent.lastWaggle <= 0)
@@ -176,8 +199,10 @@ function agentControl_Adam(currentAgent, localAgents, thermalStrength, target, S
     newPos(3) = currentAgent.position(3) + vspeed*SL.dt;
     if newPos(3) > SL.agentCeiling
         newPos(3) = SL.agentCeiling;
+        vspeed = min(vspeed,0);
     elseif newPos(3) < SL.agentFloor % not Giga-Jank
         newPos (3) = SL.agentFloor; % Tera-Jank
+        vspeed = max(vspeed,0);
     end
     if newPos(3) <= 0
         currentAgent.markedForDeath = true;

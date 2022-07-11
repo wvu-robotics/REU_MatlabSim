@@ -43,16 +43,21 @@ params = sim.SimParams(
     periodic_boundary=False
     )
 
+
+
 if __name__ == '__main__':
     orig_features = [
         Cohesion(),
         Alignment(), 
         SeparationInv2(),
+        SeparationInv6(),
         SteerToAvoid(params.neighbor_radius/4,params.neighbor_radius),
         Rotation()
     ]
     
-    true_gains = np.array([1,3,1,0,1])
+    addGaussianNoise = True
+   
+    true_gains = np.array([1,1,1,1,1,1])
 
     orig = fc(true_gains,orig_features)
     controllers = [copy.deepcopy(orig) for i in range(params.num_agents)]
@@ -69,16 +74,18 @@ if __name__ == '__main__':
     #shortsim params
     shortSimParams = copy.deepcopy(params)
     print("Running short sims")
-    shortSimParams.num_agents = 20
-    shortSimParams.enclosure_size = 20 #strong effect on learning separation
-    shortSimParams.overall_time = 2
+    shortSimParams.num_agents = 10
+    shortSimParams.enclosure_size = 10 #strong effect on learning separation
+    shortSimParams.overall_time = 4
     shortSimParams.init_pos_max = shortSimParams.enclosure_size
     shortSimParams.agent_max_vel = 7
 
     learning_features = {
+        
         "coh": Cohesion(),
         "align": Alignment(),
         "sep": SeparationInv2(),
+        "sep6": SeparationInv6(),
         "steer": SteerToAvoid(params.neighbor_radius/4,params.neighbor_radius),
         "rot": Rotation()
     }
@@ -199,9 +206,9 @@ if __name__ == '__main__':
             
         #solution = optimize.minimize(fitness_function,(linear_gains), method='SLSQP')
         #print("Parameters of the best solution : {params}".format(params=solution.x))
-    
+
     print("Running imitated visual: ")
-    controllers_imitated = [fc(sol_gains, (list(learning_features.values()))) for i in
+    controllers_imitated = [fc(linear_gains, (list(learning_features.values()))) for i in
                             range(params.num_agents)]
     for controller in controllers_imitated:
         controller.setColor('red')
@@ -222,7 +229,7 @@ if __name__ == '__main__':
     original_agents = [fc(true_gains, list(learning_features.values())) for i in range(int(params.num_agents * mix_factor))]
     for controller in original_agents:
         controller.setColor("rgb(99, 110, 250)")
-    imitated_agents = [fc(sol_gains, list(learning_features.values())) for i in
+    imitated_agents = [fc(linear_gains, list(learning_features.values())) for i in
                        range(int(params.num_agents * (1 - mix_factor)))]
     for controller in imitated_agents:
         controller.setColor("red")

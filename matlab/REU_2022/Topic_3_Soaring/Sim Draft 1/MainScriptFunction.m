@@ -20,7 +20,17 @@ function outputData = MainScriptFunction(SL, simNumber, videoName, render)
 
     %% Run simulation...
     steps  = SL.totalTime/SL.dt;
-    outputData.heightData = zeros(3,steps);
+%     blanks1 = zeros(1,steps);
+    blanks3 = zeros(3,steps);
+    outputData.heightData = blanks3;
+%     outputData.hero.number = blanks1;
+%     outputData.hero.height = blanks1;
+%     outputData.hero.position = blanks3;
+%     outputData.hero.heading = blanks1;
+%     outputData.hero.bankAngle = blanks1;
+%     outputData.hero.velocity = blanks3;
+
+
     outputData.timeStart = datestr(now,"HH:MM:SS");
 
     for step = 1:steps
@@ -28,19 +38,17 @@ function outputData = MainScriptFunction(SL, simNumber, videoName, render)
             %% Step simulation
             thermalMap.staticStep();
             swarm.saveAgentData();
-            swarm.stepSimulation();
+            swarm.stepSimulation(step);
 
             %% Read Data
             swarm.updateData(step);
             outputData.heightData(1,step) = swarm.maxHeight;
             outputData.heightData(2,step) = swarm.minHeight;
             outputData.heightData(3,step) = swarm.avgHeight;
-            
-            if mod(step,SL.frameSkip)==0
-                %% Render
-                if render
-                    swarm.renderAll();
-                end
+
+            %% Render
+            if mod(step,SL.frameSkip)==0 && render
+                swarm.renderAll();
             end
 
             %% Print
