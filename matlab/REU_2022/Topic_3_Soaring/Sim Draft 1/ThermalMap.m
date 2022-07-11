@@ -252,11 +252,8 @@ classdef ThermalMap < handle
 
         % Step for non-location varying map
         function [] = staticStep(thermalMap)
-            SL = thermalMap.simLaw;
-            for thermalIndex = 1:thermalMap.numThermals
-                %thermalMap.adjustThermalPositions(0);
-                thermalMap.fadeThermals();
-            end
+            %thermalMap.adjustThermalPositions(0);
+            thermalMap.fadeThermals();
         end
 
         %% Adjust thermal positions if they overlap
