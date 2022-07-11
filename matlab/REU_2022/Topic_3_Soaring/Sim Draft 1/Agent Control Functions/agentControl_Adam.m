@@ -41,7 +41,8 @@ function agentControl_Adam(currentAgent, localAgents, thermalStrength, target, S
             
             otherHeading = localAgent.savedHeading;
             otherVel = localAgent.savedVelocity(1) * [cos(otherHeading),sin(otherHeading),0];
-            otherVelUnit = otherVel/norm(otherVel);
+            currentVel = currentAgent.savedVelocity(1) * [cos(currentAgent.savedHeading),sin(currentAgent.savedHeading),0];
+            velDiff = otherVel - currentVel;
             
             diff = localAgent.savedPosition - currentAgent.savedPosition;
             diffHeight = diff(3);
@@ -90,7 +91,7 @@ function agentControl_Adam(currentAgent, localAgents, thermalStrength, target, S
             weight_alignment = interp1(SL.relativeHeightMagBounds,SL.align_relativeHeight,factor_relativeHeight) * ...
                                 interp1(SL.heightDesireMagBounds,SL.align_heightDesire,factor_heightDesire) * ...
                                 (1 - factor_distance)^2;
-            alignmentSum = alignmentSum - weight_alignment*otherVelUnit;
+            alignmentSum = alignmentSum - weight_alignment*velDiff;
             alignmentDiv = alignmentDiv + 1;
         end
         
