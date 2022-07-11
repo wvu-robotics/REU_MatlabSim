@@ -6,6 +6,7 @@ classdef Swarm < handle
         funcHandle_agentControl
         funcHandle_findNeighborhood
         thisAgent = 0;
+        heroAgent
         thermalMap
         simFig
         video
@@ -38,7 +39,7 @@ classdef Swarm < handle
             obj.simLaw = simLaw;
             obj.thermalMap = thermalMap;
             SL = obj.simLaw;
-            
+
             obj.funcHandle_agentControl = str2func(SL.funcName_agentControl);
             obj.funcHandle_findNeighborhood = str2func(SL.funcName_findNeighborhood);
             obj.ToD = zeros(1,SL.numAgents);
@@ -47,7 +48,8 @@ classdef Swarm < handle
             numAgents = SL.numAgents;   %Get total number of agents
             obj.agents = Agent.empty(0,SL.numAgents);
             obj.agents(1,numAgents) = Agent();  %Fill agents with default constructors of Agent
-            
+            obj.heroAgent = obj.agents(1); % hero is number one
+
             %Iterate through all agents
             posRange = SL.agentSpawnPosRange;
             velRange = SL.agentSpawnVelRange;
@@ -234,40 +236,12 @@ classdef Swarm < handle
                 %% All Agents
                 if ~SL.followAgent || (abs(obj.agents(i).position(1) - obj.agents(obj.thisAgent).position(1)) < SL.followRadius ...
                                     && abs(obj.agents(i).position(2) - obj.agents(obj.thisAgent).position(2)) < SL.followRadius)
-                    obj.agents(i).render();
+                    obj.agents(i).render(obj);
                 elseif(class(obj.agents(i).patchObj) ~= "double")
                     obj.agents(i).patchObj.Visible = 'off';
                 end
             end
         end
-        
-        % Get Data (probably outdated but dont want to delete
-%         function [maxHeight, minHeight, avgHeight, avgSpeed] = getData(obj)
-%             SL = obj.simLaw;
-%             
-%             maxHeightIndex = 0;
-%             maxHeight = SL.agentFloor;
-%             minHeightIndex = 0;
-%             minHeight = SL.agentCeiling;
-%             avgHeight = 0;
-%             avgSpeed = 0;
-%             
-%             for i=1:SL.numAgents
-%                 currentHeight = obj.agents(i).position(3);
-%                 if(currentHeight > maxHeight)
-%                     maxHeightIndex = i;
-%                     maxHeight = currentHeight;
-%                 end
-%                 if(currentHeight < minHeight)
-%                     minHeightIndex = i;
-%                     minHeight = currentHeight;
-%                 end
-%                 avgHeight = avgHeight + currentHeight;
-%                 avgSpeed = avgSpeed + obj.agents(i).savedVelocity(1);
-%             end
-%             avgHeight = avgHeight / SL.numAgents;
-%             avgSpeed = avgSpeed / SL.numAgents;
-%         end
         
         % Updated Update Data Function
         function obj = updateData(obj,step)

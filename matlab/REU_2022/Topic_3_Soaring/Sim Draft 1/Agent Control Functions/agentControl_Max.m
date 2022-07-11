@@ -4,9 +4,12 @@ numNeighbors = size(localAgents,2);
 thisPos = thisAgent.savedPosition;
 thisVelFTZ = thisAgent.savedVelocity;
 thisVelXY  = thisVelFTZ(1).*[cos(thisAgent.heading), sin(thisAgent.heading)];
-cohesionVEC   = thisAgent.cVEC;
-separationVEC = thisAgent.sVEC;
-alignmentVEC  = thisAgent.aVEC;
+cohesionVEC = [0 0];
+separationVEC = [0 0];
+alignmentVEC = [0 0];
+% cohesionVEC   = thisAgent.cVEC;
+% separationVEC = thisAgent.sVEC;
+% alignmentVEC  = thisAgent.aVEC;
 
 %% Get SCA Vectors...
 if (numNeighbors > 0)% && (convertCharsToStrings(class(localAgents))=="Agent")
@@ -37,7 +40,7 @@ if (numNeighbors > 0)% && (convertCharsToStrings(class(localAgents))=="Agent")
     
     theirVelXY = theirVelFTZ(:,1).*[cos(theirHeading), sin(theirHeading)];
 
-    theirRelVelZ = theirVelFTZ(:,3) - thisVelFTZ(:,3);
+    theirRelVelZ = theirVelFTZ(:,3) - thisVelFTZ(3);
     
     %% Collision Death
 
@@ -60,19 +63,19 @@ if (numNeighbors > 0)% && (convertCharsToStrings(class(localAgents))=="Agent")
     % at some point lower weights based on altitude pls
     cohesionVecs = weightCohesion.*ndiff2D.*dist2D.^1;
     cohesionVEC  = sum(cohesionVecs,1) / numNeighbors;
-    thisAgent.cVEC = cohesionVEC;
+%     thisAgent.cVEC = cohesionVEC;
     
     %% Separation and Alignment
     seenSA = abs(diff(:,3)) < SL.separationHeightWidth/2;
     separationVecs(seenSA,:) = - ndiff2D(seenSA,:)./dist2D(seenSA,:).^2;
     separationVecs(~seenSA,:) = [];
     separationVEC = sum(separationVecs,1);
-    thisAgent.sVEC = separationVEC;
+%     thisAgent.sVEC = separationVEC;
 
     alignmentVecs(seenSA,:) = (theirVelXY(seenSA,:)-thisVelXY)./dist2D(seenSA,:).^2;
     alignmentVecs(~seenSA,:) = [];
     alignmentVEC = sum(alignmentVecs,1);
-    thisAgent.aVEC = alignmentVEC;
+%     thisAgent.aVEC = alignmentVEC;
 end
 
 %% Migration
@@ -133,7 +136,7 @@ elseif(newVel(1) < SL.forwardSpeedMin)
 end
 % a = omega * v
 thisAgent.bankAngle = atan(newAccel(2)/SL.g);
-
+thisAgent.bankAngle = thisAgent.bankAngle + SL.thermalBankFactor*thermalStrength*sign(thisAgent.bankAngle);
 if(thisAgent.bankAngle > SL.bankMax)
     thisAgent.bankAngle = SL.bankMax;
 end

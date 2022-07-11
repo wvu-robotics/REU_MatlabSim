@@ -9,9 +9,9 @@ classdef Agent < handle
         velocity = [0.0, 0.0, 0.0]           %m/s, rad/s, [forward,omega]
         patchObj = NaN
 
-        cVEC = [0.0, 0.0]
-        sVEC = [0.0, 0.0]
-        aVEC = [0.0, 0.0]
+%         cVEC = [0.0, 0.0]
+%         sVEC = [0.0, 0.0]
+%         aVEC = [0.0, 0.0]
 
         isAlive  = true
         markedForDeath = false
@@ -32,7 +32,7 @@ classdef Agent < handle
     
     methods
         % Render Function (1/2)
-        function obj = render(obj)
+        function obj = render(obj,swarm)
             SL = obj.simLaw;
 
             %% Calculate Agent Orientation Properties
@@ -43,13 +43,24 @@ classdef Agent < handle
             rotatedShape = rotatedShape'; %Convert to [x,y];
             globalShape = rotatedShape + obj.position(1:2); %[x,y] matrix
             scaledAlti = 0.8*((obj.position(3)-SL.agentFloor)/(SL.agentCeiling - SL.agentFloor));
+            scaledVSpeed = 0.6*(obj.velocity(3)+1)/(1+SL.thermalStrengthMax);
             % Fix altitude
             if scaledAlti < 0
                 scaledAlti = 0;
             elseif scaledAlti > 0.8
                 scaledAlti = 0.8;
             end
-            color = hsv2rgb([scaledAlti,1,1]);
+            if scaledVSpeed < 0
+                scaledVSpeed = 0;
+            elseif scaledVSpeed > 0.8
+                scaledVSpeed = 0.8;
+            end
+            if abs(obj.position(3) - swarm.heroAgent.position(3)) > SL.separationHeightWidth/2
+                color = hsv2rgb([scaledAlti,0.5,0.5]);
+            else
+                color = hsv2rgb([scaledAlti,1,1]);
+            end
+            edgeColor = hsv2rgb([scaledVSpeed,1,1]);
             %fprintf("hue: %g\n",color(1));
             
             %% Calculate Acceleration Direction (deprecated)
@@ -81,6 +92,7 @@ classdef Agent < handle
                 obj.patchObj = patch('FaceColor',color);
             end
             obj.patchObj.FaceColor = color;
+            obj.patchObj.EdgeColor = edgeColor;
             obj.patchObj.XData = globalShape(:,1);
             obj.patchObj.YData = globalShape(:,2);
             if ~obj.isAlive
