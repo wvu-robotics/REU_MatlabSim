@@ -31,58 +31,56 @@ class featureSlice:
     features: dict
     last_vel: np.ndarray
     output_vel: np.ndarray
+    motion_constrained: bool
+    boundary_constrained: bool
 
 #rewriting this to generalized
-def featuresFromPosVelSlice(slice,params=SimParams(),features={},neighborCaps=[0,np.inf],ignoreConstrainedMotion=False,ignoreBoundaryData=True):
+def featuresFromPosVelSlice(slice,params=SimParams(),features={},neighborCaps=[0,np.inf]):
     featureSlices = []
     for agent in range(params.num_agents):
         agentPos = slice.pos[agent]
         agentVel = slice.vel[agent]
         agentNextVel = slice.next_vel[agent]
 
-        # reject on boundary or motion constraints
-        if ignoreBoundaryData:
-            #throw out data near the boundary, only needed with bounce
-            # not throwing out enough
-            over = agentPos - params.enclosure_size
-            under = agentPos + params.enclosure_size
-            
-            # comparing both coordinates in a variety of ways
-            # figure out how to set tolerances reasonably
-            v_mag_current = np.linalg.norm(agentVel)
-            v_mag_next = np.linalg.norm(agentNextVel)
+        over = agentPos - params.enclosure_size
+        under = agentPos + params.enclosure_size
+        
+        # comparing both coordinates in a variety of ways
+        # figure out how to set tolerances reasonably
+        v_mag_current = np.linalg.norm(agentVel)
+        v_mag_next = np.linalg.norm(agentNextVel)
 
-            # 7 is the standard for 0.05 dt, just projecting linearly for other dts
-            # yes this needs to be investigated further, but over rejection is ok for now
-            stepsInFuturePast = 7 * (0.05/params.dt)
+        # 7 is the standard for 0.05 dt, just projecting linearly for other dts
+        # yes this needs to be investigated further, but over rejection is ok for now
+        stepsInFuturePast = 7 * (0.05/params.dt)
 
-            tol = max(v_mag_current,v_mag_next)*params.dt*stepsInFuturePast
-            above = over>=0
-            closeTop = np.isclose(over,0,atol=tol)
-            closeBot = np.isclose(under,0,atol=tol)
-            below = under<=0
+        tol = max(v_mag_current,v_mag_next)*params.dt*stepsInFuturePast
+        above = over>=0
+        closeTop = np.isclose(over,0,atol=tol)
+        closeBot = np.isclose(under,0,atol=tol)
+        below = under<=0
 
-            #elementiwise or of all the above boolean arrays
-            if reduce(np.bitwise_or,[above,closeTop,below,closeBot]).any():
-                #print("boundary rejection via complex method")
-                continue
+        boundary_constrained = False
+        #elementiwise or of all the above boolean arrays
+        if reduce(np.bitwise_or,[above,closeTop,below,closeBot]).any():
+            boundary_constrained = True
+        
+        motion_constrained = False
 
-        if ignoreConstrainedMotion:
-            if np.linalg.norm(agentNextVel) >= params.agent_max_vel or np.isclose(np.linalg.norm(agentNextVel),params.agent_max_vel,atol=.1):
-                # print("ignoring at max vel")
-                continue
-            # if np.linalg.norm(agentNextVel) > 6.7: print("Let",np.linalg.norm(agentNextVel),"get through")
-            if abs(np.linalg.norm(agentNextVel)-np.linalg.norm(agentVel)) >= params.agent_max_accel*params.dt:
-                continue
-    
-            vel_new_angle = np.arctan2(agentNextVel[1],agentNextVel[0])
-            vel_angle = np.arctan2(agentVel[1],agentVel[0])
-            angleDeviation = vel_new_angle - vel_angle
-            if angleDeviation > np.pi or angleDeviation < -np.pi:
-                angleDeviation = -2*np.pi + angleDeviation
-    
-            if abs(angleDeviation) >= params.agent_max_turn_rate*params.dt:
-                continue
+        if np.linalg.norm(agentNextVel) >= params.agent_max_vel or np.isclose(np.linalg.norm(agentNextVel),params.agent_max_vel,atol=.1):
+            motion_constrained = True
+        # if np.linalg.norm(agentNextVel) > 6.7: print("Let",np.linalg.norm(agentNextVel),"get through")
+        if abs(np.linalg.norm(agentNextVel)-np.linalg.norm(agentVel)) >= params.agent_max_accel*params.dt:
+            motion_constrained = True
+
+        vel_new_angle = np.arctan2(agentNextVel[1],agentNextVel[0])
+        vel_angle = np.arctan2(agentVel[1],agentVel[0])
+        angleDeviation = vel_new_angle - vel_angle
+        if angleDeviation > np.pi or angleDeviation < -np.pi:
+            angleDeviation = -2*np.pi + angleDeviation
+
+        if abs(angleDeviation) >= params.agent_max_turn_rate*params.dt:
+            motion_constrained = True
         
         relevantPositions,relevantVelocities = neighborHood(agentPos,params.neighbor_radius,slice.pos,slice.vel)
 
@@ -91,10 +89,10 @@ def featuresFromPosVelSlice(slice,params=SimParams(),features={},neighborCaps=[0
             continue
 
         computed_features = {name:feature.compute(relevantPositions,relevantVelocities,agentPos,agentVel) for name,feature in features.items()}
-        featureSlices.append(featureSlice(computed_features,agentVel,agentNextVel))
+        featureSlices.append(featureSlice(computed_features,agentVel,agentNextVel,motion_constrained,boundary_constrained))
     return featureSlices
 
-def toFeatureSlices(posVelSlices,features={},params=SimParams(),threads = 8,neighborCaps=[1,np.inf],ignoreConstrainedMotion=False,ignoreBoundaryData=True,verbose=True):
+def toFeatureSlices(posVelSlices,features={},params=SimParams(),threads = 8,neighborCaps=[1,np.inf],verbose=True):
     #multiprocessing
     pool = Pool(threads)
     
@@ -102,12 +100,11 @@ def toFeatureSlices(posVelSlices,features={},params=SimParams(),threads = 8,neig
     clumpedSlices = []
     if verbose:
         clumpedSlices = tqdm(pool.imap(
-            partial(featuresFromPosVelSlice,features=features,params=params,neighborCaps=neighborCaps,ignoreConstrainedMotion=ignoreConstrainedMotion,ignoreBoundaryData=ignoreBoundaryData),
+            partial(featuresFromPosVelSlice,features=features,params=params,neighborCaps=neighborCaps),
             posVelSlices),total=len(posVelSlices))
     else:
         clumpedSlices = pool.map(
-            partial(featuresFromPosVelSlice,features=features,params=params,neighborCaps=neighborCaps,ignoreConstrainedMotion=ignoreConstrainedMotion,
-            ignoreBoundaryData=ignoreBoundaryData),
+            partial(featuresFromPosVelSlice,features=features,params=params,neighborCaps=neighborCaps),
             posVelSlices)
 
     featuresSlices = []
@@ -117,6 +114,8 @@ def toFeatureSlices(posVelSlices,features={},params=SimParams(),threads = 8,neig
     if verbose:
         print("Ignored ",(len(posVelSlices)*params.num_agents)-len(featuresSlices),"/",len(posVelSlices)*params.num_agents," slices")
     return featuresSlices
+
+
 
 @dataclass
 class agentSlice:

@@ -52,7 +52,7 @@ if __name__ == '__main__':
         Rotation()
     ]
     
-    true_gains = np.array([1,1,1,0,-1])
+    true_gains = np.array([1,3,1,0,1])
 
     orig = fc(true_gains,orig_features)
     controllers = [copy.deepcopy(orig) for i in range(params.num_agents)]
@@ -84,32 +84,50 @@ if __name__ == '__main__':
     }
 
 
-    featureSlices = automation.runSimsForFeatures(controllers,learning_features,num_sims=500,params=shortSimParams,ignoreMC=True)
-    """print(featureSlices[0])
-    print(featureSlices[0].features["coh"])
-    print(np.array(list(featureSlices[0].features.values())))"""
+    featureSlices = automation.runSimsForFeatures(controllers,learning_features,num_sims=500,params=shortSimParams)
+    # """print(featureSlices[0])
+    # print(featureSlices[0].features["coh"])
+    # print(np.array(list(featureSlices[0].features.values())))"""
 
-    x = []
-    y = []
+
+    #ignore saturated data for this one
+    x_flat = []
+    y_flat = []
     for slice in featureSlices:
+        if slice.motion_constrained or slice.boundary_constrained:
+            continue
         f = slice.features
-        x.append(np.array(list(slice.features.values()))[:,0])
-        y.append(slice.output_vel[0] - slice.last_vel[0])
-        x.append(np.array(list(slice.features.values()))[:,1])
-        y.append(slice.output_vel[1] - slice.last_vel[1])
-    
+        x_flat.append(np.array(list(slice.features.values()))[:,0])
+        y_flat.append(slice.output_vel[0] - slice.last_vel[0])
+        x_flat.append(np.array(list(slice.features.values()))[:,1])
+        y_flat.append(slice.output_vel[1] - slice.last_vel[1])
+
     true_loss = 0
-    for i in range(len(x)):
-        v_pred = np.dot(x[i].transpose(),true_gains)
+    for i in range(len(x_flat)):
+        v_pred = np.dot(x_flat[i].transpose(),true_gains)
         # v_pred = x[i][0]*true_gains[0] + x[i][1]*true_gains[1] + x[i][2]*true_gains[2]
-        v_actual = y[i]
+        v_actual = y_flat[i]
         true_loss += np.sum(np.abs(v_pred-v_actual))
-    print("True loss on avg: ",true_loss/len(x))
+    print("True loss on avg, Flat, no saturation",true_loss/len(x_flat))
+
+    #  doing true loss with constraints means I need to include last_vels
+    # this loss is higher, which makes sense
+    true_loss = 0
+    for slice in featureSlices:
+        if slice.boundary_constrained:
+            continue
+        x = np.array(list(slice.features.values()))
+        v_pred = np.dot(x.transpose(),true_gains)+slice.last_vel
+        v_pred = sim.motionConstraints(v_pred,slice.last_vel,params=shortSimParams)
+        v_actual = slice.output_vel
+        true_loss += np.sum(np.abs(v_pred-v_actual))
+    print("True loss on avg, 2D,saturated: ",true_loss/len(x))
+
 
     print("First pass linear regression: ")
-    reg = ElasticNetCV(cv=10).fit(x,y) 
+    reg = lr().fit(x_flat,y_flat) 
 
-    print("R^2: ",reg.score(x,y))
+    print("R^2: ",reg.score(x_flat,y_flat))
 
     # #create some visuals with the imitated swarm
     #     #maybe do an imposter(sus) pretending to be within the original swarm
@@ -119,16 +137,19 @@ if __name__ == '__main__':
 
 
 
-    def sliceBasedFitness(x):
+    def sliceBasedFitness(featureSlices):
         def fitness(linear_gains):
             linear_gains = np.array(linear_gains)
             # print("Gains",est_gains)
             loss = 0.0
-            for i in range(len(x)):
-                
-                vel_pred = np.dot(x[i].transpose(),linear_gains)
-                #vel_pred = sim.motionConstraints(vel_pred, slice.last_vel, params)
-                err = (vel_pred - y[i])
+            for slice in featureSlices:
+                if slice.boundary_constrained:
+                    continue
+                x = np.array(list(slice.features.values()))
+                vel_pred = np.dot(x.transpose(),linear_gains) + slice.last_vel
+                vel_pred = sim.motionConstraints(vel_pred, slice.last_vel, params)
+                v_actual = slice.output_vel
+                err = (vel_pred - v_actual)
                 loss += np.linalg.norm(err)  # could change to MSE, but I like accounting for direction better
             if len(x) == 0:
                 return np.inf
@@ -136,27 +157,36 @@ if __name__ == '__main__':
 
         return fitness
 
-    filter = np.bitwise_not(np.isclose(np.array(linear_gains),0,atol=0.005))
-    print("Filter",filter)
-    filter_same_dim = np.tile(filter,len(x))
+    # getting rid of filter for rn, I know pereira wanted it gone
+    # filter = np.bitwise_not(np.isclose(np.array(linear_gains),0,atol=0.005))
+    # print("Filter",filter)
+    # filter_same_dim = np.tile(filter,len(x))
 
-    x_filtered = np.extract(filter_same_dim,x).reshape(len(x),-1) #let non-linear only learn off of features with non-zero gains
-    linear_gains_filtered = np.extract(filter,linear_gains)
-    
-    fitness_function = sliceBasedFitness(x_filtered)
+    # x_filtered = np.extract(filter_same_dim,x).reshape(len(x),-1) #let non-linear only learn off of features with non-zero gains
+    # linear_gains_filtered = np.extract(filter,linear_gains)
+    np.random.shuffle(featureSlices)
+
+    fitness_function = sliceBasedFitness(featureSlices[:100])
+    x_saturated = []
+    for slice in featureSlices:
+        if slice.boundary_constrained:
+            continue
+        x_saturated.append(np.array(list(slice.features.values())))
+
     #if np.all(linear_gains) == True:
-    solution = optimize.minimize(fitness_function,(linear_gains_filtered), method='SLSQP')
+    solution = optimize.minimize(fitness_function,(linear_gains), method='SLSQP')
     nl_gains = np.array(solution.x)
 
     # adding zeros back into output gains
     sol_gains = [] #can't think of a shorter way to write this rn
-    nl_cursor = 0
-    for bool in filter:
-        if bool:
-            sol_gains.append(nl_gains[nl_cursor])
-            nl_cursor += 1
-        else:
-            sol_gains.append(0)
+    sol_gains = nl_gains.tolist()
+    # nl_cursor = 0
+    # for bool in filter:
+    #     if bool:
+    #         sol_gains.append(nl_gains[nl_cursor])
+    #         nl_cursor += 1
+    #     else:
+    #         sol_gains.append(0)
 
     print("Solution gains after NL step",sol_gains)
 

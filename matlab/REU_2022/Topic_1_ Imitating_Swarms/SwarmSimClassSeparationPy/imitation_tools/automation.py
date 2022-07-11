@@ -15,7 +15,7 @@ def runSimtoPosVel(dummy,controllers=[],params=sim.SimParams()):
 
 
 # making new to preserve old compatibility
-def runSimsForFeatures(controllers=[],features = {},threads = 8,params=sim.SimParams(),num_sims=10,verbose=True,ignoreMC=False,ignoreBC=True,export_info =[]):
+def runSimsForFeatures(controllers=[],features = {},threads = 8,params=sim.SimParams(),num_sims=10,verbose=True,export_info =[]):
     if verbose:
         print("Running a batch of simulations")
     pool = Pool(threads)
@@ -34,8 +34,7 @@ def runSimsForFeatures(controllers=[],features = {},threads = 8,params=sim.SimPa
     for clump in posVelClumps:
         posVelSlices.extend(clump[0])
     if verbose:print("Parsing to agent slices")
-    featureSlices = data_prep.toFeatureSlices(posVelSlices,features=features,params=params,verbose=verbose,
-    ignoreConstrainedMotion=ignoreMC,ignoreBoundaryData=ignoreBC)
+    featureSlices = data_prep.toFeatureSlices(posVelSlices,features=features,params=params,verbose=verbose)
     return featureSlices
 
 
