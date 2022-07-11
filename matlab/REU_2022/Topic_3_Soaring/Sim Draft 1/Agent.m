@@ -55,7 +55,7 @@ classdef Agent < handle
             elseif scaledVSpeed > 0.8
                 scaledVSpeed = 0.8;
             end
-            if abs(obj.position(3) - swarm.heroAgent.position(3)) > SL.separationHeightWidth/2
+            if SL.followAgent && abs(obj.position(3) - swarm.heroAgent.position(3)) > SL.separationHeightWidth/2
                 color = hsv2rgb([scaledAlti,0.5,0.5]);
             else
                 color = hsv2rgb([scaledAlti,1,1]);
@@ -93,6 +93,7 @@ classdef Agent < handle
             end
             obj.patchObj.FaceColor = color;
             obj.patchObj.EdgeColor = edgeColor;
+            obj.patchObj.EdgeAlpha = min(1,2*scaledVSpeed);
             obj.patchObj.XData = globalShape(:,1);
             obj.patchObj.YData = globalShape(:,2);
             if ~obj.isAlive

@@ -60,7 +60,6 @@ if (numNeighbors > 0)% && (convertCharsToStrings(class(localAgents))=="Agent")
     weightCohesion = (theirRelVelZ - SL.cohesionAscensionIgnore)*(ascendCaringFactor-1)/(SL.cohesionAscensionMax - SL.cohesionAscensionIgnore) + 1;
     % Set weights of sinking/weakly thermalling agents to 1
     weightCohesion(theirRelVelZ <= SL.cohesionAscensionIgnore) = 1;
-    % at some point lower weights based on altitude pls
     cohesionVecs = weightCohesion.*ndiff2D.*dist2D.^1;
     cohesionVEC  = sum(cohesionVecs,1) / numNeighbors;
 %     thisAgent.cVEC = cohesionVEC;
