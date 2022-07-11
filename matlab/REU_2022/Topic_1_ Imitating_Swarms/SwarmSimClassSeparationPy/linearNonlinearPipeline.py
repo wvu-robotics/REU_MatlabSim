@@ -43,16 +43,21 @@ params = sim.SimParams(
     periodic_boundary=False
     )
 
+
+
 if __name__ == '__main__':
     orig_features = [
         Cohesion(),
         Alignment(), 
         SeparationInv2(),
+        SeparationInv6(),
         SteerToAvoid(params.neighbor_radius/4,params.neighbor_radius),
         Rotation()
     ]
     
-    true_gains = np.array([1,1,1,0,-1])
+    addGaussianNoise = True
+   
+    true_gains = np.array([1,1,1,1,1,1])
 
     orig = fc(true_gains,orig_features)
     controllers = [copy.deepcopy(orig) for i in range(params.num_agents)]
@@ -69,16 +74,18 @@ if __name__ == '__main__':
     #shortsim params
     shortSimParams = copy.deepcopy(params)
     print("Running short sims")
-    shortSimParams.num_agents = 20
-    shortSimParams.enclosure_size = 20 #strong effect on learning separation
-    shortSimParams.overall_time = 2
+    shortSimParams.num_agents = 10
+    shortSimParams.enclosure_size = 10 #strong effect on learning separation
+    shortSimParams.overall_time = 4
     shortSimParams.init_pos_max = shortSimParams.enclosure_size
     shortSimParams.agent_max_vel = 7
 
     learning_features = {
+        
         "coh": Cohesion(),
         "align": Alignment(),
         "sep": SeparationInv2(),
+        "sep6": SeparationInv6(),
         "steer": SteerToAvoid(params.neighbor_radius/4,params.neighbor_radius),
         "rot": Rotation()
     }
@@ -98,6 +105,21 @@ if __name__ == '__main__':
         x.append(np.array(list(slice.features.values()))[:,1])
         y.append(slice.output_vel[1] - slice.last_vel[1])
     
+    if addGaussianNoise == True:
+        noise = 0.05*params.agent_max_vel*np.random.normal(0,1,size=len(y))
+        y += noise
+    
+
+    print("First pass linear regression: ")
+    reg = lr().fit(x,y) 
+
+    print("R^2: ",reg.score(x,y))
+
+    # #create some visuals with the imitated swarm
+    #     #maybe do an imposter(sus) pretending to be within the original swarm
+    linear_gains = reg.coef_.tolist()
+    print(linear_gains)
+    """ 
     true_loss = 0
     for i in range(len(x)):
         v_pred = np.dot(x[i].transpose(),true_gains)
@@ -105,20 +127,28 @@ if __name__ == '__main__':
         v_actual = y[i]
         true_loss += np.sum(np.abs(v_pred-v_actual))
     print("True loss on avg: ",true_loss/len(x))
+    """
+    
+    featureSlices = automation.runSimsForFeatures(controllers,learning_features,num_sims=100,params=shortSimParams,ignoreMC=False)
+    """print(featureSlices[0])
+    print(featureSlices[0].features["coh"])
+    print(np.array(list(featureSlices[0].features.values())))"""
 
-    print("First pass linear regression: ")
-    reg = ElasticNetCV(cv=10).fit(x,y) 
+    x = []
+    y = []
 
-    print("R^2: ",reg.score(x,y))
-
-    # #create some visuals with the imitated swarm
-    #     #maybe do an imposter(sus) pretending to be within the original swarm
-    linear_gains = reg.coef_.tolist()
-    print("Linear gains",linear_gains)
-
-
-
-
+    for slice in featureSlices:
+        f = slice.features
+        x.append(np.array(list(slice.features.values()))[:,0])
+        y.append(slice.output_vel[0] - slice.last_vel[0])
+        x.append(np.array(list(slice.features.values()))[:,1])
+        y.append(slice.output_vel[1] - slice.last_vel[1])
+        vel_pred = []
+        
+    if addGaussianNoise == True:
+        noise = 0.05*params.agent_max_vel*np.random.normal(0,1,size=len(y))
+        y += noise
+        
     def sliceBasedFitness(x):
         def fitness(linear_gains):
             linear_gains = np.array(linear_gains)
@@ -136,32 +166,10 @@ if __name__ == '__main__':
 
         return fitness
 
-    filter = np.bitwise_not(np.isclose(np.array(linear_gains),0,atol=0.005))
-    print("Filter",filter)
-    filter_same_dim = np.tile(filter,len(x))
-
-    x_filtered = np.extract(filter_same_dim,x).reshape(len(x),-1) #let non-linear only learn off of features with non-zero gains
-    linear_gains_filtered = np.extract(filter,linear_gains)
-    
-    fitness_function = sliceBasedFitness(x_filtered)
+    fitness_function = sliceBasedFitness(x)
     #if np.all(linear_gains) == True:
-    solution = optimize.minimize(fitness_function,(linear_gains_filtered), method='SLSQP')
-    nl_gains = np.array(solution.x)
-
-    # adding zeros back into output gains
-    sol_gains = [] #can't think of a shorter way to write this rn
-    nl_cursor = 0
-    for bool in filter:
-        if bool:
-            sol_gains.append(nl_gains[nl_cursor])
-            nl_cursor += 1
-        else:
-            sol_gains.append(0)
-
-    print("Solution gains after NL step",sol_gains)
-
-
-    # print("Parameters of the best solution : {params}".format(params=solution.x))
+    solution = optimize.minimize(fitness_function,(linear_gains), method='SLSQP')
+    print("Parameters of the best solution : {params}".format(params=solution.x))
     #else:
         #zero_ind = np.where(linear_gains == 0)[0]
         #nonzero_gains = linear_gains[linear_gains != 0]
@@ -169,9 +177,9 @@ if __name__ == '__main__':
             
         #solution = optimize.minimize(fitness_function,(linear_gains), method='SLSQP')
         #print("Parameters of the best solution : {params}".format(params=solution.x))
-    
+
     print("Running imitated visual: ")
-    controllers_imitated = [fc(sol_gains, (list(learning_features.values()))) for i in
+    controllers_imitated = [fc(linear_gains, (list(learning_features.values()))) for i in
                             range(params.num_agents)]
     for controller in controllers_imitated:
         controller.setColor('red')
@@ -192,7 +200,7 @@ if __name__ == '__main__':
     original_agents = [fc(true_gains, list(learning_features.values())) for i in range(int(params.num_agents * mix_factor))]
     for controller in original_agents:
         controller.setColor("rgb(99, 110, 250)")
-    imitated_agents = [fc(sol_gains, list(learning_features.values())) for i in
+    imitated_agents = [fc(linear_gains, list(learning_features.values())) for i in
                        range(int(params.num_agents * (1 - mix_factor)))]
     for controller in imitated_agents:
         controller.setColor("red")
