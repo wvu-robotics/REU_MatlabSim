@@ -55,7 +55,7 @@ if __name__ == '__main__':
         Rotation()
     ]
     
-    addGaussianNoise = True
+    addGaussianNoise = False
    
     true_gains = np.array([1,1,1,1,1,1])
 
@@ -96,6 +96,12 @@ if __name__ == '__main__':
     # print(featureSlices[0].features["coh"])
     # print(np.array(list(featureSlices[0].features.values())))"""
 
+    # doing noise feature wise, so it affects both
+    if addGaussianNoise == True:
+        for slice in featureSlices:
+            noise_percent = 1
+            noise = noise_percent*params.agent_max_vel*np.random.normal(0,1,size=(2))
+            slice.output_vel += noise # adding noise here, propogates in a weird way
 
     #ignore saturated data for this one
     x_flat = []
@@ -143,7 +149,7 @@ if __name__ == '__main__':
 
 
 
-
+    # what if we only consider motion constrained?
     def sliceBasedFitness(featureSlices):
         def fitness(linear_gains):
             linear_gains = np.array(linear_gains)
@@ -173,7 +179,7 @@ if __name__ == '__main__':
     # linear_gains_filtered = np.extract(filter,linear_gains)
     np.random.shuffle(featureSlices)
 
-    fitness_function = sliceBasedFitness(featureSlices[:100])
+    fitness_function = sliceBasedFitness(featureSlices[:5000])
     x_saturated = []
     for slice in featureSlices:
         if slice.boundary_constrained:
