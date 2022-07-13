@@ -63,6 +63,7 @@ xlswrite(outputExcelName,outputVariables,sheetNum,outputLabelPos);
 
 %% Iterate for each simulation excel column
 %bigOutputData(1:numSims) = struct();
+fprintf("Starting %g sim(s).\n",numSims);
 parfor sim = 1:numSims
     % Parse current SimLaw
     simColumn = startingColumn+sim-1;
@@ -73,7 +74,6 @@ parfor sim = 1:numSims
             continue;
         end
         varValue = RAW{varRow,simColumn};
-        fprintf("Val: %s=%g\n",varValue,varValue);
         if(class(varValue) == "char")
             %Try evaluating string
             try
@@ -87,17 +87,10 @@ parfor sim = 1:numSims
     
     %% Run Simulation
     simNumber = SL.simIDNum;
-    render = SL.render;
     videoName = sprintf('%s/%d SimRender.avi',simBatchFolder,simNumber);
-    outputData = MainScriptFunction(SL, simNumber, videoName, render);
+    outputData = MainScriptFunction(SL, simNumber, videoName);
     bigOutputData(sim) = outputData;
     fprintf("Finished sim %d.\n",simNumber);
-    
-    fprintf("IsProp: %g\n",isprop(SL,"rngSeed"));
-    if(isprop(SL,"rngSeed"))
-        fprintf("Prop: %g\n",SL.rngSeed);
-        fprintf("IsNan: %g\n",isnan(SL.rngSeed));
-    end
 end
 
 %% Save data
