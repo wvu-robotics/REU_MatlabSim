@@ -3,6 +3,11 @@ function outputData = MainScriptFunction(SL, simNumber, videoName)
     close all
     %clear
     %clc
+    
+    %% Set RNG Seed
+    if(isfield(SL,"rngSeed") && ~isnan(SL.rngSeed))
+        rnd(SL.rngSeed);
+    end
 
     %% Load simulation parameters
     % Initialize thermals as a matrix of Thermals

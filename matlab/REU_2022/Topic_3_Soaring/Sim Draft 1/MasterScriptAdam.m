@@ -73,6 +73,7 @@ parfor sim = 1:numSims
             continue;
         end
         varValue = RAW{varRow,simColumn};
+        fprintf("Val: %s=%g\n",varValue,varValue);
         if(class(varValue) == "char")
             %Try evaluating string
             try
@@ -86,11 +87,17 @@ parfor sim = 1:numSims
     
     %% Run Simulation
     simNumber = SL.simIDNum;
-    render = true;
+    render = SL.render;
     videoName = sprintf('%s/%d SimRender.avi',simBatchFolder,simNumber);
     outputData = MainScriptFunction(SL, simNumber, videoName, render);
     bigOutputData(sim) = outputData;
     fprintf("Finished sim %d.\n",simNumber);
+    
+    fprintf("IsProp: %g\n",isprop(SL,"rngSeed"));
+    if(isprop(SL,"rngSeed"))
+        fprintf("Prop: %g\n",SL.rngSeed);
+        fprintf("IsNan: %g\n",isnan(SL.rngSeed));
+    end
 end
 
 %% Save data
