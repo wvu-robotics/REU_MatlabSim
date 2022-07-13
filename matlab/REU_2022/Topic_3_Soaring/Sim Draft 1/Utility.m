@@ -60,5 +60,10 @@ classdef Utility
         function mid = midMinMax(num, min, max)
             mid = min(max(num,min),max);
         end
+        %% Render From Data (WIP)
+        function video = renderData(fileName)
+            allData = load(fileName,"xData","yData","zData","fVelData","VelData","zVelData","bankAngleData","headingData");
+            numSteps = allData.SL.totalTime / allData.SL.dt;
+        end
     end
 end
