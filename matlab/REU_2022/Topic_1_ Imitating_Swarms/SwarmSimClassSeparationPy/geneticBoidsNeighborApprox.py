@@ -25,7 +25,7 @@ params = sim.SimParams(
     init_vel_max = None,
     agent_max_accel=np.inf,
     agent_max_turn_rate=np.inf,
-    neighbor_radius=2,
+    neighbor_radius=3,
     periodic_boundary=False
     )
 
@@ -36,7 +36,7 @@ if __name__ ==  '__main__':
         SeparationInv2()
     ]
 
-    true_gains = np.array([1,1,1])
+    true_gains = np.array([3,2,1])
 
     orig_controller = fc(true_gains,orig_features)
     # really should clean up this interface too
@@ -87,7 +87,6 @@ if __name__ ==  '__main__':
             return -loss/len(agentSlices) #normalized between runs
         return fitness
 
-# is terrible
     def fitnessLinearReg(posVelSlices):
         def fitness(radius,sol_id):
             # only do genetic with on the neighbor radius, with fitness doing a linear regression
@@ -172,4 +171,4 @@ if __name__ ==  '__main__':
 
         print("Running final sim:")
 
-        ga_instance.plot_fitness()
+        # ga_instance.plot_fitness()
