@@ -256,22 +256,24 @@ classdef Swarm < handle
                         textnHeader = sprintf("N  \x0394Z   Dist \x0394V_{z} \x0394V_{xy} CWeight\n");
                         
                         textStr = textPos + textAng + textSpd + textRule + textDet + textnHeader;
-                        nRelHeight = currentAgent.neighborData.relPosition(:,3);
-                        nDist      = vecnorm(currentAgent.neighborData.relPosition,2,2);
-                        ndVz       = currentAgent.neighborData.relVelocity(:,3);
-                        ndV        = vecnorm(currentAgent.neighborData.relVelocity(:,1:2),2,2);
-                        nWght      = currentAgent.neighborData.cWeight;
-                        [nWght, ind] = sort(nWght,'descend');
-                        nRelHeight = nRelHeight(ind);
-                        nDist = nDist(ind);
-                        ndVz = ndVz(ind);
-                        ndV = ndV(ind);
+                        currentAgent.neighborData = struct();
+                        
+                        if(SL.listNeighborData)
+                            nRelHeight = currentAgent.neighborData.relPosition(:,3);
+                            nDist      = vecnorm(currentAgent.neighborData.relPosition,2,2);
+                            ndVz       = currentAgent.neighborData.relVelocity(:,3);
+                            ndV        = vecnorm(currentAgent.neighborData.relVelocity(:,1:2),2,2);
+                            nWght      = currentAgent.neighborData.cWeight;
+                            [nWght, ind] = sort(nWght,'descend');
+                            nRelHeight = nRelHeight(ind);
+                            nDist = nDist(ind);
+                            ndVz = ndVz(ind);
+                            ndV = ndV(ind);
 
-                        for n = 1:numLocalAgents
-                            textStr = textStr + sprintf("%2.0f %+4.0f %4.0f %+3.1f %2.0f %5.0f\n",n,nRelHeight(n),nDist(n),ndVz(n),ndV(n),nWght(n));
+                            for n = 1:numLocalAgents
+                                textStr = textStr + sprintf("%2.0f %+4.0f %4.0f %+3.1f %2.0f %5.0f\n",n,nRelHeight(n),nDist(n),ndVz(n),ndV(n),nWght(n));
+                            end
                         end
-
-
                         
                         if(class(obj.textAnnt) == "double")
                             obj.textAnnt = annotation('textbox');

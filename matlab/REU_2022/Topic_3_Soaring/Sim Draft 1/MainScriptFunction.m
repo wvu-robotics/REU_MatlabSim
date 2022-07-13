@@ -66,7 +66,7 @@ function outputData = MainScriptFunction(SL, simNumber, videoName)
 
             %% Print
             if mod(step,steps/100) == 0
-                fprintf("%02g%% through Run #  %g \n",100*step/steps, simNumber);
+                fprintf("%02g%% through Run #%g \n",100*step/steps, simNumber);
             end
         else
             fprintf("Everybody died in Run # %g\n", simNumber);
