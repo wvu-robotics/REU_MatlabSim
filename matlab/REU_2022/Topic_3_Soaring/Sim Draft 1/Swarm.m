@@ -5,7 +5,7 @@ classdef Swarm < handle
         simLaw
         funcHandle_agentControl
         funcHandle_findNeighborhood
-        thisAgent = 0;
+        thisAgent = 1;
         heroAgent
         thermalMap
         simFig
@@ -86,9 +86,9 @@ classdef Swarm < handle
                     if frame==1 || mod(frame,SL.neighborFrameSkip)==0
                         %Find localAgents
                         localAgents = obj.funcHandle_findNeighborhood(obj,i,SL);
-                        obj.agents(i).neighbors = localAgents;
+                        currentAgent.neighbors = localAgents;
                     else
-                        localAgents = obj.agents(i).neighbors;
+                        localAgents = currentAgent.neighbors;
                     end
                     
                     %Find thermal strength from ThermalMap
@@ -98,7 +98,7 @@ classdef Swarm < handle
                     obj.funcHandle_agentControl(currentAgent,localAgents,thermalStrength,[0,0,0], SL);
                 end
             end
-            for i=1:numAgents
+            for i=1:numAgents % Must occur after the previous loop is finished
                 if obj.agents(i).markedForDeath
                     obj.agents(i).isAlive = false;
                 end
@@ -232,25 +232,47 @@ classdef Swarm < handle
                     
                     %% Text Box
                     if(SL.showText)
-                        posX = currentAgent.position(1);
-                        posY = currentAgent.position(2);
-                        posZ = currentAgent.position(3);
-                        textPos = sprintf('X: %+4.0fm\nY: %+4.0fm\nY: %+4.0fm\n',posX,posY,posZ);
-                        heading = currentAgent.heading*180/pi;
+                        thisPos = currentAgent.position;
+                        posX = thisPos(1);
+                        posY = thisPos(2);
+                        posZ = thisPos(3);
+                        textPos = sprintf("X: %+4.0fm\nY: %+4.0fm\nY: %+4.0fm\n",posX,posY,posZ);
+                        heading = currentAgent.heading;
+                        headingDeg = mod(currentAgent.heading*180/pi,360);
                         bankAngle = currentAgent.bankAngle*180/pi;
-                        textAng = sprintf('Heading: %+3.0fdeg\nBank: %+2.0fdeg\n',heading,bankAngle);
-                        speed = currentAgent.velocity(1);
-                        omega = currentAgent.velocity(2);
+                        textAng = sprintf("Heading: %3.0fdeg\nBank: %+2.0fdeg\n",headingDeg,bankAngle);
+                        speed  = currentAgent.velocity(1);
+                        omega  = currentAgent.velocity(2);
                         vspeed = currentAgent.velocity(3);
-                        textSpd = sprintf('Speed: %2.0fm/s\nOmega: %+2.0fdeg/s\nVSpeed: %+1.1fm/s\n',speed,omega,vspeed);
+                        Range = -speed/currentAgent.vsink * posZ;
+                        ascendCaringFactor = SL.cohesionAscensionMult*(1 - (posZ/SL.agentCeiling));
+                        textSpd = sprintf("Speed: %2.0fm/s\nOmega: %+2.0fdeg/s\nVSpeed: %+1.1fm/s\nRange: %6.0fm\nAscend Caring: %3.0f\n",speed,omega,vspeed,Range,ascendCaringFactor);
                         ruleMag = currentAgent.rulesMag;
-                        textRule = sprintf('S:%2.2g\nC:%2.2g\nA:%2.2g\nM:%2.2g\n',ruleMag(1:4));
+                        textRule = sprintf("S:%2.2g\nC:%2.2g\nA:%2.2g\nM:%2.2g\n",ruleMag(1:4));
                         clearance = currentAgent.clearance;
                         localAgents = currentAgent.neighbors;
                         numLocalAgents = size(localAgents,2);
-                        textDet = sprintf('Clearance:%5.1f\nNeighbors:%2.0f',clearance,numLocalAgents);
+                        textDet = sprintf("Clearance:%5.1f\nNeighbors:%2.0f\n",clearance,numLocalAgents);
+                        textnHeader = sprintf("N  \x0394Z   Dist \x0394V_{z} \x0394V_{xy} CWeight\n");
+                        
+                        textStr = textPos + textAng + textSpd + textRule + textDet + textnHeader;
+                        nRelHeight = currentAgent.neighborData.relPosition(:,3);
+                        nDist      = vecnorm(currentAgent.neighborData.relPosition,2,2);
+                        ndVz       = currentAgent.neighborData.relVelocity(:,3);
+                        ndV        = vecnorm(currentAgent.neighborData.relVelocity(:,1:2),2,2);
+                        nWght      = currentAgent.neighborData.cWeight;
+                        [nWght, ind] = sort(nWght,'descend');
+                        nRelHeight = nRelHeight(ind);
+                        nDist = nDist(ind);
+                        ndVz = ndVz(ind);
+                        ndV = ndV(ind);
 
-                        textStr = sprintf('%s%s%s%s%s',textPos,textAng,textSpd,textRule,textDet);
+                        for n = 1:numLocalAgents
+                            textStr = textStr + sprintf("%2.0f %+4.0f %4.0f %+3.1f %2.0f %5.0f\n",n,nRelHeight(n),nDist(n),ndVz(n),ndV(n),nWght(n));
+                        end
+
+
+                        
                         if(class(obj.textAnnt) == "double")
                             obj.textAnnt = annotation('textbox');
                             obj.textAnnt.FontName = 'FixedWidth';
@@ -260,7 +282,7 @@ classdef Swarm < handle
                             obj.textAnnt.Position = [0 1 0.1 0.3];
                             obj.textAnnt.FitBoxToText = 'on';
                             obj.textAnnt.Position(2) = 1 - obj.textAnnt.Position(4);
-                            obj.textAnnt.FontSize = 15;
+                            obj.textAnnt.FontSize = 10;
                         end
                         obj.textAnnt.String = textStr;
 
@@ -333,14 +355,20 @@ classdef Swarm < handle
             obj.thermalMap.renderThermals();
             obj.renderAgents();
 
-
+            ax = gca;
+            ax.Position = [0.2 0.1 0.8 0.8];
+            if SL.followAgent
+                 xlim([obj.agents(obj.thisAgent).position(1) - SL.followRadius, obj.agents(obj.thisAgent).position(1) + SL.followRadius]);
+                 ylim([obj.agents(obj.thisAgent).position(2) - SL.followRadius, obj.agents(obj.thisAgent).position(2) + SL.followRadius]);
+            else
+                xlim(SL.mapSize);
+                ylim(SL.mapSize);
+            end
+            ax.PositionConstraint = 'outerposition';
             currFrame = getframe(obj.simFig);
             writeVideo(obj.video,currFrame);
             pause(0.0001);
-    
-
             hold off
-
         end
 
         % Initialize Video
@@ -351,7 +379,7 @@ classdef Swarm < handle
             obj.video.FrameRate = 1/SL.dt * SL.fpsMult / SL.frameSkip;
             open(obj.video);
             
-            obj.simFig = figure('Visible','on');
+            obj.simFig = figure('Visible',SL.Show);
             obj.simFig.Position = [0 0 1024 768];
             % Initialize map background
             clf
@@ -365,16 +393,7 @@ classdef Swarm < handle
             map = interp1(x/obj.thermalMap.thermalPixels,colors,linspace(0,1,obj.thermalMap.thermalPixels)); % Creates a color gradient for the map
             colormap();%map);
             set(gca,'clim',cbLimits);
-            ax = gca;
-            ax.Position = [0.2 0.1 0.8 0.8];
-            if SL.followAgent
-                 xlim([obj.agents(obj.thisAgent).position(1) - SL.followRadius, obj.agents(obj.thisAgent).position(1) + SL.followRadius]);
-                 ylim([obj.agents(obj.thisAgent).position(2) - SL.followRadius, obj.agents(obj.thisAgent).position(2) + SL.followRadius]);
-            else
-                xlim(SL.mapSize);
-                ylim(SL.mapSize);
-            end
-            ax.PositionConstraint = 'outerposition';
+
         end
         
         % Close Video
