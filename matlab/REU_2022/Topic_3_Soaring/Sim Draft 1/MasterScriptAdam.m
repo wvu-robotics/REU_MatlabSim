@@ -63,7 +63,7 @@ xlswrite(outputExcelName,outputVariables,sheetNum,outputLabelPos);
 
 %% Iterate for each simulation excel column
 %bigOutputData(1:numSims) = struct();
-fprintf("Starting %g sims.\n",numSims);
+fprintf("Starting %g sim(s).\n",numSims);
 parfor sim = 1:numSims
     % Parse current SimLaw
     simColumn = startingColumn+sim-1;
