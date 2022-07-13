@@ -6,7 +6,7 @@ function outputData = MainScriptFunction(SL, simNumber, videoName)
     
     %% Set RNG Seed
     if(isfield(SL,"rngSeed") && ~isnan(SL.rngSeed))
-        rnd(SL.rngSeed);
+        rng(SL.rngSeed);
     end
 
     %% Load simulation parameters
