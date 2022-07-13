@@ -9,10 +9,6 @@ classdef Agent < handle
         velocity = [0.0, 0.0, 0.0]           %m/s, rad/s, [forward,omega]
         patchObj = NaN
 
-%         cVEC = [0.0, 0.0]
-%         sVEC = [0.0, 0.0]
-%         aVEC = [0.0, 0.0]
-
         isAlive  = true
         markedForDeath = false
         accelDir = 0.0;
@@ -21,6 +17,7 @@ classdef Agent < handle
         vsink    = 0                    % m/s
         clearance = 0
         neighbors
+        neighborData
 
         lastWaggle = 0;
         waggleSign = 0;
@@ -55,7 +52,7 @@ classdef Agent < handle
             elseif scaledVSpeed > 0.8
                 scaledVSpeed = 0.8;
             end
-            if abs(obj.position(3) - swarm.heroAgent.position(3)) > SL.separationHeightWidth/2
+            if SL.followAgent && abs(obj.position(3) - swarm.heroAgent.position(3)) > SL.separationHeightWidth/2
                 color = hsv2rgb([scaledAlti,0.5,0.5]);
             else
                 color = hsv2rgb([scaledAlti,1,1]);
@@ -63,36 +60,13 @@ classdef Agent < handle
             edgeColor = hsv2rgb([scaledVSpeed,1,1]);
             %fprintf("hue: %g\n",color(1));
             
-            %% Calculate Acceleration Direction (deprecated)
-%             if SL.showArrow
-%                 
-% 
-%                 AccelMatrix    = [cos(obj.accelDir), -sin(obj.accelDir); sin(obj.accelDir), cos(obj.accelDir)];
-%                 SepMatrix      = [cos(obj.rulesDir(1)), -sin(obj.rulesDir(1)); sin(obj.rulesDir(1)), cos(obj.rulesDir(1))];
-%                 CohMatrix      = [cos(obj.rulesDir(2)), -sin(obj.rulesDir(2)); sin(obj.rulesDir(2)), cos(obj.rulesDir(2))];
-%                 AliMatrix      = [cos(obj.rulesDir(3)), -sin(obj.rulesDir(3)); sin(obj.rulesDir(3)), cos(obj.rulesDir(3))];
-%                 MigMatrix      = [cos(obj.rulesDir(4)), -sin(obj.rulesDir(4)); sin(obj.rulesDir(4)), cos(obj.rulesDir(4))];
-%                 
-%                 arrow = SL.Arrow;
-%                 %arrow(1,:) = arrow(1,:) + 0.5;
-%                 arrow = arrow .* SL.renderScale .* 0.6;
-%                 % rotatedArrow = AccelMatrix * arrow;
-%                 % rotatedArrow = rotatedArrow';
-%                 % globalArrow = rotatedArrow + obj.position(1:2);
-%                 scalingFactor = max(obj.rulesMag);
-%                 Sarrow = (SepMatrix * arrow .* obj.rulesMag(1) ./ scalingFactor)' + obj.position(1:2);
-%                 Carrow = (CohMatrix * arrow .* obj.rulesMag(2) ./ scalingFactor)' + obj.position(1:2);
-%                 Aarrow = (AliMatrix * arrow .* obj.rulesMag(3) ./ scalingFactor)' + obj.position(1:2);
-%                 Marrow = (MigMatrix * arrow .* obj.rulesMag(4) ./ scalingFactor)' + obj.position(1:2);
-% 
-%             end
-            
             %% Do Patch Functions
             if(class(obj.patchObj) == "double")
                 obj.patchObj = patch('FaceColor',color);
             end
             obj.patchObj.FaceColor = color;
             obj.patchObj.EdgeColor = edgeColor;
+            obj.patchObj.EdgeAlpha = min(1,2*scaledVSpeed);
             obj.patchObj.XData = globalShape(:,1);
             obj.patchObj.YData = globalShape(:,2);
             if ~obj.isAlive

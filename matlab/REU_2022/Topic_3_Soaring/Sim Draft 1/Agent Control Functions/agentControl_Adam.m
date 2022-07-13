@@ -83,15 +83,15 @@ function agentControl_Adam(currentAgent, localAgents, thermalStrength, target, S
             %% Separation
             weight_separation = interp1(SL.relativeHeightMagBounds,SL.sep_relativeHeight,factor_relativeHeight) * ...
                                 interp1(SL.heightDesireMagBounds,SL.sep_heightDesire,factor_heightDesire) * ...
-                                (1 - factor_distance)^2;
+                                (1 - factor_distance)^SL.avoidPower;
             separationSum = separationSum - weight_separation*diff2DUnit;
             separationDiv = separationDiv + 1;
             
             %% Alignment  
             weight_alignment = interp1(SL.relativeHeightMagBounds,SL.align_relativeHeight,factor_relativeHeight) * ...
                                 interp1(SL.heightDesireMagBounds,SL.align_heightDesire,factor_heightDesire) * ...
-                                (1 - factor_distance)^2;
-            alignmentSum = alignmentSum - weight_alignment*velDiff;
+                                (1 - factor_distance)^SL.avoidPower;
+            alignmentSum = alignmentSum + weight_alignment*velDiff*SL.dt;
             alignmentDiv = alignmentDiv + 1;
         end
         
@@ -99,7 +99,6 @@ function agentControl_Adam(currentAgent, localAgents, thermalStrength, target, S
         if(cohesionDiv ~= 0)
             cohesionSum = cohesionSum / cohesionDiv;
             vector_cohesion = cohesionSum;
-            %vector_cohesion = vector_cohesion * norm(vector_cohesion);
         end
         
         %% Separation

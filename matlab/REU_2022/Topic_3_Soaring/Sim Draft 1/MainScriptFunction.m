@@ -1,8 +1,13 @@
-function outputData = MainScriptFunction(SL, simNumber, videoName, render)
+function outputData = MainScriptFunction(SL, simNumber, videoName)
     %% Clear
     close all
     %clear
     %clc
+    
+    %% Set RNG Seed
+    if(isfield(SL,"rngSeed") && ~isnan(SL.rngSeed))
+        rng(SL.rngSeed);
+    end
 
     %% Load simulation parameters
     % Initialize thermals as a matrix of Thermals
@@ -11,7 +16,7 @@ function outputData = MainScriptFunction(SL, simNumber, videoName, render)
     swarm = Swarm(SL, thermalMap);
 
     %% Setup video and figure
-    if render
+    if SL.render
         %videoPrefix = sprintf('[dt %g, T %g, x%g] ',simLaw.dt, simLaw.totalTime, simLaw.fpsMult);
         %videoSuffix = sprintf('%02g',Param(1));
         %videoSuffix = sprintf('%1.0E, %1.0E, %1.0E', simLaw.separation, simLaw.cohesion, simLaw.alignment);
@@ -20,17 +25,15 @@ function outputData = MainScriptFunction(SL, simNumber, videoName, render)
 
     %% Run simulation...
     steps  = SL.totalTime/SL.dt;
-%     blanks1 = zeros(1,steps);
-    blanks3 = zeros(3,steps);
-    outputData.heightData = blanks3;
-%     outputData.hero.number = blanks1;
-%     outputData.hero.height = blanks1;
-%     outputData.hero.position = blanks3;
-%     outputData.hero.heading = blanks1;
-%     outputData.hero.bankAngle = blanks1;
-%     outputData.hero.velocity = blanks3;
-
-
+    outputData.heightData = zeros(3,steps);
+    outputData.xData = zeros(SL.numAgents,steps);
+    outputData.yData = zeros(SL.numAgents,steps);
+    outputData.zData = zeros(SL.numAgents,steps);
+    outputData.headingData = zeros(SL.numAgents,steps);
+    outputData.bankAngleData = zeros(SL.numAgents,steps);
+    outputData.fVelData = zeros(SL.numAgents,steps);
+    outputData.tVelData = zeros(SL.numAgents,steps);
+    outputData.zVelData = zeros(SL.numAgents,steps);
     outputData.timeStart = datestr(now,"HH:MM:SS");
 
     for step = 1:steps
@@ -45,14 +48,24 @@ function outputData = MainScriptFunction(SL, simNumber, videoName, render)
             outputData.heightData(1,step) = swarm.maxHeight;
             outputData.heightData(2,step) = swarm.minHeight;
             outputData.heightData(3,step) = swarm.avgHeight;
+            for Agent = 1:SL.numAgents
+                outputData.xData(Agent,step) = swarm.agents(Agent).position(1);
+                outputData.yData(Agent,step) = swarm.agents(Agent).position(2);
+                outputData.zData(Agent,step) = swarm.agents(Agent).position(3);
+                outputData.headingData(Agent,step) = swarm.agents(Agent).heading;
+                outputData.bankAngleData(Agent,step) = swarm.agents(Agent).bankAngle;
+                outputData.fVelData(Agent,step) = swarm.agents(Agent).velocity(1);
+                outputData.tVelData(Agent,step) = swarm.agents(Agent).velocity(2);
+                outputData.zVelData(Agent,step) = swarm.agents(Agent).velocity(3);
+            end
 
             %% Render
-            if mod(step,SL.frameSkip)==0 && render
+            if mod(step,SL.frameSkip)==0 && SL.render
                 swarm.renderAll();
             end
 
             %% Print
-            if mod(step,steps/10) == 0
+            if mod(step,steps/100) == 0
                 fprintf("%02g%% through Run #  %g \n",100*step/steps, simNumber);
             end
         else
@@ -60,7 +73,7 @@ function outputData = MainScriptFunction(SL, simNumber, videoName, render)
             break
         end
     end
-    if render 
+    if SL.render 
         swarm.closeVideo(); 
     end
 

@@ -86,9 +86,8 @@ for sim = 1:numSims
     
     %% Run Simulation
     simNumber = SL.simIDNum;
-    render = true;
     videoName = sprintf('%s/%d SimRender.avi',simBatchFolder,simNumber);
-    outputData = MainScriptFunction(SL, simNumber, videoName, render);
+    outputData = MainScriptFunction(SL, simNumber, videoName);
     bigOutputData(sim) = outputData;
     fprintf("Finished sim %d.\n",simNumber);
 end

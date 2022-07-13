@@ -5,7 +5,7 @@ classdef Swarm < handle
         simLaw
         funcHandle_agentControl
         funcHandle_findNeighborhood
-        thisAgent = 0;
+        thisAgent = 1;
         heroAgent
         thermalMap
         simFig
@@ -86,9 +86,9 @@ classdef Swarm < handle
                     if frame==1 || mod(frame,SL.neighborFrameSkip)==0
                         %Find localAgents
                         localAgents = obj.funcHandle_findNeighborhood(obj,i,SL);
-                        obj.agents(i).neighbors = localAgents;
+                        currentAgent.neighbors = localAgents;
                     else
-                        localAgents = obj.agents(i).neighbors;
+                        localAgents = currentAgent.neighbors;
                     end
                     
                     %Find thermal strength from ThermalMap
@@ -98,7 +98,7 @@ classdef Swarm < handle
                     obj.funcHandle_agentControl(currentAgent,localAgents,thermalStrength,[0,0,0], SL);
                 end
             end
-            for i=1:numAgents
+            for i=1:numAgents % Must occur after the previous loop is finished
                 if obj.agents(i).markedForDeath
                     obj.agents(i).isAlive = false;
                 end
@@ -114,8 +114,7 @@ classdef Swarm < handle
                     shownNeighbors = true;
                     currentAgent = obj.agents(i);
                     obj.thisAgent = i;
-                    localAgents = obj.funcHandle_findNeighborhood(obj,i,SL);
-                    
+
                     %% Show Vision Radius
                     if(SL.showFixedRadius)
                         theta = linspace(currentAgent.heading-SL.fov/2,currentAgent.heading+SL.fov/2,20);
@@ -134,7 +133,22 @@ classdef Swarm < handle
 
                     %% Show Lines to Neighbors
                     if(SL.showNeighbors)
+                        localAgents = currentAgent.neighbors;
                         numLocalAgents = size(localAgents,2);
+%                         theirVelZ = zeros(1,numLocalAgents);
+%                         for nb = 1:numLocalAgents
+%                             theirVelZ(nb) = localAgents(nb).savedVelocity(3);
+%                         end
+%                         theirRelVelZ = theirVelZ - currentAgent.savedVelocity(3);
+%                         ascendCaringFactor = SL.cohesionAscensionMult*(1 - (currentAgent.savedPosition(3)/SL.agentCeiling));
+%                         theirRelVelZ(theirRelVelZ > SL.cohesionAscensionMax) = SL.cohesionAscensionMax;
+%                         weightCohesion = (theirRelVelZ - SL.cohesionAscensionIgnore)*(ascendCaringFactor-1)/(SL.cohesionAscensionMax - SL.cohesionAscensionIgnore) + 1;
+%                         % Set weights of sinking/weakly thermalling agents to 1
+%                         weightCohesion(theirRelVelZ <= SL.cohesionAscensionIgnore) = 1;
+%                         weightCohesion = min(max(weightCohesion,0),100);
+%                         normedWeight = weightCohesion/100;
+%                         neighborColor = hsv2rgb([0.4,1,mean(normedWeight)]);
+                        neighborColor = [0 0 0];
                         linePoints = zeros(2,2*numLocalAgents+1);
                         linePoints(1,1) = currentAgent.position(1);
                         linePoints(2,1) = currentAgent.position(2);
@@ -144,10 +158,11 @@ classdef Swarm < handle
                             linePoints(1,2*j+1) = currentAgent.position(1);
                             linePoints(2,2*j+1) = currentAgent.position(2);
                         end
-
+                        
                         if(class(obj.lineNeighbors) == "double")
                             obj.lineNeighbors = line();
                         end
+                        obj.lineNeighbors.Color = neighborColor;
                         obj.lineNeighbors.XData = linePoints(1,:);
                         obj.lineNeighbors.YData = linePoints(2,:);
                     end
@@ -217,17 +232,57 @@ classdef Swarm < handle
                     
                     %% Text Box
                     if(SL.showText)
-                        textStr = sprintf('Speed: %2.0fm/s\nBank: %+3.0fdeg\nVSpeed: %1.1fm/s\nS:%2.2g\nC:%2.2g\nA:%2.2g\nM:%2.2g\nClearance:%5.1f',...
-                            currentAgent.velocity(1), currentAgent.bankAngle*180/pi,currentAgent.savedVelocity(3), currentAgent.rulesMag(1),...
-                            currentAgent.rulesMag(2),currentAgent.rulesMag(3),currentAgent.rulesMag(4),currentAgent.clearance);
+                        thisPos = currentAgent.position;
+                        posX = thisPos(1);
+                        posY = thisPos(2);
+                        posZ = thisPos(3);
+                        textPos = sprintf("X: %+4.0fm\nY: %+4.0fm\nY: %+4.0fm\n",posX,posY,posZ);
+                        heading = currentAgent.heading;
+                        headingDeg = mod(currentAgent.heading*180/pi,360);
+                        bankAngle = currentAgent.bankAngle*180/pi;
+                        textAng = sprintf("Heading: %3.0fdeg\nBank: %+2.0fdeg\n",headingDeg,bankAngle);
+                        speed  = currentAgent.velocity(1);
+                        omega  = currentAgent.velocity(2);
+                        vspeed = currentAgent.velocity(3);
+                        Range = -speed/currentAgent.vsink * posZ;
+                        ascendCaringFactor = SL.cohesionAscensionMult*(1 - (posZ/SL.agentCeiling));
+                        textSpd = sprintf("Speed: %2.0fm/s\nOmega: %+2.0fdeg/s\nVSpeed: %+1.1fm/s\nRange: %6.0fm\nAscend Caring: %3.0f\n",speed,omega,vspeed,Range,ascendCaringFactor);
+                        ruleMag = currentAgent.rulesMag;
+                        textRule = sprintf("S:%2.2g\nC:%2.2g\nA:%2.2g\nM:%2.2g\n",ruleMag(1:4));
+                        clearance = currentAgent.clearance;
+                        localAgents = currentAgent.neighbors;
+                        numLocalAgents = size(localAgents,2);
+                        textDet = sprintf("Clearance:%5.1f\nNeighbors:%2.0f\n",clearance,numLocalAgents);
+                        textnHeader = sprintf("N  \x0394Z   Dist \x0394V_{z} \x0394V_{xy} CWeight\n");
+                        
+                        textStr = textPos + textAng + textSpd + textRule + textDet + textnHeader;
+                        nRelHeight = currentAgent.neighborData.relPosition(:,3);
+                        nDist      = vecnorm(currentAgent.neighborData.relPosition,2,2);
+                        ndVz       = currentAgent.neighborData.relVelocity(:,3);
+                        ndV        = vecnorm(currentAgent.neighborData.relVelocity(:,1:2),2,2);
+                        nWght      = currentAgent.neighborData.cWeight;
+                        [nWght, ind] = sort(nWght,'descend');
+                        nRelHeight = nRelHeight(ind);
+                        nDist = nDist(ind);
+                        ndVz = ndVz(ind);
+                        ndV = ndV(ind);
+
+                        for n = 1:numLocalAgents
+                            textStr = textStr + sprintf("%2.0f %+4.0f %4.0f %+3.1f %2.0f %5.0f\n",n,nRelHeight(n),nDist(n),ndVz(n),ndV(n),nWght(n));
+                        end
+
+
+                        
                         if(class(obj.textAnnt) == "double")
                             obj.textAnnt = annotation('textbox');
                             obj.textAnnt.FontName = 'FixedWidth';
                             obj.textAnnt.BackgroundColor = [1 1 0];
                             obj.textAnnt.FaceAlpha = 0.75;
-                            obj.textAnnt.Position = [0.55 0.75 0.25 0.15];
+                            obj.textAnnt.String = textStr;
+                            obj.textAnnt.Position = [0 1 0.1 0.3];
                             obj.textAnnt.FitBoxToText = 'on';
-                            obj.textAnnt.FontSize = 8;
+                            obj.textAnnt.Position(2) = 1 - obj.textAnnt.Position(4);
+                            obj.textAnnt.FontSize = 10;
                         end
                         obj.textAnnt.String = textStr;
 
@@ -299,6 +354,9 @@ classdef Swarm < handle
             title(stringTitle);
             obj.thermalMap.renderThermals();
             obj.renderAgents();
+
+            ax = gca;
+            ax.Position = [0.2 0.1 0.8 0.8];
             if SL.followAgent
                  xlim([obj.agents(obj.thisAgent).position(1) - SL.followRadius, obj.agents(obj.thisAgent).position(1) + SL.followRadius]);
                  ylim([obj.agents(obj.thisAgent).position(2) - SL.followRadius, obj.agents(obj.thisAgent).position(2) + SL.followRadius]);
@@ -306,16 +364,11 @@ classdef Swarm < handle
                 xlim(SL.mapSize);
                 ylim(SL.mapSize);
             end
-            ax = gca;
             ax.PositionConstraint = 'outerposition';
-
             currFrame = getframe(obj.simFig);
             writeVideo(obj.video,currFrame);
             pause(0.0001);
-    
-
             hold off
-
         end
 
         % Initialize Video
@@ -326,8 +379,8 @@ classdef Swarm < handle
             obj.video.FrameRate = 1/SL.dt * SL.fpsMult / SL.frameSkip;
             open(obj.video);
             
-            obj.simFig = figure('Visible','on');
-        
+            obj.simFig = figure('Visible',SL.Show);
+            obj.simFig.Position = [0 0 1024 768];
             % Initialize map background
             clf
             xlim(SL.mapSize);
