@@ -25,6 +25,19 @@ def learnMotionConstraints(posVelSlices:list(posVelSlice),params:SimParams,verbo
 
     return {"max_vel":max_vel, "max_accel":max_accel, "max_turn_rate":max_turn_rate}
 
+def dataForLinReg(featureSlices:list(featureSlice),params:SimParams,verbose=True):
+    x_flat = []
+    y_flat = []
+    for slice in (tqdm(featureSlices) if verbose else featureSlices):
+        if slice.motion_constrained or slice.boundary_constrained:
+            continue
+        f = slice.features
+        x_flat.append(np.array(list(f.values()))[:,0])
+        y_flat.append(slice.output_vel[0]-slice.last_vel[0])
+        x_flat.append(np.array(list(f.values()))[:,1])
+        y_flat.append(slice.output_vel[1]-slice.last_vel[1])
+    return np.array(x_flat),np.array(y_flat)
+
 #used in GA for neighbor radius
 def fitnessLinearReg(posVelSlices:list(posVelSlice),params:SimParams,learning_features:dict):
         def fitness(radius,sol_id):
@@ -41,16 +54,7 @@ def fitnessLinearReg(posVelSlices:list(posVelSlice),params:SimParams,learning_fe
             
             # estimate boids gains
             #prep for linear regression
-            X = []
-            y = []
-            for slice in agentSlices:
-                if slice.motion_constrained or slice.boundary_constrained:
-                    continue
-
-                X.append(np.array(list(slice.features.values()))[:,0])
-                y.append(slice.output_vel[0]-slice.last_vel[0])
-                X.append(np.array(list(slice.features.values()))[:,1])
-                y.append(slice.output_vel[1]-slice.last_vel[1])
+            X,y = dataForLinReg(agentSlices,localParams,verbose=False)
             if len(X)==0:
                 return -np.inf
             
@@ -112,28 +116,20 @@ def learnNeighborRadius(posVelSlices:list(posVelSlice),params:SimParams,learning
         ga_instance.run()
         solution, solution_fitness, solution_idx = ga_instance.best_solution(ga_instance.last_generation_fitness)
         return solution
-    
+
 # creating seperate in case we ever want to return to elastic net/lasso
 def learnGainsLinearRegression(featureSlices:list(featureSlice),params:SimParams,verbose=True)->np.ndarray:
     #ignores motion constrained data
     if verbose: print("Learning gains using linear regression:")
 
-    x_flat = []
-    y_flat = []
-    for slice in (tqdm(featureSlices) if verbose else featureSlices):
-        if slice.motion_constrained or slice.boundary_constrained:
-            continue
-        f = slice.features
-        x_flat.append(np.array(list(f.values()))[:,0])
-        y_flat.append(slice.output_vel[0]-slice.last_vel[0])
-        x_flat.append(np.array(list(f.values()))[:,1])
-        y_flat.append(slice.output_vel[1]-slice.last_vel[1])
+    x_flat,y_flat = dataForLinReg(featureSlices,params,verbose)
+
     model = lr().fit(np.array(x_flat),np.array(y_flat))
     return model.coef_
 
 # used in NL optimization, for gains
 def sliceBasedLoss(featureSlices,params:SimParams):
-    def fitness(linear_gains):
+    def loss(linear_gains):
         linear_gains = np.array(linear_gains)
         # print("Gains",est_gains)
         loss = 0.0
@@ -150,7 +146,7 @@ def sliceBasedLoss(featureSlices,params:SimParams):
             return np.inf
         return loss / len(x)  # normalized between runs
 
-    return fitness
+    return loss
 
 # could add an intermediary function/option to only optimize selected features
 def learnGainsNonLinearOptimization(featureSlices:list(featureSlice),params:SimParams,guess:np.ndarray,maxSample:int=5000,verbose=True)->np.ndarray:
