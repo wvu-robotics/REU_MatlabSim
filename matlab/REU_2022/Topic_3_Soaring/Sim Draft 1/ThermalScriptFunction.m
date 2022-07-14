@@ -1,4 +1,4 @@
-function [average, surviving, flightTime, ToD, Log] = ThermalScriptFunction(Param, render)
+function [average, surviving, flightTime, ToD, Log] = ThermalScriptFunction(render)
 % Main script: loads parameter variables and runs swarm step function
 %% Clear
 close all
@@ -16,21 +16,21 @@ SL = ColesLaw();
 thermalMap = ThermalMap(SL);
 
 
-number                   = Param(1);
-SL.separation            = 10^Param(2);
-SL.cohesion              = 10^Param(3);
-SL.alignment             = 10^Param(4);
-SL.migration             = 10^Param(5);
-SL.cohesionHeightMult    = Param(6);
-SL.separationHeightWidth = Param(7);
-SL.dt                    = Param(8);
-SL.waggle                = Param(9);
-SL.waggleTime            = Param(10);
-SL.numAgents             = Param(11);
-SL.thermalStrengthMin    = Param(12);
-SL.thermalStrengthMax    = Param(13);
-SL.forwardSpeedMin       = Param(14);
-SL.forwardSpeedMax       = Param(15);
+number                   = 1;
+% SL.separation            = 10^Param(2);
+% SL.cohesion              = 10^Param(3);
+% SL.alignment             = 10^Param(4);
+% SL.migration             = 10^Param(5);
+% SL.cohesionHeightMult    = Param(6);
+% SL.separationHeightWidth = Param(7);
+% SL.dt                    = Param(8);
+% SL.waggle                = Param(9);
+% SL.waggleTime            = Param(10);
+% %SL.numAgents             = Param(11);
+% SL.thermalStrengthMin    = Param(12);
+% SL.thermalStrengthMax    = Param(13);
+% SL.forwardSpeedMin       = Param(14);
+% SL.forwardSpeedMax       = Param(15);
 
 swarm = Swarm(SL, thermalMap);
 
@@ -90,7 +90,7 @@ Living = SL.numAgents;
 maxHeight     = -1;
 minHeight     = 1E6;
 averageHeight = 0;
-flightTime          = 0;
+flightTime    = 0;
 ToD           = zeros(1,SL.numAgents);
 
 for step = 1:steps
@@ -99,7 +99,7 @@ for step = 1:steps
         thermalMap.staticStep();
     
         swarm.saveAgentData();
-        swarm.stepSimulation();
+        swarm.stepSimulation(step);
         averageHeight = 0;
         for i=1:SL.numAgents
             if swarm.agents(i).isAlive
@@ -216,7 +216,7 @@ time = datestr(now,timeFormat2);
 % Column data in spreadsheet
 Log = {date, time,...
        SL.separation, SL.cohesion, SL.alignment,SL.migration,...
-       SL.cohesionHeightMult, SL.separationHeightGap, SL.waggle, SL.waggleTime, SL.k,...
+       SL.cohesionHeightMult, SL.separationHeightWidth, SL.waggle, SL.waggleTime, SL.k,...
        SL.dt, SL.totalTime,SL.numAgents, SL.numThermals, SL.neighborRadius,...
        SL.fov, SL.funcName_agentControl, SL.funcName_findNeighborhood, SL.forwardSpeedMin, SL.forwardSpeedMax,...
        SL.thermalStrengthMin, SL.thermalStrengthMax, SL.thermalRadiusMin, SL.thermalRadiusMax,...
