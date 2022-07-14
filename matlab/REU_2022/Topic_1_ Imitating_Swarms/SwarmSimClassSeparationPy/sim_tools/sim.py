@@ -7,7 +7,7 @@ class SimParams:
     num_agents=10,
     dt=0.1,overall_time = 15,
     enclosure_size =10, init_pos_max= None,
-    agent_max_vel=5,init_vel_max = None,agent_max_accel=1,agent_max_turn_rate=np.inf,
+    agent_max_vel=5,init_vel_max = None,agent_max_accel=np.inf,agent_max_turn_rate=np.inf,
     neighbor_radius=2,periodic_boundary=False):
         self.num_agents = num_agents
         self.dt = dt

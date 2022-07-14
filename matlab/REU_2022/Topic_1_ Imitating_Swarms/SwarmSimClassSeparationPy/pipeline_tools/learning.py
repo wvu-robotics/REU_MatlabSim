@@ -5,14 +5,14 @@ from sklearn.linear_model import LinearRegression as lr
 from scipy import optimize
 import pygad
 import copy
-import tqdm
+from tqdm import tqdm
 
-def learnMotionConstraints(posVelSlices:list(posVelSlice),params:SimParams,verbose=True)->dict:
+def learnMotionConstraints(posVelSlices:list[posVelSlice],params:SimParams,verbose=True)->dict:
     print("Learning motion constraints:")
     # consider different kinds of motion models
     max_vel = 0
-    max_accel = 0
-    max_turn_rate = 0
+    max_accel = np.inf #need to work on learning these
+    max_turn_rate = np.inf #need to work on learning
 
     for slice in (tqdm(posVelSlices) if verbose else posVelSlices):
         if max_vel < np.max(np.abs(slice.vel)):
@@ -25,7 +25,7 @@ def learnMotionConstraints(posVelSlices:list(posVelSlice),params:SimParams,verbo
 
     return {"max_vel":max_vel, "max_accel":max_accel, "max_turn_rate":max_turn_rate}
 
-def dataForLinReg(featureSlices:list(featureSlice),params:SimParams,verbose=True):
+def dataForLinReg(featureSlices:list[featureSlice],params:SimParams,verbose=True):
     x_flat = []
     y_flat = []
     for slice in (tqdm(featureSlices) if verbose else featureSlices):
@@ -39,7 +39,7 @@ def dataForLinReg(featureSlices:list(featureSlice),params:SimParams,verbose=True
     return np.array(x_flat),np.array(y_flat)
 
 #used in GA for neighbor radius
-def fitnessLinearReg(posVelSlices:list(posVelSlice),params:SimParams,learning_features:dict):
+def fitnessLinearReg(posVelSlices:list[posVelSlice],params:SimParams,learning_features:dict):
         def fitness(radius,sol_id):
             # only do genetic with on the neighbor radius, with fitness doing a linear regression
             localParams = copy.deepcopy(params)
@@ -77,7 +77,7 @@ def fitnessLinearReg(posVelSlices:list(posVelSlice),params:SimParams,learning_fe
         return fitness
 
 # involves first pass linear regression-might be better to return gains from that at some point
-def learnNeighborRadius(posVelSlices:list(posVelSlice),params:SimParams,learning_features:dict,verbose=True)->int:
+def learnNeighborRadius(posVelSlices:list[posVelSlice],params:SimParams,learning_features:dict,verbose=True)->int:
     fitnessFunc = fitnessLinearReg(posVelSlices,params,learning_features)
 
     if verbose: print("Running genetic algorithm to learn radius:")
@@ -118,11 +118,13 @@ def learnNeighborRadius(posVelSlices:list(posVelSlice),params:SimParams,learning
         return solution
 
 # creating seperate in case we ever want to return to elastic net/lasso
-def learnGainsLinearRegression(featureSlices:list(featureSlice),params:SimParams,verbose=True)->np.ndarray:
+def learnGainsLinearRegression(featureSlices:list[featureSlice],params:SimParams,verbose=True)->np.ndarray:
     #ignores motion constrained data
     if verbose: print("Learning gains using linear regression:")
 
     x_flat,y_flat = dataForLinReg(featureSlices,params,verbose)
+
+    if verbose: print("Data length for linear regression",len(x_flat))
 
     model = lr().fit(np.array(x_flat),np.array(y_flat))
     return model.coef_
@@ -149,7 +151,7 @@ def sliceBasedLoss(featureSlices,params:SimParams):
     return loss
 
 # could add an intermediary function/option to only optimize selected features
-def learnGainsNonLinearOptimization(featureSlices:list(featureSlice),params:SimParams,guess:np.ndarray,maxSample:int=5000,verbose=True)->np.ndarray:
+def learnGainsNonLinearOptimization(featureSlices:list[featureSlice],params:SimParams,guess:np.ndarray,maxSample:int=5000,verbose=True)->np.ndarray:
     np.random.shuffle(featureSlices) # since we subsample the data
     loss_fn = sliceBasedLoss(featureSlices[:min(len(featureSlices),maxSample)],params)
     solution = optimize.minimize(loss_fn,(guess), method='SLSQP') #maybe pass more options up the line

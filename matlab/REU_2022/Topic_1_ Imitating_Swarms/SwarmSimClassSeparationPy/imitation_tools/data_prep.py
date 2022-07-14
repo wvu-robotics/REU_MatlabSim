@@ -18,7 +18,7 @@ class posVelSlice:
     vel: np.ndarray
     next_vel: np.ndarray
 
-def toPosVelSlices(agentPositions,params:SimParams()):
+def toPosVelSlices(agentPositions,params:SimParams):
     #includes velocity calculation--I don't fully understand how to abstract this out yet
     # would really like to remove this dt
     return [posVelSlice(agentPositions[i],
@@ -35,7 +35,7 @@ class featureSlice:
     boundary_constrained: bool
 
 #rewriting this to generalized
-def featuresFromPosVelSlice(slice,params:SimParams(),features:dict,neighborCaps=[0,np.inf]):
+def featuresFromPosVelSlice(slice,params:SimParams,features:dict,neighborCaps=[0,np.inf]):
     featureSlices = []
     for agent in range(params.num_agents):
         agentPos = slice.pos[agent]
@@ -92,7 +92,7 @@ def featuresFromPosVelSlice(slice,params:SimParams(),features:dict,neighborCaps=
         featureSlices.append(featureSlice(computed_features,agentVel,agentNextVel,motion_constrained,boundary_constrained))
     return featureSlices
 
-def toFeatureSlices(posVelSlices,features:dict,params:SimParams(),threads = 8,neighborCaps=[1,np.inf],verbose=True):
+def toFeatureSlices(posVelSlices,features:dict,params:SimParams,threads = 8,neighborCaps=[1,np.inf],verbose=True):
     #multiprocessing
     pool = Pool(threads)
     
@@ -130,7 +130,7 @@ class agentSlice:
     output_vel: np.ndarray
 
 #need to figure out how to pass more things to this, maybe function currying is the way
-def agentSliceFromPosVelSlice(slice,params:SimParams(),neighborCaps=[0,np.inf],ignoreConstrainedMotion=False,ignoreBoundaryData=True):
+def agentSliceFromPosVelSlice(slice,params:SimParams,neighborCaps=[0,np.inf],ignoreConstrainedMotion=False,ignoreBoundaryData=True):
     # if ignoreConstrainedMotion: print("IGNORING CONSTRAINED MOTION")
     agentSlices = []
     for agent in range(params.num_agents):
@@ -248,7 +248,7 @@ def agentSliceFromPosVelSlice(slice,params:SimParams(),neighborCaps=[0,np.inf],i
     return agentSlices
 
 #this can be multiprocessed, maybe also allow turning off certain slices
-def toAgentSlices(posVelSlices,params:SimParams(),threads = 8,neighborCaps=[1,np.inf],ignoreConstrainedMotion=False,ignoreBoundaryData=True,verbose=True):
+def toAgentSlices(posVelSlices,params:SimParams,threads = 8,neighborCaps=[1,np.inf],ignoreConstrainedMotion=False,ignoreBoundaryData=True,verbose=True):
     #multiprocessing
     pool = Pool(threads)
     

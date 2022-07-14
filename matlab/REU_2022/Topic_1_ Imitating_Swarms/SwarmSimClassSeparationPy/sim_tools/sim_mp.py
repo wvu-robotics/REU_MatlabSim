@@ -1,3 +1,5 @@
+#NOT FUNCTIONAL, issues with shared memory
+
 import numpy as np
 import cmath
 from tqdm import tqdm #might eventually make a param for this to ship, but later
