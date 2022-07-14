@@ -256,9 +256,9 @@ classdef Swarm < handle
                         textnHeader = sprintf("N  \x0394Z   Dist \x0394V_{z} \x0394V_{xy} CWeight\n");
                         
                         textStr = textPos + textAng + textSpd + textRule + textDet + textnHeader;
-                        currentAgent.neighborData = struct();
+%                         currentAgent.neighborData = struct();
                         
-                        if(SL.listNeighborData)
+                        if(SL.listNeighborData) && numLocalAgents > 0
                             nRelHeight = currentAgent.neighborData.relPosition(:,3);
                             nDist      = vecnorm(currentAgent.neighborData.relPosition,2,2);
                             ndVz       = currentAgent.neighborData.relVelocity(:,3);
