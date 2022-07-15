@@ -380,7 +380,7 @@ classdef Swarm < handle
             obj.video = VideoWriter(videoName);
             obj.video.FrameRate = 1/SL.dt * SL.fpsMult / SL.frameSkip;
             open(obj.video);
-            
+            fprintf("SL.Show: %G\n",SL.Show);
             obj.simFig = figure('Visible',SL.Show);
             obj.simFig.Position = [0 0 1024 768];
             % Initialize map background

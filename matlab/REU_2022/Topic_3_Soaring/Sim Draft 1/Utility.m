@@ -65,5 +65,25 @@ classdef Utility
             allData = load(fileName,"xData","yData","zData","fVelData","VelData","zVelData","bankAngleData","headingData");
             numSteps = allData.SL.totalTime / allData.SL.dt;
         end
+        
+        %% Convert (Row,Column) to spreadsheet position format: <Column Letter><Row Number>
+        function ssPos = findSSPos(rowNumber,colNumber)
+            columnLetter = char(64 + colNumber); %char(65) = 'A', char(66) = 'B' ...
+            ssPos = sprintf("%s%g",columnLetter,rowNumber);
+        end
+        
+        %% Saves a struct in the given file name (work around for par-for save conflict?)
+        function parSave(fileName,structToSave)
+            save(fileName,'-struct','structToSave');
+        end
+        
+        %% Normal eval function (work around for par-for eval conflict?)
+        function output = parTryEval(param)
+            try
+                output = eval(param);
+            catch
+                output = param;
+            end
+        end
     end
 end
