@@ -34,14 +34,14 @@ end
 %% Set up input Excel sheet
 simLawExcel = "AdamsLaw.xlsx";
 sheetNum = 1;
-[~,~,RAW] = xlsread(simLawExcel,sheetNum);
+RAW = readcell(simLawExcel);
 varLabelColumn = 2;
 startingColumn = 3;
 startingRow = 1;
 numSims = size(RAW,2) - startingColumn + 1;
 nanCount = 0;
 for col = 1:numSims
-    if isnan(RAW{1,col+startingColumn-1})
+    if ismissing(RAW{1,col+startingColumn-1})
         nanCount = nanCount + 1;
     end
 end

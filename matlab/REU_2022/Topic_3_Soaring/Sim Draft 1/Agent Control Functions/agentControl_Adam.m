@@ -9,15 +9,95 @@ function agentControl_Adam(currentAgent, localAgents, thermalStrength, target, S
     
     numLocalAgents = size(localAgents,2);
     
+    %{
     %% Non-neighbor Factors
     % Height desire
     height = currentAgent.savedPosition(3);
     height = min(max(height,SL.heightDesireBounds(1)),SL.heightDesireBounds(2));
     factor_heightDesire = interp1(SL.heightDesireBounds,SL.heightDesireMagBounds,height);
+    %}
     
+    
+    % Height
+    height = currentAgent.savedPosition(3);
+    if(height > SL.heightDesireBounds(2))
+        height = SL.heightDesireBounds(2);
+    elseif(height < SL.heightDesireBounds(1))
+        height = SL.heightDesireBounds(1);
+    end
+    factor_height = (height-SL.heightDesireBounds(1))/(SL.heightDesireBounds(2)-SL.heightDesireBounds(1));
         
     %% Neighbor Rules
     if(numLocalAgents > 0)
+        otherPos = zeros(numLocalAgents,3);
+        otherHeading = zeros(numLocalAgents,1);
+        otherVel = zeros(numLocalAgents,3);
+        
+        for i=1:numLocalAgents
+            otherPos(i,:) = localAgents(i).savedPosition;
+            otherHeading(i) = localAgents(i).savedHeading;
+            otherVel(i,:) = localAgents(i).savedVelocity;
+        end
+        
+        currentPos = currentAgent.savedPosition;
+        currentHeading = currentAgent.savedHeading;
+        currentVel = currentAgent.savedVelocity;
+        
+        diffPos = otherPos - currentPos;
+        dist = vecnorm(diffPos,2,2);
+        
+        %% Collision Death
+        if any(dist < SL.collisionKillDistance)
+            currentAgent.markedForDeath = true;
+            return;
+        end
+        
+        diffPos2D = diffPos(:,1:2);
+        dist2D = vecnorm(diffPos2D,2,2);
+        diffPos2DUnit = [diffPos2D./dist2D,zeros(numLocalAgents,1)];
+        diffVelXY = [otherVel(:,1).*cos(otherHeading(:))-currentVel(1)*cos(currentHeading),...
+                     otherVel(:,1).*sin(otherHeading(:))-currentVel(1)*sin(currentHeading),...
+                     zeros(numLocalAgents,1)];
+        diffVelZ = otherVel(:,3) - currentVel(3);
+        
+        %% Factors
+        % Relative Ascension
+        relativeAscension = diffVelZ;
+        relativeAscension(relativeAscension < SL.relativeAscensionBounds(1)) = SL.relativeAscensionBounds(1);
+        relativeAscension(relativeAscension > SL.relativeAscensionBounds(2)) = SL.relativeAscensionBounds(2);
+        factor_relativeAscension = (relativeAscension-SL.relativeAscensionBounds(1))/(SL.relativeAscensionBounds(2)-SL.relativeAscensionBounds(1));
+        
+        % Relative Height
+        relativeHeight = diffPos(:,3);
+        % Already bounded by neighborRadius
+        factor_relativeHeight = (relativeHeight-SL.neighborRadius)/(2*SL.neighborRadius);
+        
+        % Distance
+        factor_distance = dist2D / SL.neighborRadius;
+        
+        %% Rules
+        % Cohesion
+        weight_cohesion = (factor_relativeAscension * (SL.coh_relativeAscension(2)-SL.coh_relativeAscension(1)) + SL.coh_relativeAscension(1)) .* ...
+                          (factor_height * (SL.coh_heightDesire(2)-SL.coh_heightDesire(1)) + SL.coh_heightDesire(1)) .* ...
+                          factor_distance;
+        vectorAll_cohesion = (weight_cohesion .* diffPos2DUnit) / numLocalAgents;
+        vector_cohesion = sum(vectorAll_cohesion,1);
+        
+        % Separation
+        weight_separation = (factor_relativeHeight * (SL.sep_relativeHeight(2)-SL.sep_relativeHeight(1)) + SL.sep_relativeHeight(1)) .* ...
+                            (factor_height * (SL.sep_heightDesire(2)-SL.sep_heightDesire(1)) + SL.sep_heightDesire(1)) .* ...
+                            (1-factor_distance).^SL.avoidPower;
+        vectorAll_separation = (weight_separation .* -diffPos2DUnit) / numLocalAgents;
+        vector_separation = sum(vectorAll_separation,1);
+        
+        % Alignment
+        weight_alignment = (factor_relativeHeight * (SL.align_relativeHeight(2)-SL.align_relativeHeight(1)) + SL.align_relativeHeight(1)) .* ...
+                            (factor_height * (SL.align_heightDesire(2)-SL.align_heightDesire(1)) + SL.align_heightDesire(1)) .* ...
+                            (1-factor_distance).^SL.avoidPower;
+        vectorAll_alignment = (weight_alignment .* diffVelXY) / numLocalAgents;
+        vector_alignment = sum(vectorAll_alignment,1);
+        
+        %{
         % Cohesion
         cohesionSum = [0,0,0];
         cohesionDiv = 0;
@@ -112,6 +192,7 @@ function agentControl_Adam(currentAgent, localAgents, thermalStrength, target, S
             alignmentSum = alignmentSum/alignmentDiv;
             vector_alignment = alignmentSum;
         end
+        %}
     end
    
     %% Migration
@@ -120,8 +201,12 @@ function agentControl_Adam(currentAgent, localAgents, thermalStrength, target, S
     distTarget = norm(diffTarget);
     diffTargetUnit = diffTarget/distTarget;
     
+    %{
     weight_migration = interp1(SL.heightDesireMagBounds,SL.mig_heightDesire,factor_heightDesire) * ...
                        distTarget^2;
+    %}
+    weight_migration = (factor_height * (SL.mig_heightDesire(2)-SL.mig_heightDesire(1)) + SL.mig_heightDesire(1)) * ...
+                        distTarget^2;
     vector_migration = weight_migration * diffTargetUnit;
 
     %% Waggle
@@ -139,7 +224,7 @@ function agentControl_Adam(currentAgent, localAgents, thermalStrength, target, S
     vector_cohesion = vector_cohesion * SL.cohesion;
     vector_migration = vector_migration * SL.migration;
     vector_waggle = vector_waggle * SL.waggle;
-    
+
     newAccel = vector_separation + ...
                vector_alignment + ...
                vector_cohesion + ...
