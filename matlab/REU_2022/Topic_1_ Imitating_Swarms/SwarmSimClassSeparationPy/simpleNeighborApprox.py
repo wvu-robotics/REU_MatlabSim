@@ -37,6 +37,12 @@ if __name__ ==  '__main__':
     # really should clean up this interface too
     controllers = [copy.deepcopy(orig_controller) for i in range(params.num_agents)]
     agentPositions, agentVels = sim.runSim(controllers,params,progress_bar=True)
+    noise_percent = 0.7
+    for pos in agentPositions:
+        # 0.6 to account for stdev value, so most things are within bounds
+        # maybe should do the noise based on current vel
+        noise = 0.6*noise_percent*params.agent_max_vel*np.random.normal(0,1,size=(2))*params.dt
+        pos+=noise
 
     if not os.path.exists("SimpleNeighbor"):
         os.makedirs("SimpleNeighbor")
