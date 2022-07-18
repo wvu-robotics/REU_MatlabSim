@@ -13,7 +13,7 @@ function outputData = MainScriptFunction(SL, simNumber, videoName)
     % Initialize thermals as a matrix of Thermals
 
     thermalMap = ThermalMap(SL);
-    swarm = Swarm(SL, thermalMap);
+    swarm = Swarm(SL, thermalMap, simNumber);
 
     %% Setup video and figure
     if SL.render
