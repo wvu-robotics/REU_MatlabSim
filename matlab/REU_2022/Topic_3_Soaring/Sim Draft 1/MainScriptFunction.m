@@ -78,6 +78,7 @@ function outputData = MainScriptFunction(SL, simNumber, videoName)
     end
 
     %% Save more output data
+    outputData.SL = SL;
     outputData.simNumber = simNumber;
     outputData.timeEnd = datestr(now,"HH:MM:SS");
     outputData.surviving = swarm.Living;
