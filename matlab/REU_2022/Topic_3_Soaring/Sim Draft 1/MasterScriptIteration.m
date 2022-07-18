@@ -139,7 +139,7 @@ fprintf("Finished simulations.\n");
 
 %% Save data to Excel sheet
 outputExcelName = sprintf('%s/SimData_%s.xlsx',simBatchFolder,simBatchCode);
-outputVariables = ["simNumber";"timeStart";"timeEnd";"surviving";"flightTime";"finalHeightMax";"finalHeightMin";"finalHeightAvg"];
+outputVariables = ["simNumber";"rngSeed";"timeStart";"timeEnd";"surviving";"flightTime";"finalHeightMax";"finalHeightMin";"finalHeightAvg"];
 Utility.generateOutputExcelSheet(outputExcelName,matFilesFolder,RAW,changedVariables,outputVariables);
 fprintf("Done!\n");
 

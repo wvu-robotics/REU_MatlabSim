@@ -5,9 +5,10 @@ function outputData = MainScriptFunction(SL, simNumber, videoName)
     %clc
     
     %% Set RNG Seed
-    if(isfield(SL,"rngSeed") && ~isnan(SL.rngSeed))
-        rng(SL.rngSeed);
+    if(~isfield(SL,"rngSeed") || isnan(SL.rngSeed))
+        SL.rngSeed = round(now*10^6);
     end
+    rng(SL.rngSeed);
 
     %% Load simulation parameters
     % Initialize thermals as a matrix of Thermals
@@ -80,6 +81,7 @@ function outputData = MainScriptFunction(SL, simNumber, videoName)
     %% Save more output data
     outputData.SL = SL;
     outputData.simNumber = simNumber;
+    outputData.rngSeed = SL.rngSeed;
     outputData.timeEnd = datestr(now,"HH:MM:SS");
     outputData.surviving = swarm.Living;
     outputData.flightTime = swarm.flightTime;
