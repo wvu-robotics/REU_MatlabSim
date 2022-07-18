@@ -88,6 +88,7 @@ classdef Utility
         
         %% Generate output excel sheet from .mat files
         function generateOutputExcelSheet(outputExcelName,matFilesFolder,inputCellsToCopy,changedVariables,outputVariables)
+            fprintf("Generating output Excel sheet... ");
             % Read mat files
             fileSearch = sprintf("%s/*.mat",matFilesFolder);
             dirData = dir(fileSearch);

@@ -135,7 +135,7 @@ parfor sim = 1:numSims
     Utility.parSave(outputDataName,outputData);
 end
 
-fprintf("Finished simulations.\nGenerating output Excel sheet.\n");
+fprintf("Finished simulations.\n");
 
 %% Save data to Excel sheet
 outputExcelName = sprintf('%s/SimData_%s.xlsx',simBatchFolder,simBatchCode);
