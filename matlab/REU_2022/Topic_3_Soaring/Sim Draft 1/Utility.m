@@ -65,5 +65,85 @@ classdef Utility
             allData = load(fileName,"xData","yData","zData","fVelData","VelData","zVelData","bankAngleData","headingData");
             numSteps = allData.SL.totalTime / allData.SL.dt;
         end
+        
+        %% Convert (Row,Column) to spreadsheet position format: <Column Letter><Row Number>
+        function ssPos = findSSPos(rowNumber,colNumber)
+            columnLetter = char(64 + colNumber); %char(65) = 'A', char(66) = 'B' ...
+            ssPos = sprintf("%s%g",columnLetter,rowNumber);
+        end
+        
+        %% Saves a struct in the given file name (work around for par-for save conflict?)
+        function parSave(fileName,structToSave)
+            save(fileName,'-struct','structToSave');
+        end
+        
+        %% Normal eval function (work around for par-for eval conflict?)
+        function output = parTryEval(param)
+            try
+                output = eval(param);
+            catch
+                output = param;
+            end
+        end
+        
+        %% Generate output excel sheet from .mat files
+        function generateOutputExcelSheet(outputExcelName,matFilesFolder,inputCellsToCopy,changedVariables,outputVariables)
+            fprintf("Generating output Excel sheet... ");
+            % Read mat files
+            fileSearch = sprintf("%s/*.mat",matFilesFolder);
+            dirData = dir(fileSearch);
+            numFiles = size(dirData,1);
+            fileNames = {dirData.name};
+            for i=numFiles:-1:1
+                fileName = sprintf('%s/%s',matFilesFolder,fileNames{i});
+                bigOutputData(i) = load(fileName);
+            end
+            
+            % Setup output Excel sheet
+            sheetNum = 1;
+            varLabelColumn = 2;
+            startingColumn = 3;
+            % Copy inputCellsToCopy to Excel sheet
+            writecell(inputCellsToCopy,outputExcelName,'Sheet',sheetNum,'Range','A1','AutoFitWidth',0);
+            outputRow = size(inputCellsToCopy,1) + 5;
+            % Write 'OUTPUT' to Excel sheet
+            writecell({'OUTPUT'},outputExcelName,'Sheet',sheetNum,'Range',Utility.findSSPos(outputRow,1),'AutoFitWidth',0);
+            outputRow = outputRow + 1;
+            
+            % Write changedVariables to Excel sheet
+            if(~isempty(changedVariables))
+                writecell({'Changed Variables'},outputExcelName,'Sheet',sheetNum,'Range',Utility.findSSPos(outputRow,1),'AutoFitWidth',0);
+                numVar = length(changedVariables);
+                cellsChangedVariableLabels = cell(numVar,1);
+                cellsChangedVariableValues = cell(numVar,numFiles);
+                for varIndex = 1:numVar
+                    cellsChangedVariableLabels{varIndex,1} = changedVariables(varIndex);
+                    for sim=1:numFiles
+                        cellsChangedVariableValues{varIndex,sim} = bigOutputData(sim).SL.(changedVariables(varIndex));
+                    end
+                end
+                writecell(cellsChangedVariableLabels,outputExcelName,'Sheet',sheetNum,'Range',Utility.findSSPos(outputRow,varLabelColumn),'AutoFitWidth',0);
+                writecell(cellsChangedVariableValues,outputExcelName,'Sheet',sheetNum,'Range',Utility.findSSPos(outputRow,startingColumn),'AutoFitWidth',0);
+                
+                outputRow = outputRow + numVar + 1;
+            end
+            
+            % Write outputVariables to Excel sheet
+            if(~isempty(outputVariables))
+                writecell({'Output Variables'},outputExcelName,'Sheet',sheetNum,'Range',Utility.findSSPos(outputRow,1),'AutoFitWidth',0);
+                numVar = length(outputVariables);
+                cellsOutputVariableLabels = cell(numVar,1);
+                cellsOutputVariableValues = cell(numVar,numFiles);
+                for varIndex = 1:numVar
+                    cellsOutputVariableLabels{varIndex,1} = outputVariables(varIndex);
+                    for sim=1:numFiles
+                        cellsOutputVariableValues{varIndex,sim} = bigOutputData(sim).(outputVariables(varIndex));
+                    end
+                end
+                writecell(cellsOutputVariableLabels,outputExcelName,'Sheet',sheetNum,'Range',Utility.findSSPos(outputRow,varLabelColumn),'AutoFitWidth',0);
+                writecell(cellsOutputVariableValues,outputExcelName,'Sheet',sheetNum,'Range',Utility.findSSPos(outputRow,startingColumn),'AutoFitWidth',0);
+            end
+            fprintf("Done!\n");
+        end
     end
 end

@@ -34,10 +34,11 @@ classdef Swarm < handle
     
     methods
         % Generation Function
-        function obj = Swarm(simLaw,thermalMap)
+        function obj = Swarm(simLaw,thermalMap,simNumber)
             % Save parameters and agentControlFunc
             obj.simLaw = simLaw;
             obj.thermalMap = thermalMap;
+            obj.number = simNumber;
             SL = obj.simLaw;
 
             obj.funcHandle_agentControl = str2func(SL.funcName_agentControl);
@@ -245,8 +246,8 @@ classdef Swarm < handle
                         omega  = currentAgent.velocity(2);
                         vspeed = currentAgent.velocity(3);
                         Range = -speed/currentAgent.vsink * posZ;
-                        ascendCaringFactor = SL.cohesionAscensionMult*(1 - (posZ/SL.agentCeiling));
-                        textSpd = sprintf("Speed: %2.0fm/s\nOmega: %+2.0fdeg/s\nVSpeed: %+1.1fm/s\nRange: %6.0fm\nAscend Caring: %3.0f\n",speed,omega,vspeed,Range,ascendCaringFactor);
+                        heightFactor = (1 - posZ/SL.agentCeiling)^SL.heightFactorPower;
+                        textSpd = sprintf("Speed: %2.0fm/s\nOmega: %+2.0fdeg/s\nVSpeed: %+1.1fm/s\nRange: %6.0fm\nHeight Factor: %g\n",speed,omega,vspeed,Range,heightFactor);
                         ruleMag = currentAgent.rulesMag;
                         textRule = sprintf("S:%2.2g\nC:%2.2g\nA:%2.2g\nM:%2.2g\n",ruleMag(1:4));
                         clearance = currentAgent.clearance;
@@ -256,9 +257,9 @@ classdef Swarm < handle
                         textnHeader = sprintf("N  \x0394Z   Dist \x0394V_{z} \x0394V_{xy} CWeight\n");
                         
                         textStr = textPos + textAng + textSpd + textRule + textDet + textnHeader;
-                        currentAgent.neighborData = struct();
+%                         currentAgent.neighborData = struct();
                         
-                        if(SL.listNeighborData)
+                        if(SL.listNeighborData) && numLocalAgents > 0
                             nRelHeight = currentAgent.neighborData.relPosition(:,3);
                             nDist      = vecnorm(currentAgent.neighborData.relPosition,2,2);
                             ndVz       = currentAgent.neighborData.relVelocity(:,3);
@@ -271,7 +272,7 @@ classdef Swarm < handle
                             ndV = ndV(ind);
 
                             for n = 1:numLocalAgents
-                                textStr = textStr + sprintf("%2.0f %+4.0f %4.0f %+3.1f %2.0f %5.0f\n",n,nRelHeight(n),nDist(n),ndVz(n),ndV(n),nWght(n));
+                                textStr = textStr + sprintf("%2.0f %+5.0f %4.0f %+3.1f %2.0f %0.4f\n",n,nRelHeight(n),nDist(n),ndVz(n),ndV(n),nWght(n));
                             end
                         end
                         
@@ -380,7 +381,6 @@ classdef Swarm < handle
             obj.video = VideoWriter(videoName);
             obj.video.FrameRate = 1/SL.dt * SL.fpsMult / SL.frameSkip;
             open(obj.video);
-            
             obj.simFig = figure('Visible',SL.Show);
             obj.simFig.Position = [0 0 1024 768];
             % Initialize map background

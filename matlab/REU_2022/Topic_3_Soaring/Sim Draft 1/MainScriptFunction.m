@@ -13,7 +13,7 @@ function outputData = MainScriptFunction(SL, simNumber, videoName)
     % Initialize thermals as a matrix of Thermals
 
     thermalMap = ThermalMap(SL);
-    swarm = Swarm(SL, thermalMap);
+    swarm = Swarm(SL, thermalMap, simNumber);
 
     %% Setup video and figure
     if SL.render
@@ -65,8 +65,8 @@ function outputData = MainScriptFunction(SL, simNumber, videoName)
             end
 
             %% Print
-            if mod(step,steps/100) == 0
-                fprintf("%02g%% through Run #%g \n",100*step/steps, simNumber);
+            if mod(step,steps/1000) == 0
+                fprintf("%04.1f%% through Run #%g \n",100*step/steps, simNumber);
             end
         else
             fprintf("Everybody died in Run # %g\n", simNumber);
@@ -78,6 +78,7 @@ function outputData = MainScriptFunction(SL, simNumber, videoName)
     end
 
     %% Save more output data
+    outputData.SL = SL;
     outputData.simNumber = simNumber;
     outputData.timeEnd = datestr(now,"HH:MM:SS");
     outputData.surviving = swarm.Living;
