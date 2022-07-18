@@ -144,7 +144,7 @@ Utility.generateOutputExcelSheet(outputExcelName,matFilesFolder,RAW,changedVaria
 fprintf("Done!\n");
 
 %% microwave
-microwave = False;
+microwave = false;
 if(microwave)
     [y,Fs] = audioread("microwave.mp3");
     sound(y,Fs)
