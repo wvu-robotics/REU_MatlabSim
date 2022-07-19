@@ -86,7 +86,7 @@ if __name__ == '__main__':
 
     np.random.shuffle(posVelSlices)
     radius = learnNeighborRadius(
-        posVelSlices[:100], learnedParams, learning_features)
+        posVelSlices[:1000], learnedParams, learning_features)
     print("Learned Radius", radius)
     learnedParams.neighbor_radius = radius
 

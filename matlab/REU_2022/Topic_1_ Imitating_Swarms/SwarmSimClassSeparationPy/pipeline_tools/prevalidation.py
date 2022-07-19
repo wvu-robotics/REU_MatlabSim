@@ -11,12 +11,12 @@ import numpy as np
 # use exact fitness function
 
 
-def testTrueNeighborRadius(posVelSlices: list[posVelSlice], orig_params: SimParams, learning_features: dict):
+def testTrueNeighborRadius(posVelSlices: list, orig_params: SimParams, learning_features: dict):
     fitness_fn = fitnessLinearReg(posVelSlices, orig_params, learning_features)
     return -1*fitness_fn([orig_params.neighbor_radius], 0)  # returning loss
 
 
-def plotNeighborRadius(posVelSlices: list[posVelSlice], orig_params: SimParams, learning_features: dict):
+def plotNeighborRadius(posVelSlices: list, orig_params: SimParams, learning_features: dict):
     fitness_fn = fitnessLinearReg(posVelSlices, orig_params, learning_features)
     x = np.linspace(0, 10, 50)
     y = [fitness_fn([a],0) for a in x]
@@ -25,7 +25,7 @@ def plotNeighborRadius(posVelSlices: list[posVelSlice], orig_params: SimParams, 
     fig.show()
 
 
-def testTrueGainsLinear(true_gains, featureSlices: list[featureSlice], params: SimParams):
+def testTrueGainsLinear(true_gains, featureSlices: list, params: SimParams):
     # validating true gains in same way as lin reg(optimally should )
     x_flat, y_flat=dataForLinReg(featureSlices, params, verbose = False)
     true_loss=0
@@ -35,7 +35,7 @@ def testTrueGainsLinear(true_gains, featureSlices: list[featureSlice], params: S
         true_loss += np.sum(np.abs(v_pred-v_actual))
     return true_loss
 
-def testTrueGainsNonLinear(true_gains, featureSlices: list[featureSlice], params: SimParams, maxSample: int = 5000):
+def testTrueGainsNonLinear(true_gains, featureSlices: list, params: SimParams, maxSample: int = 5000):
     np.random.shuffle(featureSlices)  # since we subsample the data
     loss_fn=sliceBasedLoss(
         featureSlices[:min(len(featureSlices), maxSample)], params)
