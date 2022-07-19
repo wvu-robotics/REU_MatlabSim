@@ -7,14 +7,14 @@ clc;
 simBatchCode = datestr(now,"yyyymmddHHMMSS");
 
 %% Add search paths for sim laws and agent functions
-addpath("Code of Laws");
-addpath("Agent Control Functions");
-addpath("Find Neighborhood Functions");
+addpath("Code_of_Laws");
+addpath("Agent_Control_Functions");
+addpath("Find_Neighborhood_Functions");
 addpath("Misc");
 
 %% setup output folders
 %Output Media folder
-rootFolder = "Output Media";
+rootFolder = "Output_Media";
 if(~exist(rootFolder,'dir'))
     mkdir(rootFolder);
 end
