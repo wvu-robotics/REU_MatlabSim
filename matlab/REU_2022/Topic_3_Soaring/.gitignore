@@ -1,11 +1,8 @@
 *.gif
 *.avi
 *.asv
-<<<<<<< HEAD
 *.ogg
 *.png
 *.mat
-=======
 *.png
 */Output_Media/*
->>>>>>> 2c2455f022a897726c8bbfceed4f08aebb8af304
