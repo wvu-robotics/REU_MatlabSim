@@ -138,12 +138,12 @@ fprintf("Finished simulations.\n");
 
 %% Save data to Excel sheet
 outputExcelName = sprintf('%s/SimData_%s.xlsx',simBatchFolder,simBatchCode);
-outputVariables = ["simNumber";"rngSeed";"timeStart";"timeEnd";"surviving";"flightTime";"heightScore";"finalHeightMax";"finalHeightMin";"finalHeightAvg"];
+outputVariables = ["simNumber";"rngSeed";"timeStart";"timeEnd";"surviving";"collisionDeaths";"groundDeaths";"flightTime";"heightScore";"explorationPercent";"thermalUseScore";"finalHeightMax";"finalHeightMin";"finalHeightAvg"];
 Utility.generateOutputExcelSheet(outputExcelName,matFilesFolder,RAW,changedVariables,outputVariables);
 fprintf("Done!\n");
 
 %% microwave
-microwave = true;
+microwave = false;
 if(microwave)
     [y,Fs] = audioread("microwave.mp3");
     sound(y,Fs)

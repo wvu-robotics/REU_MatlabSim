@@ -23,14 +23,21 @@ classdef Swarm < handle
         textAnnt = NaN
         number  = 0                 % 
         Elapsed = [0.0 0.0 0.0]     % hours, minutes, seconds
-        flightTime = 0.0            % Agent-Seconds
-        heightScore = 0.0           % m-seconds
         Living = 0                  %
         avgHeight = 0           % m
         minHeight = 0               % m
         maxHeight = 0               % m
         avgSpeed  = 0               % m/s
         ToD
+        collisionDeaths = 0
+        groundDeaths = 0
+        
+        flightTime = 0.0            % Agent-seconds
+        heightScore = 0.0           % m-seconds
+        thermalUseScore = 0.0       % Agent-seconds
+        mapDivisions
+        mapDivSize
+        explorationPercent = 0.0    % Percent
     end
     
     methods
@@ -67,6 +74,9 @@ classdef Swarm < handle
                 obj.agents(i).velocity(1) = Utility.randIR(velRange(1,1),velRange(2,1));
                 obj.agents(i).velocity(2) = Utility.randIR(velRange(1,2),velRange(2,2));
             end
+            
+            obj.mapDivisions = false(SL.mapDivResolution);
+            obj.mapDivSize = (SL.mapSize(2)-SL.mapSize(1))/SL.mapDivResolution;
         end
         
         % Save Function
@@ -85,6 +95,7 @@ classdef Swarm < handle
             for i=1:numAgents
                 if obj.agents(i).isAlive
                     currentAgent = obj.agents(i);
+                    
                     if frame==1 || mod(frame,SL.neighborFrameSkip)==0
                         %Find localAgents
                         localAgents = obj.funcHandle_findNeighborhood(obj,i,SL);
@@ -101,8 +112,14 @@ classdef Swarm < handle
                 end
             end
             for i=1:numAgents % Must occur after the previous loop is finished
-                if obj.agents(i).markedForDeath
+                if obj.agents(i).markedForDeath && obj.agents(i).isAlive
                     obj.agents(i).isAlive = false;
+                    causeOfDeath = obj.agents(i).killCause;
+                    if(causeOfDeath == "Collision")
+                        obj.collisionDeaths = obj.collisionDeaths + 1;
+                    elseif(causeOfDeath == "Ground")
+                        obj.groundDeaths = obj.groundDeaths + 1;
+                    end
                 end
             end
         end
@@ -315,19 +332,31 @@ classdef Swarm < handle
             obj.avgHeight = 0;
             obj.avgSpeed = 0;
             
-            if obj.Living ~= nnz([obj.agents.isAlive])
+            currentLiving = nnz([obj.agents.isAlive]);
+            if obj.Living ~= currentLiving
                 % if living is suddenly 39/40, update number 1 to whatever time it
                 % is now.
                 % if multiple agents die, update that number of elements.
                 % Living should always be >= nnz of isAlive; isAlive updates first.
-                obj.ToD((SL.numAgents - obj.Living + 1) : (SL.numAgents - nnz([obj.agents.isAlive]))) = obj.Elapsed(2) + 60*obj.Elapsed(1);
+                obj.ToD((SL.numAgents - obj.Living + 1) : (SL.numAgents - currentLiving)) = obj.Elapsed(2) + 60*obj.Elapsed(1);
             end
-            obj.Living  = nnz([obj.agents.isAlive]);
-            obj.flightTime    = obj.flightTime + obj.Living * SL.dt;
+            obj.Living = currentLiving;
+            obj.flightTime = obj.flightTime + obj.Living * SL.dt;
 
+            numAgentsUsingThermals = 0;
             for i=1:SL.numAgents
-                if obj.agents(i).isAlive
-                    currentHeight = obj.agents(i).position(3);
+                currentAgent = obj.agents(i);
+                if currentAgent.isAlive
+                    % Check map exploration
+                    if step==1 || mod(step,SL.mapDivFrameSkip)==0
+                        xIndex = ceil((currentAgent.savedPosition(1)-SL.mapSize(1))/obj.mapDivSize);
+                        yIndex = ceil((currentAgent.savedPosition(2)-SL.mapSize(1))/obj.mapDivSize);
+                        if(xIndex > 0 && xIndex <= SL.mapDivResolution && yIndex > 0 && yIndex <= SL.mapDivResolution)
+                            obj.mapDivisions(xIndex,yIndex) = true;
+                        end
+                    end
+                    
+                    currentHeight = currentAgent.savedPosition(3);
                     if(currentHeight > obj.maxHeight)
                         obj.maxHeight = currentHeight;
                     end
@@ -335,8 +364,12 @@ classdef Swarm < handle
                         obj.minHeight = currentHeight;
                     end
                     obj.avgHeight = obj.avgHeight + currentHeight;
-                    obj.avgSpeed = obj.avgSpeed + obj.agents(i).savedVelocity(1);
-                    obj.heightScore = obj.heightScore + currentHeight;
+                    obj.avgSpeed = obj.avgSpeed + currentAgent.savedVelocity(1);
+                    obj.heightScore = obj.heightScore + currentHeight * SL.dt;
+                    
+                    if(currentAgent.savedVelocity(3) > 0)
+                        numAgentsUsingThermals = numAgentsUsingThermals + 1;
+                    end
                 end
             end
             % THIS
@@ -345,6 +378,9 @@ classdef Swarm < handle
             % OR THIS
             obj.avgHeight = obj.avgHeight / obj.Living;
             obj.avgSpeed = obj.avgSpeed / obj.Living;
+            
+            obj.thermalUseScore = obj.thermalUseScore + numAgentsUsingThermals * SL.dt;
+            obj.explorationPercent = 100 * sum(obj.mapDivisions(:))/SL.mapDivResolution^2;
         end
         
         % Render EVERYTHING

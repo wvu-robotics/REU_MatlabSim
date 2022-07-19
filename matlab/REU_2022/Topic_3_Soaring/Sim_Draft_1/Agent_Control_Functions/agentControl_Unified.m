@@ -46,6 +46,7 @@ if (numLocalAgents > 0)
 
     if any(distXYZ < SL.collisionKillDistance)
         currentAgent.markedForDeath = true;
+        currentAgent.killCause = "Collision";
         return;
     end
     
@@ -161,7 +162,7 @@ if newPos(3) > SL.agentCeiling
 elseif newPos(3) < SL.agentFloor % not Giga-Jank
     if newPos(3) <= 0
         currentAgent.markedForDeath = true;
-        %thisAgent.causeOfDeath = 'Ground';
+        currentAgent.killCause = "Ground";
         return;
     end
     newPos (3) = SL.agentFloor; % Tera-Jank

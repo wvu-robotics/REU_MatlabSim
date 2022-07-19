@@ -11,6 +11,7 @@ classdef Agent < handle
 
         isAlive  = true
         markedForDeath = false
+        killCause = ""
         accelDir = 0.0;
         rulesDir = [0.0, 0.0, 0.0, 0.0, 0.0] % S, C, A, M
         rulesMag = [0.0, 0.0, 0.0, 0.0, 0.0] % S, C, A, M
