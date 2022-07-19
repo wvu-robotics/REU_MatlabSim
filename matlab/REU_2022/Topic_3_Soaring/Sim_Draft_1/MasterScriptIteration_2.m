@@ -7,14 +7,14 @@ clc;
 simBatchCode = datestr(now,"yyyymmddHHMMSS");
 
 %% Add search paths for sim laws and agent functions
-addpath("Code of Laws");
-addpath("Agent Control Functions");
-addpath("Find Neighborhood Functions");
+addpath("Code_of_Laws");
+addpath("Agent_Control_Functions");
+addpath("Find_Neighborhood_Functions");
 addpath("Misc");
 
 %% setup output folders
 %Output Media folder
-rootFolder = "Output Media";
+rootFolder = "Output_Media";
 if(~exist(rootFolder,'dir'))
     mkdir(rootFolder);
 end
@@ -39,7 +39,7 @@ if(~exist(matFilesFolder,'dir'))
 end
 
 %% Set up input Excel sheet
-simLawExcel = "AdamsLawIteration.xlsx";
+simLawExcel = "UnifiedLawIteration_2.xlsx";
 sheetNum = 1;
 RAW = readcell(simLawExcel,'Sheet',sheetNum);
 % Convert missing to NaN
@@ -129,7 +129,6 @@ parfor sim = 1:numSims
     outputData = MainScriptFunction(SL, simNumber, videoName);
     bigOutputData(sim) = outputData;
     fprintf("Finished sim %d.\n",simNumber);
-    
     %% Save sim outputData to .mat file
     outputDataName = sprintf("%s/%d_OutputData.mat",matFilesFolder,simNumber);
     Utility.parSave(outputDataName,outputData);
@@ -139,7 +138,7 @@ fprintf("Finished simulations.\n");
 
 %% Save data to Excel sheet
 outputExcelName = sprintf('%s/SimData_%s.xlsx',simBatchFolder,simBatchCode);
-outputVariables = ["simNumber";"timeStart";"timeEnd";"surviving";"flightTime";"finalHeightMax";"finalHeightMin";"finalHeightAvg"];
+outputVariables = ["simNumber";"rngSeed";"timeStart";"timeEnd";"surviving";"collisionDeaths";"groundDeaths";"flightTime";"heightScore";"explorationPercent";"thermalUseScore";"finalHeightMax";"finalHeightMin";"finalHeightAvg"];
 Utility.generateOutputExcelSheet(outputExcelName,matFilesFolder,RAW,changedVariables,outputVariables);
 fprintf("Done!\n");
 
