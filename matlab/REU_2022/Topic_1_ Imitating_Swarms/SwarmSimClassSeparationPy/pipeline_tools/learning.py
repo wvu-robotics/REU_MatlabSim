@@ -51,7 +51,7 @@ def fitnessLinearReg(posVelSlices: list[posVelSlice], params: SimParams, learnin
         # hrm maybe should be constraining motion more
         # I might migrate to new interface for speed
         agentSlices = toFeatureSlices(
-            posVelSlices, learning_features, localParams, verbose=False)
+            posVelSlices, learning_features, localParams, verbose=True)
 
         if len(agentSlices) == 0:
             return -np.inf
