@@ -6,7 +6,7 @@ function outputData = MainScriptFunction(SL, simNumber, videoName)
     
     %% Set RNG Seed
     if(~isfield(SL,"rngSeed") || isnan(SL.rngSeed))
-        SL.rngSeed = round(now*10^6);
+        SL.rngSeed = round(mod(now*10^6,10^9));
     end
     rng(SL.rngSeed);
 
@@ -85,6 +85,7 @@ function outputData = MainScriptFunction(SL, simNumber, videoName)
     outputData.timeEnd = datestr(now,"HH:MM:SS");
     outputData.surviving = swarm.Living;
     outputData.flightTime = swarm.flightTime;
+    outputData.heightScore = swarm.heightScore;
     outputData.finalHeightMax = outputData.heightData(1,steps);
     outputData.finalHeightMin = outputData.heightData(2,steps);
     outputData.finalHeightAvg = outputData.heightData(3,steps);

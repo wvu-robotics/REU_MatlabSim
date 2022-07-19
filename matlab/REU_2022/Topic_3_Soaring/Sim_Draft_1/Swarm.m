@@ -24,6 +24,7 @@ classdef Swarm < handle
         number  = 0                 % 
         Elapsed = [0.0 0.0 0.0]     % hours, minutes, seconds
         flightTime = 0.0            % Agent-Seconds
+        heightScore = 0.0           % m-seconds
         Living = 0                  %
         avgHeight = 0           % m
         minHeight = 0               % m
@@ -335,14 +336,15 @@ classdef Swarm < handle
                     end
                     obj.avgHeight = obj.avgHeight + currentHeight;
                     obj.avgSpeed = obj.avgSpeed + obj.agents(i).savedVelocity(1);
+                    obj.heightScore = obj.heightScore + currentHeight;
                 end
             end
             % THIS
             % obj.avgHeight = obj.avgHeight / SL.numAgents;
             % obj.avgSpeed = obj.avgSpeed / SL.numAgents;
             % OR THIS
-            obj.avgHeight = obj.avgHeight / nnz([obj.agents.isAlive]);
-            obj.avgSpeed = obj.avgSpeed / nnz([obj.agents.isAlive]);
+            obj.avgHeight = obj.avgHeight / obj.Living;
+            obj.avgSpeed = obj.avgSpeed / obj.Living;
         end
         
         % Render EVERYTHING
