@@ -147,7 +147,7 @@ class RectangularBoundSeparationShapely(Feature):
 
         return impulse
 
-class RectangularBoundSeparationSteer(Feature):
+class RectangularBoundSteer(Feature):
     def __init__(self, xEnclosureSize, yEnclosureSize, neighbor_radius):
         self.xEnclosureSize = xEnclosureSize
         self.yEnclosureSize = yEnclosureSize
@@ -168,9 +168,9 @@ class RectangularBoundSeparationSteer(Feature):
             dot = np.dot(rel_pos,v)
             if dot > 0:
                 if cross > 0:
-                    impulse = np.array([-polypoint.y + rel_pos[1], polypoint.x - rel_pos[0]])*abs(dot)
+                    impulse = np.array([-polypoint.y + rel_pos[1], polypoint.x - rel_pos[0]])
                 if cross <= 0:
-                    impulse = -1*np.array([-polypoint.y + rel_pos[1], polypoint.x - rel_pos[0]])*abs(dot)
+                    impulse = -1*np.array([-polypoint.y + rel_pos[1], polypoint.x - rel_pos[0]])
         return impulse
 
     
