@@ -11,6 +11,7 @@ import plotly.express as px
 import pandas as pd
 from features.features import *
 from models.featureCombo import FeatureCombo as fc
+from models.featureComboEnv import FeatureComboEnv as fce
 from scipy import optimize
 
 from sklearn.linear_model import (
@@ -30,16 +31,16 @@ from sklearn.pipeline import Pipeline
 
 
 params = sim.SimParams(
-    num_agents=50,
+    num_agents=100,
     dt=0.05,
     overall_time = 15,
-    enclosure_size = 15,
+    enclosure_size = 3,
     init_pos_max = None, #if None, then defaults to enclosure_size
-    agent_max_vel=7,
+    agent_max_vel = 2,
     init_vel_max = None,
     agent_max_accel=np.inf,
     agent_max_turn_rate=np.inf,
-    neighbor_radius=3,
+    neighbor_radius=1,
     periodic_boundary=False
     )
 
@@ -51,15 +52,24 @@ if __name__ == '__main__':
         Alignment(), 
         SeparationInv2(),
         SeparationInv6(),
-        SteerToAvoid(params.neighbor_radius/4,params.neighbor_radius),
-        Rotation()
+        #SeparationExp(),
+        #SteerToAvoid(params.neighbor_radius/4,params.neighbor_radius),
+        Rotation(),
+        RectangularBoundSeparationSteer(params.enclosure_size, params.enclosure_size, params.neighbor_radius)
+    ]
+
+    environmental_features = [
+        RectangularBoundSeparationSteer(params.enclosure_size, params.enclosure_size, params.neighbor_radius)
     ]
     
     addGaussianNoise = False
    
-    true_gains = np.array([1,1,1,1,1,1])
+    true_gains = np.array([1,0.4,0.02,0,0,1])
+
+    environmental_gains = np.array([1])
 
     orig = fc(true_gains,orig_features)
+    #orig = fce(true_gains,orig_features, environmental_gains, environmental_features)
     controllers = [copy.deepcopy(orig) for i in range(params.num_agents)]
 
     #initial simulation
@@ -74,11 +84,11 @@ if __name__ == '__main__':
     #shortsim params
     shortSimParams = copy.deepcopy(params)
     print("Running short sims")
-    shortSimParams.num_agents = 10
+    shortSimParams.num_agents = 50
     shortSimParams.enclosure_size = 10 #strong effect on learning separation
-    shortSimParams.overall_time = 4
+    shortSimParams.overall_time = 45
     shortSimParams.init_pos_max = shortSimParams.enclosure_size
-    shortSimParams.agent_max_vel = 7
+    #shortSimParams.agent_max_vel = 10
 
     learning_features = {
         
@@ -86,12 +96,13 @@ if __name__ == '__main__':
         "align": Alignment(),
         "sep": SeparationInv2(),
         "sep6": SeparationInv6(),
-        "steer": SteerToAvoid(params.neighbor_radius/4,params.neighbor_radius),
-        "rot": Rotation()
+        #"steer": SteerToAvoid(params.neighbor_radius/4,params.neighbor_radius),
+        "rot": Rotation(),
+        "bound": RectangularBoundSeparationSteer(params.enclosure_size, params.enclosure_size, params.neighbor_radius)
     }
 
 
-    featureSlices = automation.runSimsForFeatures(controllers,learning_features,num_sims=500,params=shortSimParams)
+    featureSlices = automation.runSimsForFeatures(controllers,learning_features,num_sims=1,params=shortSimParams)
     # """print(featureSlices[0])
     # print(featureSlices[0].features["coh"])
     # print(np.array(list(featureSlices[0].features.values())))"""
@@ -99,7 +110,7 @@ if __name__ == '__main__':
     # doing noise feature wise, so it affects both
     if addGaussianNoise == True:
         for slice in featureSlices:
-            noise_percent = 1
+            noise_percent = 0.1
             noise = noise_percent*params.agent_max_vel*np.random.normal(0,1,size=(2))
             slice.output_vel += noise # adding noise here, propogates in a weird way
 
@@ -115,6 +126,9 @@ if __name__ == '__main__':
         x_flat.append(np.array(list(slice.features.values()))[:,1])
         y_flat.append(slice.output_vel[1] - slice.last_vel[1])
 
+    print(slice.features.values())
+
+    """
     true_loss = 0
     for i in range(len(x_flat)):
         v_pred = np.dot(x_flat[i].transpose(),true_gains)
@@ -122,6 +136,7 @@ if __name__ == '__main__':
         v_actual = y_flat[i]
         true_loss += np.sum(np.abs(v_pred-v_actual))
     print("True loss on avg, Flat, no saturation",true_loss/len(x_flat))
+    
 
     #  doing true loss with constraints means I need to include last_vels
     # this loss is higher, which makes sense
@@ -135,7 +150,7 @@ if __name__ == '__main__':
         v_actual = slice.output_vel
         true_loss += np.sum(np.abs(v_pred-v_actual))
     print("True loss on avg, 2D,saturated: ",true_loss/len(x))
-
+    """
 
     print("First pass linear regression: ")
     reg = lr().fit(x_flat,y_flat) 
@@ -145,7 +160,27 @@ if __name__ == '__main__':
     # #create some visuals with the imitated swarm
     #     #maybe do an imposter(sus) pretending to be within the original swarm
     linear_gains = reg.coef_.tolist()
-    print("Linear gains",linear_gains)
+    print("Linear gains: ",linear_gains)
+
+    
+    if len(linear_gains) == len(true_gains):
+        Labs_distance = 0
+        for parameter in range(len(linear_gains)):
+            Labs_distance += (linear_gains[parameter]-true_gains[parameter])**2
+        Labs_distance = Labs_distance**(1/2)
+        print("Absolute distance in feature space (L): " + str(Labs_distance))
+
+
+    print("Running Linear Regression visual: ")
+    controllers_imitated = [fc(linear_gains, (list(learning_features.values()))) for i in
+                            range(params.num_agents)]
+    for controller in controllers_imitated:
+        controller.setColor('RebeccaPurple')
+    agentPositions_imitated, agentVels_imitated = sim.runSim(controllers_imitated, params, progress_bar=True, initial_positions=agentPositions[0], initial_velocities=agentVels[0])
+    export.export(export.ExportType.GIF, "linearNonlinearOutput/LinearImitated", agentPositions_imitated, agentVels_imitated,
+                  controllers=controllers_imitated, params=params, progress_bar=True)
+
+
 
 
 
@@ -160,7 +195,7 @@ if __name__ == '__main__':
                     continue
                 x = np.array(list(slice.features.values()))
                 vel_pred = np.dot(x.transpose(),linear_gains) + slice.last_vel
-                vel_pred = sim.motionConstraints(vel_pred, slice.last_vel, params)
+                vel_pred = sim.motionConstraints(vel_pred, slice.last_vel, shortSimParams)
                 v_actual = slice.output_vel
                 err = (vel_pred - v_actual)
                 loss += np.linalg.norm(err)  # could change to MSE, but I like accounting for direction better
@@ -203,6 +238,14 @@ if __name__ == '__main__':
 
     print("Solution gains after NL step",sol_gains)
 
+    
+    if len(sol_gains) == len(true_gains):
+        NLabs_distance = 0
+        for parameter in range(len(sol_gains)):
+            NLabs_distance += (sol_gains[parameter]-true_gains[parameter])**2
+        NLabs_distance = NLabs_distance**(1/2)
+        print("Absolute distance in feature space (NL): " + str(NLabs_distance))
+
 
     # print("Parameters of the best solution : {params}".format(params=solution.x))
     #else:
@@ -213,13 +256,13 @@ if __name__ == '__main__':
         #solution = optimize.minimize(fitness_function,(linear_gains), method='SLSQP')
         #print("Parameters of the best solution : {params}".format(params=solution.x))
 
-    print("Running imitated visual: ")
-    controllers_imitated = [fc(linear_gains, (list(learning_features.values()))) for i in
+    print("Running Nonlinear Optimization visual: ")
+    controllers_imitated = [fc(sol_gains, (list(learning_features.values()))) for i in
                             range(params.num_agents)]
     for controller in controllers_imitated:
         controller.setColor('red')
     agentPositions_imitated, agentVels_imitated = sim.runSim(controllers_imitated, params, progress_bar=True, initial_positions=agentPositions[0], initial_velocities=agentVels[0])
-    export.export(export.ExportType.GIF, "linearNonlinearOutput/Imitated", agentPositions_imitated, agentVels_imitated,
+    export.export(export.ExportType.GIF, "linearNonlinearOutput/NonLinearImitated", agentPositions_imitated, agentVels_imitated,
                   controllers=controllers_imitated, params=params, progress_bar=True)
     
     # now create some hybrid visualizations
