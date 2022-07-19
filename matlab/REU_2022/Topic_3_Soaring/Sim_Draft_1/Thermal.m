@@ -15,8 +15,8 @@ classdef Thermal < handle
             % Randomize the thermal's properties
             thermal.radius = round(Utility.randIR(simLaw.thermalRadiusMin,simLaw.thermalRadiusMax));
 
-            thermal.position(1) = round(Utility.randIR(simLaw.mapSize(1) + thermal.radius + 1, simLaw.mapSize(2) - thermal.radius - 1));
-            thermal.position(2) = round(Utility.randIR(simLaw.mapSize(1) + thermal.radius + 1,simLaw.mapSize(2) - thermal.radius - 1));
+            thermal.position(1) = round(Utility.randIR(simLaw.thermalSpawnRange(1) + thermal.radius + 1, simLaw.thermalSpawnRange(2) - thermal.radius - 1));
+            thermal.position(2) = round(Utility.randIR(simLaw.thermalSpawnRange(1) + thermal.radius + 1, simLaw.thermalSpawnRange(2) - thermal.radius - 1));
 
             % Randomly decide if the velocity is negative or positive
             randFactor = randi([0 1],1,2);
