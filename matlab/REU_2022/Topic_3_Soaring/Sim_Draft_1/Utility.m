@@ -87,7 +87,7 @@ classdef Utility
         end
         
         %% Generate output excel sheet from .mat files
-        function generateOutputExcelSheet(outputExcelName,matFilesFolder,inputCellsToCopy,changedVariables,outputVariables)
+        function generateOutputExcelSheet(outputStructCode,outputExcelName,matFilesFolder,inputCellsToCopy,changedVariables,outputVariables)
             fprintf("Generating output Excel sheet... ");
             % Read mat files
             fileSearch = sprintf("%s/*.mat",matFilesFolder);
@@ -121,9 +121,13 @@ classdef Utility
                     for sim=1:numFiles
                         cellsChangedVariableValues{varIndex,sim} = bigOutputData(sim).SL.(changedVariables(varIndex));
                     end
+                    structChangedVariables.(cellsChangedVariableLabels{varIndex,1})=[cellsChangedVariableValues{varIndex,:}];
                 end
                 writecell(cellsChangedVariableLabels,outputExcelName,'Sheet',sheetNum,'Range',Utility.findSSPos(outputRow,varLabelColumn),'AutoFitWidth',0);
                 writecell(cellsChangedVariableValues,outputExcelName,'Sheet',sheetNum,'Range',Utility.findSSPos(outputRow,startingColumn),'AutoFitWidth',0);
+
+                structChangedVariablesName = sprintf(outputStructCode,"StructChangedVariables");
+                save(structChangedVariablesName,'-struct','structChangedVariables');
                 
                 outputRow = outputRow + numVar + 1;
             end
@@ -139,9 +143,13 @@ classdef Utility
                     for sim=1:numFiles
                         cellsOutputVariableValues{varIndex,sim} = bigOutputData(sim).(outputVariables(varIndex));
                     end
+                    structOutputVariables.(cellsOutputVariableLabels{varIndex,1})=[cellsOutputVariableValues{varIndex,:}];
                 end
                 writecell(cellsOutputVariableLabels,outputExcelName,'Sheet',sheetNum,'Range',Utility.findSSPos(outputRow,varLabelColumn),'AutoFitWidth',0);
                 writecell(cellsOutputVariableValues,outputExcelName,'Sheet',sheetNum,'Range',Utility.findSSPos(outputRow,startingColumn),'AutoFitWidth',0);
+                
+                structOutputVariablesName = sprintf(outputStructCode,"StructOutputVariables");
+                save(structOutputVariablesName,'-struct','structOutputVariables');
             end
             fprintf("Done!\n");
         end
