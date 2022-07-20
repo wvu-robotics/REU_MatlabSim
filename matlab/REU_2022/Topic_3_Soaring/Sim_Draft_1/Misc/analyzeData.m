@@ -61,10 +61,58 @@ for fileIndex = 1:length(excelFiles)
 end
 
 %{
+Small:
+
 scatter3(idata.cohesion,idata.separation,odata.surviving);
 set(gca,'XScale','log');
 set(gca,'YScale','log');
 xlabel('Cohesion');
 ylabel('Separation');
 zlabel('Surviving');
+
+
+Big:
+clf;
+tiledlayout(2,2);
+nexttile;
+scatter3(idata.cohesion,idata.separation,odata.surviving);
+set(gca,'XScale','log');
+set(gca,'YScale','log');
+xlabel('Cohesion');
+ylabel('Separation');
+zlabel('Surviving');
+nexttile;
+scatter3(idata.cohesion,idata.separation,odata.heightScore);
+set(gca,'XScale','log');
+set(gca,'YScale','log');
+xlabel('Cohesion');
+ylabel('Separation');
+zlabel('Height Score');
+nexttile;
+scatter3(idata.cohesion,idata.separation,odata.explorationPercent);
+set(gca,'XScale','log');
+set(gca,'YScale','log');
+xlabel('Cohesion');
+ylabel('Separation');
+zlabel('Exploration Percent');
+nexttile;
+scatter3(idata.cohesion,idata.separation,odata.thermalUseScore);
+set(gca,'XScale','log');
+set(gca,'YScale','log');
+xlabel('Cohesion');
+ylabel('Separation');
+zlabel('Thermal Use Score');
+
+
+Feature Selection:
+X = [idata.rngSeed',idata.cohesion',idata.cohesionAscensionIgnore',idata.separation',idata.alignment'];
+Y = odata.surviving;
+[idx,scores] = fscchi2(X,Y);
+if(isempty(find(isinf(scores))))
+    bar(idx,scores(idx))
+    xlabel('Predictor rank')
+    ylabel('Predictor importance score')
+else
+    fprintf("Inf values!\n");
+end
 %}

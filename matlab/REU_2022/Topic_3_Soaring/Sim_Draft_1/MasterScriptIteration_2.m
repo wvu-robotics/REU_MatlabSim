@@ -141,6 +141,7 @@ outputStructCode = sprintf('%s/%s_%s.mat',simBatchFolder,'%s',simBatchCode);
 outputExcelName = sprintf('%s/SimData_%s.xlsx',simBatchFolder,simBatchCode);
 outputVariables = ["simNumber";"rngSeed";"timeStart";"timeEnd";"surviving";"collisionDeaths";"groundDeaths";"flightTime";"heightScore";"explorationPercent";"thermalUseScore";"finalHeightMax";"finalHeightMin";"finalHeightAvg"];
 Utility.generateOutputExcelSheet(outputStructCode,outputExcelName,matFilesFolder,RAW,changedVariables,outputVariables);
+Utility.notifyACP();
 fprintf("Done!\n");
 
 %% microwave
