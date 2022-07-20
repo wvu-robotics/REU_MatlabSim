@@ -88,6 +88,14 @@ classdef Utility
         
         %% Generae output structs from .mat files
         function generateOutputStruct(outputStructCode, matFilesFolder,changedVariables,outputVariables)
+            %{
+            outputStructCode = "E:\WVU_REU\7-20-22\SimBatch_20220720110652\%s.mat";
+            matFilesFolder = "E:\WVU_REU\7-20-22\SimBatch_20220720110652\MatFiles";
+            changedVariables=["rngSeed","cohesion","heightFactorPower","cohesionAscensionIgnore","ascensionFactorPower","separation","alignment","cohesionAscensionMax"];
+            outputVariables = ["simNumber";"rngSeed";"timeStart";"timeEnd";"surviving";"collisionDeaths";"groundDeaths";"flightTime";"heightScore";"explorationPercent";"thermalUseScore";"finalHeightMax";"finalHeightMin";"finalHeightAvg"];
+            %}
+            
+            
             fprintf("Generating output struct... ");
             % Read mat files
             fileSearch = sprintf("%s/*.mat",matFilesFolder);
@@ -95,8 +103,12 @@ classdef Utility
             numFiles = size(dirData,1);
             fileNames = {dirData.name};
             for i=numFiles:-1:1
-                fileName = sprintf('%s/%s',matFilesFolder,fileNames{i});
-                bigOutputData(i) = load(fileName);
+                try
+                    fileName = sprintf('%s/%s',matFilesFolder,fileNames{i});
+                    bigOutputData(i) = load(fileName);
+                catch
+                    fprintf("Load failed.\n");
+                end
             end
             
             % Write changedVariables to .mat file
