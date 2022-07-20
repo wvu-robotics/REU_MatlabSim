@@ -12,7 +12,7 @@ startingColumn = 3;
 
 inputData = cell(0,0);
 outputData = cell(0,0);
-for fileIndex = 1:1%length(excelFiles)
+for fileIndex = 1:length(excelFiles)
     excelFileName = fileFolder + excelFiles(fileIndex);
     RAW = readcell(excelFileName,'Sheet',sheetNum);
     outputRow = -1;
@@ -46,11 +46,25 @@ for fileIndex = 1:1%length(excelFiles)
         end
     end
     
-    for i=1:numChangedVariables
-        inputData.(RAW{rowChangedVar+i-1,startingColumn-1}) = [tempInputData{:,i}];
-    end
+    inputData = [inputData;tempInputData];
+    outputData = [outputData;tempOutputData];
     
-    for i=1:numOutputVariables
-        outputData.(RAW{rowOutputVar+i-1,startingColumn-1}) = [tempOutputData{:,i}];
+    if(fileIndex == length(excelFiles))
+        for i=1:numChangedVariables
+            idata.(RAW{rowChangedVar+i-1,startingColumn-1}) = [inputData{:,i}];
+        end
+
+        for i=1:numOutputVariables
+            odata.(RAW{rowOutputVar+i-1,startingColumn-1}) = [outputData{:,i}];
+        end
     end
 end
+
+%{
+scatter3(idata.cohesion,idata.separation,odata.surviving);
+set(gca,'XScale','log');
+set(gca,'YScale','log');
+xlabel('Cohesion');
+ylabel('Separation');
+zlabel('Surviving');
+%}
