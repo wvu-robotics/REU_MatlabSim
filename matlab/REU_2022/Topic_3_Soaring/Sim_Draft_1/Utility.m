@@ -86,8 +86,65 @@ classdef Utility
             end
         end
         
+        %% Generae output structs from .mat files
+        function generateOutputStruct(outputStructCode, matFilesFolder,changedVariables,outputVariables)
+            %{
+            outputStructCode = "E:\WVU_REU\7-20-22\SimBatch_20220720110652\%s.mat";
+            matFilesFolder = "E:\WVU_REU\7-20-22\SimBatch_20220720110652\MatFiles";
+            changedVariables=["rngSeed","cohesion","heightFactorPower","cohesionAscensionIgnore","ascensionFactorPower","separation","alignment","cohesionAscensionMax"];
+            outputVariables = ["simNumber";"rngSeed";"timeStart";"timeEnd";"surviving";"collisionDeaths";"groundDeaths";"flightTime";"heightScore";"explorationPercent";"thermalUseScore";"finalHeightMax";"finalHeightMin";"finalHeightAvg"];
+            %}
+            
+            
+            fprintf("Generating output struct... ");
+            % Read mat files
+            fileSearch = sprintf("%s/*.mat",matFilesFolder);
+            dirData = dir(fileSearch);
+            numFiles = size(dirData,1);
+            fileNames = {dirData.name};
+            for i=numFiles:-1:1
+                try
+                    fileName = sprintf('%s/%s',matFilesFolder,fileNames{i});
+                    bigOutputData(i) = load(fileName);
+                catch
+                    fprintf("Load failed.\n");
+                end
+            end
+            
+            % Write changedVariables to .mat file
+            if(~isempty(changedVariables))
+                numVar = length(changedVariables);
+                for varIndex = 1:numVar
+                    varLabel = changedVariables(varIndex);
+                    cellsChangedVariableValues = cell(1,numFiles);
+                    for sim=1:numFiles
+                        cellsChangedVariableValues{1,sim} = bigOutputData(sim).SL.(changedVariables(varIndex));
+                    end
+                    structChangedVariables.(varLabel) = [cellsChangedVariableValues{1,:}];
+                end
+                structChangedVariablesName = sprintf(outputStructCode,"StructChangedVariables");
+                save(structChangedVariablesName,'-struct','structChangedVariables');
+            end
+            
+            % Write outputVariables to Excel sheet
+            if(~isempty(outputVariables))
+                numVar = length(outputVariables);
+                for varIndex = 1:numVar
+                    varLabel = outputVariables(varIndex);
+                    cellsOutputVariableValues = cell(1,numFiles);
+                    for sim=1:numFiles
+                        cellsOutputVariableValues{1,sim} = bigOutputData(sim).(outputVariables(varIndex));
+                    end
+                    structOutputVariables.(varLabel)=[cellsOutputVariableValues{1,:}];
+                end
+                structOutputVariablesName = sprintf(outputStructCode,"StructOutputVariables");
+                save(structOutputVariablesName,'-struct','structOutputVariables');
+            end
+            fprintf("Done!\n");
+        end
+        
         %% Generate output excel sheet from .mat files
-        function generateOutputExcelSheet(outputStructCode,outputExcelName,matFilesFolder,inputCellsToCopy,changedVariables,outputVariables)
+        function generateOutputExcelSheet(outputExcelName,matFilesFolder,inputCellsToCopy,changedVariables,outputVariables)
             fprintf("Generating output Excel sheet... ");
             % Read mat files
             fileSearch = sprintf("%s/*.mat",matFilesFolder);
@@ -121,14 +178,10 @@ classdef Utility
                     for sim=1:numFiles
                         cellsChangedVariableValues{varIndex,sim} = bigOutputData(sim).SL.(changedVariables(varIndex));
                     end
-                    structChangedVariables.(cellsChangedVariableLabels{varIndex,1})=[cellsChangedVariableValues{varIndex,:}];
                 end
                 writecell(cellsChangedVariableLabels,outputExcelName,'Sheet',sheetNum,'Range',Utility.findSSPos(outputRow,varLabelColumn),'AutoFitWidth',0);
                 writecell(cellsChangedVariableValues,outputExcelName,'Sheet',sheetNum,'Range',Utility.findSSPos(outputRow,startingColumn),'AutoFitWidth',0);
 
-                structChangedVariablesName = sprintf(outputStructCode,"StructChangedVariables");
-                save(structChangedVariablesName,'-struct','structChangedVariables');
-                
                 outputRow = outputRow + numVar + 1;
             end
             
@@ -143,13 +196,9 @@ classdef Utility
                     for sim=1:numFiles
                         cellsOutputVariableValues{varIndex,sim} = bigOutputData(sim).(outputVariables(varIndex));
                     end
-                    structOutputVariables.(cellsOutputVariableLabels{varIndex,1})=[cellsOutputVariableValues{varIndex,:}];
                 end
                 writecell(cellsOutputVariableLabels,outputExcelName,'Sheet',sheetNum,'Range',Utility.findSSPos(outputRow,varLabelColumn),'AutoFitWidth',0);
                 writecell(cellsOutputVariableValues,outputExcelName,'Sheet',sheetNum,'Range',Utility.findSSPos(outputRow,startingColumn),'AutoFitWidth',0);
-                
-                structOutputVariablesName = sprintf(outputStructCode,"StructOutputVariables");
-                save(structOutputVariablesName,'-struct','structOutputVariables');
             end
             fprintf("Done!\n");
         end

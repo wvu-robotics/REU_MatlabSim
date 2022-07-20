@@ -26,16 +26,18 @@ function outputData = MainScriptFunction(SL, simNumber, videoName)
 
     %% Run simulation...
     steps  = SL.totalTime/SL.dt;
-    outputData.heightData = zeros(3,steps);
-    outputData.xData = zeros(SL.numAgents,steps);
-    outputData.yData = zeros(SL.numAgents,steps);
-    outputData.zData = zeros(SL.numAgents,steps);
-    outputData.headingData = zeros(SL.numAgents,steps);
-    outputData.bankAngleData = zeros(SL.numAgents,steps);
-    outputData.fVelData = zeros(SL.numAgents,steps);
-    outputData.tVelData = zeros(SL.numAgents,steps);
-    outputData.zVelData = zeros(SL.numAgents,steps);
     outputData.timeStart = datestr(now,"HH:MM:SS");
+    if(SL.verboseOutput)
+        outputData.heightData = zeros(3,steps);
+        outputData.xData = zeros(SL.numAgents,steps);
+        outputData.yData = zeros(SL.numAgents,steps);
+        outputData.zData = zeros(SL.numAgents,steps);
+        outputData.headingData = zeros(SL.numAgents,steps);
+        outputData.bankAngleData = zeros(SL.numAgents,steps);
+        outputData.fVelData = zeros(SL.numAgents,steps);
+        outputData.tVelData = zeros(SL.numAgents,steps);
+        outputData.zVelData = zeros(SL.numAgents,steps);
+    end
 
     for step = 1:steps
         if ~SL.stopWhenDead || step == 1 || swarm.Living > 0
@@ -46,10 +48,10 @@ function outputData = MainScriptFunction(SL, simNumber, videoName)
 
             %% Read Data
             swarm.updateData(step);
-            outputData.heightData(1,step) = swarm.maxHeight;
-            outputData.heightData(2,step) = swarm.minHeight;
-            outputData.heightData(3,step) = swarm.avgHeight;
             if SL.verboseOutput
+                outputData.heightData(1,step) = swarm.maxHeight;
+                outputData.heightData(2,step) = swarm.minHeight;
+                outputData.heightData(3,step) = swarm.avgHeight;
                 for Agent = 1:SL.numAgents
                     outputData.xData(Agent,step) = swarm.agents(Agent).position(1);
                     outputData.yData(Agent,step) = swarm.agents(Agent).position(2);
@@ -92,7 +94,7 @@ function outputData = MainScriptFunction(SL, simNumber, videoName)
     outputData.heightScore = swarm.heightScore;
     outputData.explorationPercent = swarm.explorationPercent;
     outputData.thermalUseScore = swarm.thermalUseScore;
-    outputData.finalHeightMax = outputData.heightData(1,steps);
-    outputData.finalHeightMin = outputData.heightData(2,steps);
-    outputData.finalHeightAvg = outputData.heightData(3,steps);
+    outputData.finalHeightMax = swarm.maxHeight;
+    outputData.finalHeightMin = swarm.minHeight;
+    outputData.finalHeightAvg = swarm.avgHeight;
 end
