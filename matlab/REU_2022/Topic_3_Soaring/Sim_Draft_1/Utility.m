@@ -209,7 +209,102 @@ classdef Utility
             appToken = "a5q8yhpz3t9c7pzzmrmzczpejcyozy";
             ACPToken = "uti2e2jd1jhtujgbtnaaop95rubtmq";
             message = "Simulation Complete.";
-            webwrite(url,'token',appToken,'user',ACPToken,'message',message); 
+            success = false;
+            for i=1:10
+                if(success)
+                    break
+                else
+                    try
+                        webwrite(url,'token',appToken,'user',ACPToken,'message',message); 
+                        success = true;
+                    catch
+                        success = false;
+                    end
+                end
+            end
+        end
+        
+        %% Clean .mat files of certain parameters
+        function cleanMatFiles(matFilesFolder,badParameters)
+            fileSearch = sprintf("%s/*.mat",matFilesFolder);
+            dirData = dir(fileSearch);
+            numFiles = size(dirData,1);
+            fileNames = {dirData.name};
+            for i=numFiles:-1:1
+                if(mod(i,100)==0)
+                    fprintf("i: %d\n",i);
+                end
+                fileName = sprintf('%s/%s',matFilesFolder,fileNames{i});
+                fileIn = load(fileName);
+                fields = fieldnames(fileIn);
+                for fieldIndex = 1:length(fields)
+                    field = fields{fieldIndex};
+                    if(isempty(find(badParameters == field,1)))
+                        try
+                            fileOut.(field) = fileIn.(field);
+                        catch
+                            fprintf("wtf");
+                        end
+                    end
+                end
+                save(fileName,'-struct','fileOut');
+                %fprintf("Saved %s.\n",fileName);
+                %break
+            end
+        end
+        
+        %% Combine .mat files with certain parameters
+        function combineMatFiles(matFilesFolder,SLparameters)
+            %{
+            SLparameters = ["cohesion","heightFactorPower","cohesionAscensionIgnore","cohesionAscensionMax","ascensionFactorPower","separation","alignment"];
+            %}
+            fileSearch = sprintf("%s/*.mat",matFilesFolder);
+            dirData = dir(fileSearch);
+            numFiles = size(dirData,1);
+            fileNames = {dirData.name};
+            firstFileName = sprintf('%s/%s',matFilesFolder,fileNames{1});
+            firstFileIn = load(firstFileName);
+            fields = fieldnames(firstFileIn);
+            fields(find(contains(fields,'SL'))) = [];
+
+            for i=1:length(SLparameters)
+                combinedData.(SLparameters(i)) = [];
+            end
+            for i=1:length(fields)
+                combinedData.(fields{i}) = [];
+            end
+            
+            for fileIndex=numFiles:-1:1
+                if(mod(fileIndex,100)==0)
+                    fprintf("fileIndex: %d\n",fileIndex);
+                end
+                fileName = sprintf('%s/%s',matFilesFolder,fileNames{fileIndex});
+                fileIn = load(fileName);
+                for i=1:length(SLparameters)
+                    combinedData.(SLparameters(i)) = [combinedData.(SLparameters(i)),fileIn.SL.(SLparameters(i))];
+                end
+                for i=1:length(fields)
+                    combinedData.(fields{i}) = [combinedData.(fields{i}),fileIn.(fields{i})];
+                end
+            end
+            fileName = sprintf('%s/../%s',matFilesFolder,"CombinedData.mat");
+            save(fileName,'-struct','combinedData');
+        end
+        
+        function [indepValues,averages] = avgValues(data,indepName,depName)
+            indep = data.(indepName);
+            dep = data.(depName);
+            indepValues = unique(indep);
+            indepMap = containers.Map(indepValues,1:length(indepValues));
+            sums = cell(1,length(indepValues));
+            for i=1:length(indep)
+                sumsIndex = indepMap(indep(i));
+                sums{sumsIndex} = [sums{sumsIndex},dep(i)];
+            end
+            averages = zeros(1,length(indepValues));
+            for i=1:length(indepValues)
+                averages(i) = sum(sums{i})/length(sums{i});
+            end
         end
     end
 end

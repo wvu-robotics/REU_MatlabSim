@@ -1,65 +1,123 @@
 %% Prepare workspace
-close all
+%close all
 clear
 clc
-addpath("../Output_Media/BigBatch");
 
-%% Load in data
-fileFolder = "../Output_Media/BigBatch/7-19-22/";
-excelFiles = ["SimData_20220719130449.xlsx","SimData_20220719130452.xlsx"];
-sheetNum = 1;
-startingColumn = 3;
+%% Load data
+fileName = "E:\WVU_REU\7-20-22\CombinedData_7_1920_22.mat";
+data = load(fileName);
 
-inputData = cell(0,0);
-outputData = cell(0,0);
-for fileIndex = 1:length(excelFiles)
-    excelFileName = fileFolder + excelFiles(fileIndex);
-    RAW = readcell(excelFileName,'Sheet',sheetNum);
-    outputRow = -1;
-    for i=1:size(RAW,1)
-        if(RAW{i,1} == "OUTPUT")
-            outputRow = i;
-        end
-    end
-    fprintf("OutputRow: %d\n",outputRow);
-    numChangedVariables = 0;
-    while(~ismissing(RAW{outputRow+1+numChangedVariables,2}))
-        numChangedVariables = numChangedVariables + 1;
-    end
-    fprintf("NumChangedVariables: %d\n",numChangedVariables);
-    numOutputVariables = size(RAW,1)-(outputRow+numChangedVariables+2)+1;
-    fprintf("NumOutputVariables: %d\n",numOutputVariables);
-    numSims = size(RAW,2)-startingColumn+1;
-    
-    rowChangedVar = outputRow + 1;
-    rowOutputVar = rowChangedVar + numChangedVariables + 1;
-    
-    tempInputData = cell(numSims,numChangedVariables);
-    tempOutputData = cell(numSims,numOutputVariables);
-    
-    for sim=1:numSims
-        for i=1:numChangedVariables
-            tempInputData{sim,i} = RAW{rowChangedVar+i-1,startingColumn+sim-1};
-        end
-        for i=1:numOutputVariables
-            tempOutputData{sim,i} = RAW{rowOutputVar+i-1,startingColumn+sim-1};
-        end
-    end
-    
-    inputData = [inputData;tempInputData];
-    outputData = [outputData;tempOutputData];
-    
-    if(fileIndex == length(excelFiles))
-        for i=1:numChangedVariables
-            idata.(RAW{rowChangedVar+i-1,startingColumn-1}) = [inputData{:,i}];
-        end
+%% Display data
+%labels = {'rngSeed','cohesion','heightFactorPower','cohesionAscensionIgnore','cohesionAscensionMax','ascensionFactorPower','Separation','Alignment'};
+varName = "ascensionFactorPower";
+varScale = "linear";
+plotComparison(data,"rngSeed","linear",varName,varScale,"surviving","heightScore","explorationPercent","thermalUseScore");
+plotComparison(data,"cohesion","log",varName,varScale,"surviving","heightScore","explorationPercent","thermalUseScore");
+plotComparison(data,"heightFactorPower","linear",varName,varScale,"surviving","heightScore","explorationPercent","thermalUseScore");
+plotComparison(data,"cohesionAscensionIgnore","linear",varName,varScale,"surviving","heightScore","explorationPercent","thermalUseScore");
+plotComparison(data,"cohesionAscensionMax","linear",varName,varScale,"surviving","heightScore","explorationPercent","thermalUseScore");
+plotComparison(data,"ascensionFactorPower","linear",varName,varScale,"surviving","heightScore","explorationPercent","thermalUseScore");
+plotComparison(data,"separation","log",varName,varScale,"surviving","heightScore","explorationPercent","thermalUseScore");
+plotComparison(data,"alignment","log",varName,varScale,"surviving","heightScore","explorationPercent","thermalUseScore");
 
-        for i=1:numOutputVariables
-            odata.(RAW{rowOutputVar+i-1,startingColumn-1}) = [outputData{:,i}];
-        end
-    end
+%% Good func
+function plotComparison(data,indep1,indep1Scale,indep2,indep2Scale,dep1,dep2,dep3,dep4)
+    figure('NumberTitle','off','Name',sprintf("%s VS %s",indep1,indep2));
+    tiledlayout(2,2);
+    alpha = 1;
+    
+    nextplot(data,indep1,indep1Scale,indep2,indep2Scale,dep1,alpha);
+    nextplot(data,indep1,indep1Scale,indep2,indep2Scale,dep2,alpha);
+    nextplot(data,indep1,indep1Scale,indep2,indep2Scale,dep3,alpha);
+    nextplot(data,indep1,indep1Scale,indep2,indep2Scale,dep4,alpha);
+    
+    %{
+    nexttile;
+    scatter3(data.(indep1),data.(indep2),data.(dep1),'Marker','.','MarkerEdgeAlpha',alpha,'MarkerFaceAlpha',alpha);
+    set(gca,'XScale',indep1Scale);
+    set(gca,'YScale',indep2Scale);
+    xlabel(indep1);
+    ylabel(indep2);
+    zlabel(dep1);
+    
+    nexttile;
+    scatter3(data.(indep1),data.(indep2),data.(dep2),'Marker','.','MarkerEdgeAlpha',alpha,'MarkerFaceAlpha',alpha);
+    set(gca,'XScale',indep1Scale);
+    set(gca,'YScale',indep2Scale);
+    xlabel(indep1);
+    ylabel(indep2);
+    zlabel(dep2);
+    
+    nexttile;
+    scatter3(data.(indep1),data.(indep2),data.(dep3),'Marker','.','MarkerEdgeAlpha',alpha,'MarkerFaceAlpha',alpha);
+    set(gca,'XScale',indep1Scale);
+    set(gca,'YScale',indep2Scale);
+    xlabel(indep1);
+    ylabel(indep2);
+    zlabel(dep3);
+    
+    nexttile;
+    scatter3(data.(indep1),data.(indep2),data.(dep4),'Marker','.','MarkerEdgeAlpha',alpha,'MarkerFaceAlpha',alpha);
+    set(gca,'XScale',indep1Scale);
+    set(gca,'YScale',indep2Scale);
+    xlabel(indep1);
+    ylabel(indep2);
+    zlabel(dep4);
+    %}
 end
 
+function nextplot(data,indep1Name,indep1Scale,indep2Name,indep2Scale,depName,alpha)
+    [UI1,UI2,avgDep] = avgData(data,indep1Name,indep2Name,depName);
+
+    nexttile;
+    %scatter3(UI1,UI2,avgDep,'Marker','o','MarkerEdgeAlpha',alpha,'MarkerFaceAlpha',alpha);
+    surf(UI1,UI2,avgDep);
+    set(gca,'XScale',indep1Scale);
+    set(gca,'YScale',indep2Scale);
+    xlabel(indep1Name);
+    ylabel(indep2Name);
+    zlabel(depName);
+end
+
+function [UI1,UI2,avgDep] = avgData(data,indep1Name,indep2Name,depName)
+    indep1 = data.(indep1Name);
+    indep2 = data.(indep2Name);
+    dep = data.(depName);
+    unique_indep1 = unique(indep1);
+    unique_indep2 = unique(indep2);
+    numUI1 = length(unique_indep1);
+    numUI2 = length(unique_indep2);
+    
+    sums = cell(numUI1,numUI2);
+    valueMapUI1 = containers.Map(unique_indep1,1:numUI1);
+    valueMapUI2 = containers.Map(unique_indep2,1:numUI2);
+    
+    for i=1:length(dep)
+        indexUI1 = valueMapUI1(indep1(i));
+        indexUI2 = valueMapUI2(indep2(i));
+        sums{indexUI1,indexUI2} = [sums{indexUI1,indexUI2},dep(i)];
+    end
+    
+    averages = cell(numUI1,numUI2);
+    for i=1:numUI1
+        for j=1:numUI2
+            averages{i,j} = sum(sums{i,j})/length(sums{i,j});
+        end
+    end
+    
+    avgMat = cell2mat(averages);
+    [UI2Mat,UI1Mat] = meshgrid(unique_indep2,unique_indep1);
+    
+    UI1 = UI1Mat;
+    UI2 = UI2Mat;
+    avgDep = avgMat;
+    
+    %UI1 = reshape(UI1Mat,[1,numUI1*numUI2]);
+    %UI2 = reshape(UI2Mat,[1,numUI1*numUI2]);
+    %avgDep = reshape(avgMat,[1,numUI1*numUI2]);
+end
+
+%% Comments
 %{
 Small:
 
@@ -102,17 +160,4 @@ set(gca,'YScale','log');
 xlabel('Cohesion');
 ylabel('Separation');
 zlabel('Thermal Use Score');
-
-
-Feature Selection:
-X = [idata.rngSeed',idata.cohesion',idata.cohesionAscensionIgnore',idata.separation',idata.alignment'];
-Y = odata.surviving;
-[idx,scores] = fscchi2(X,Y);
-if(isempty(find(isinf(scores))))
-    bar(idx,scores(idx))
-    xlabel('Predictor rank')
-    ylabel('Predictor importance score')
-else
-    fprintf("Inf values!\n");
-end
 %}
