@@ -4,21 +4,20 @@ clear
 clc
 
 %% Load data
-fileName = "E:\WVU_REU\7-20-22\CombinedData_7_1920_22.mat";
+fileName = "C:\Users\hombo\Documents\Github Repositories\REU_MatlabSim\matlab\REU_2022\Topic_3_Soaring\Sim_Draft_1\Output_Media\7-21-22\CombinedData_7_1920_22.mat";
 data = load(fileName);
 
 %% Display data
-%labels = {'rngSeed','cohesion','heightFactorPower','cohesionAscensionIgnore','cohesionAscensionMax','ascensionFactorPower','Separation','Alignment'};
-varName = "ascensionFactorPower";
-varScale = "linear";
-plotComparison(data,"rngSeed","linear",varName,varScale,"surviving","heightScore","explorationPercent","thermalUseScore");
-plotComparison(data,"cohesion","log",varName,varScale,"surviving","heightScore","explorationPercent","thermalUseScore");
-plotComparison(data,"heightFactorPower","linear",varName,varScale,"surviving","heightScore","explorationPercent","thermalUseScore");
-plotComparison(data,"cohesionAscensionIgnore","linear",varName,varScale,"surviving","heightScore","explorationPercent","thermalUseScore");
-plotComparison(data,"cohesionAscensionMax","linear",varName,varScale,"surviving","heightScore","explorationPercent","thermalUseScore");
-plotComparison(data,"ascensionFactorPower","linear",varName,varScale,"surviving","heightScore","explorationPercent","thermalUseScore");
-plotComparison(data,"separation","log",varName,varScale,"surviving","heightScore","explorationPercent","thermalUseScore");
-plotComparison(data,"alignment","log",varName,varScale,"surviving","heightScore","explorationPercent","thermalUseScore");
+varNames = ["rngSeed","cohesion","heightFactorPower","cohesionAscensionIgnore","cohesionAscensionMax","ascensionFactorPower","separation","alignment"];
+varScales = ["linear","log","linear","linear","linear","linear","log","log"];
+
+for i=1:(length(varNames)-1)
+    for j=i+1:length(varNames)
+        %Run comparison of vars i vs j
+        plotComparison(data,varNames(i),varScales(i),varNames(j),varScales(j),"surviving","heightScore","explorationPercent","thermalUseScore");
+    end
+end
+
 
 %% Good func
 function plotComparison(data,indep1,indep1Scale,indep2,indep2Scale,dep1,dep2,dep3,dep4)
