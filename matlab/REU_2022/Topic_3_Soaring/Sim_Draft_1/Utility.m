@@ -86,6 +86,63 @@ classdef Utility
             end
         end
         
+        %% Generae output structs from .mat files
+        function generateOutputStruct(outputStructCode, matFilesFolder,changedVariables,outputVariables)
+            %{
+            outputStructCode = "E:\WVU_REU\7-20-22\SimBatch_20220720110652\%s.mat";
+            matFilesFolder = "E:\WVU_REU\7-20-22\SimBatch_20220720110652\MatFiles";
+            changedVariables=["rngSeed","cohesion","heightFactorPower","cohesionAscensionIgnore","ascensionFactorPower","separation","alignment","cohesionAscensionMax"];
+            outputVariables = ["simNumber";"rngSeed";"timeStart";"timeEnd";"surviving";"collisionDeaths";"groundDeaths";"flightTime";"heightScore";"explorationPercent";"thermalUseScore";"finalHeightMax";"finalHeightMin";"finalHeightAvg"];
+            %}
+            
+            
+            fprintf("Generating output struct... ");
+            % Read mat files
+            fileSearch = sprintf("%s/*.mat",matFilesFolder);
+            dirData = dir(fileSearch);
+            numFiles = size(dirData,1);
+            fileNames = {dirData.name};
+            for i=numFiles:-1:1
+                try
+                    fileName = sprintf('%s/%s',matFilesFolder,fileNames{i});
+                    bigOutputData(i) = load(fileName);
+                catch
+                    fprintf("Load failed.\n");
+                end
+            end
+            
+            % Write changedVariables to .mat file
+            if(~isempty(changedVariables))
+                numVar = length(changedVariables);
+                for varIndex = 1:numVar
+                    varLabel = changedVariables(varIndex);
+                    cellsChangedVariableValues = cell(1,numFiles);
+                    for sim=1:numFiles
+                        cellsChangedVariableValues{1,sim} = bigOutputData(sim).SL.(changedVariables(varIndex));
+                    end
+                    structChangedVariables.(varLabel) = [cellsChangedVariableValues{1,:}];
+                end
+                structChangedVariablesName = sprintf(outputStructCode,"StructChangedVariables");
+                save(structChangedVariablesName,'-struct','structChangedVariables');
+            end
+            
+            % Write outputVariables to Excel sheet
+            if(~isempty(outputVariables))
+                numVar = length(outputVariables);
+                for varIndex = 1:numVar
+                    varLabel = outputVariables(varIndex);
+                    cellsOutputVariableValues = cell(1,numFiles);
+                    for sim=1:numFiles
+                        cellsOutputVariableValues{1,sim} = bigOutputData(sim).(outputVariables(varIndex));
+                    end
+                    structOutputVariables.(varLabel)=[cellsOutputVariableValues{1,:}];
+                end
+                structOutputVariablesName = sprintf(outputStructCode,"StructOutputVariables");
+                save(structOutputVariablesName,'-struct','structOutputVariables');
+            end
+            fprintf("Done!\n");
+        end
+        
         %% Generate output excel sheet from .mat files
         function generateOutputExcelSheet(outputExcelName,matFilesFolder,inputCellsToCopy,changedVariables,outputVariables)
             fprintf("Generating output Excel sheet... ");
@@ -124,7 +181,7 @@ classdef Utility
                 end
                 writecell(cellsChangedVariableLabels,outputExcelName,'Sheet',sheetNum,'Range',Utility.findSSPos(outputRow,varLabelColumn),'AutoFitWidth',0);
                 writecell(cellsChangedVariableValues,outputExcelName,'Sheet',sheetNum,'Range',Utility.findSSPos(outputRow,startingColumn),'AutoFitWidth',0);
-                
+
                 outputRow = outputRow + numVar + 1;
             end
             
@@ -144,6 +201,111 @@ classdef Utility
                 writecell(cellsOutputVariableValues,outputExcelName,'Sheet',sheetNum,'Range',Utility.findSSPos(outputRow,startingColumn),'AutoFitWidth',0);
             end
             fprintf("Done!\n");
+        end
+        
+        %% Send notification to ACP via pushover
+        function notifyACP()
+            url = "https://api.pushover.net/1/messages.json";
+            appToken = "a5q8yhpz3t9c7pzzmrmzczpejcyozy";
+            ACPToken = "uti2e2jd1jhtujgbtnaaop95rubtmq";
+            message = "Simulation Complete.";
+            success = false;
+            for i=1:10
+                if(success)
+                    break
+                else
+                    try
+                        webwrite(url,'token',appToken,'user',ACPToken,'message',message); 
+                        success = true;
+                    catch
+                        success = false;
+                    end
+                end
+            end
+        end
+        
+        %% Clean .mat files of certain parameters
+        function cleanMatFiles(matFilesFolder,badParameters)
+            fileSearch = sprintf("%s/*.mat",matFilesFolder);
+            dirData = dir(fileSearch);
+            numFiles = size(dirData,1);
+            fileNames = {dirData.name};
+            for i=numFiles:-1:1
+                if(mod(i,100)==0)
+                    fprintf("i: %d\n",i);
+                end
+                fileName = sprintf('%s/%s',matFilesFolder,fileNames{i});
+                fileIn = load(fileName);
+                fields = fieldnames(fileIn);
+                for fieldIndex = 1:length(fields)
+                    field = fields{fieldIndex};
+                    if(isempty(find(badParameters == field,1)))
+                        try
+                            fileOut.(field) = fileIn.(field);
+                        catch
+                            fprintf("wtf");
+                        end
+                    end
+                end
+                save(fileName,'-struct','fileOut');
+                %fprintf("Saved %s.\n",fileName);
+                %break
+            end
+        end
+        
+        %% Combine .mat files with certain parameters
+        function combineMatFiles(matFilesFolder,SLparameters)
+            %{
+            SLparameters = ["cohesion","heightFactorPower","cohesionAscensionIgnore","cohesionAscensionMax","ascensionFactorPower","separation","alignment"];
+            SLparameters = ["cohesion","cohesionAscensionIgnore","cohPower","separation","alignment","k"];
+            %}
+            fileSearch = sprintf("%s/*.mat",matFilesFolder);
+            dirData = dir(fileSearch);
+            numFiles = size(dirData,1);
+            fileNames = {dirData.name};
+            firstFileName = sprintf('%s/%s',matFilesFolder,fileNames{1});
+            firstFileIn = load(firstFileName);
+            fields = fieldnames(firstFileIn);
+            fields(find(contains(fields,'SL'))) = [];
+
+            for i=1:length(SLparameters)
+                combinedData.(SLparameters(i)) = [];
+            end
+            for i=1:length(fields)
+                combinedData.(fields{i}) = [];
+            end
+            
+            for fileIndex=numFiles:-1:1
+                if(mod(fileIndex,100)==0)
+                    fprintf("fileIndex: %d\n",fileIndex);
+                end
+                fileName = sprintf('%s/%s',matFilesFolder,fileNames{fileIndex});
+                fileIn = load(fileName);
+                for i=1:length(SLparameters)
+                    combinedData.(SLparameters(i)) = [combinedData.(SLparameters(i)),fileIn.SL.(SLparameters(i))];
+                end
+                for i=1:length(fields)
+                    combinedData.(fields{i}) = [combinedData.(fields{i}),fileIn.(fields{i})];
+                end
+            end
+            fileName = sprintf('%s/../%s',matFilesFolder,"CombinedData.mat");
+            save(fileName,'-struct','combinedData');
+        end
+        
+        function [indepValues,averages] = avgValues(data,indepName,depName)
+            indep = data.(indepName);
+            dep = data.(depName);
+            indepValues = unique(indep);
+            indepMap = containers.Map(indepValues,1:length(indepValues));
+            sums = cell(1,length(indepValues));
+            for i=1:length(indep)
+                sumsIndex = indepMap(indep(i));
+                sums{sumsIndex} = [sums{sumsIndex},dep(i)];
+            end
+            averages = zeros(1,length(indepValues));
+            for i=1:length(indepValues)
+                averages(i) = sum(sums{i})/length(sums{i});
+            end
         end
     end
 end

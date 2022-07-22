@@ -137,9 +137,12 @@ end
 fprintf("Finished simulations.\n");
 
 %% Save data to Excel sheet
+outputStructCode = sprintf('%s/%s_%s.mat',simBatchFolder,'%s',simBatchCode);
 outputExcelName = sprintf('%s/SimData_%s.xlsx',simBatchFolder,simBatchCode);
 outputVariables = ["simNumber";"rngSeed";"timeStart";"timeEnd";"surviving";"collisionDeaths";"groundDeaths";"flightTime";"heightScore";"explorationPercent";"thermalUseScore";"finalHeightMax";"finalHeightMin";"finalHeightAvg"];
-Utility.generateOutputExcelSheet(outputExcelName,matFilesFolder,RAW,changedVariables,outputVariables);
+Utility.notifyACP();
+Utility.generateOutputStruct(outputStructCode,matFilesFolder,changedVariables,outputVariables);
+%Utility.generateOutputExcelSheet(outputExcelName,matFilesFolder,RAW,changedVariables,outputVariables);
 fprintf("Done!\n");
 
 %% microwave
