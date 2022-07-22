@@ -35,6 +35,26 @@ def export(export_type,name,agentPositions,agentVels,params=sim.SimParams(),cont
     else:
         pass
 
+# breaking interface just for this particular kind of graph
+def exportTrajectories(name:str, agentPositions,params:sim.SimParams,startTime:int,duration:int,size=800):
+    start = int(startTime/params.dt)
+    num_frames = int(duration/params.dt)
+    agentPositionsSamples = agentPositions[start:start+num_frames]
+    steps = len(agentPositionsSamples)-1
+    df = pd.DataFrame(
+        {
+           "x":np.reshape(agentPositionsSamples[:,:,0],params.num_agents*(steps+1)),
+           "y":np.reshape(agentPositionsSamples[:,:,1],params.num_agents*(steps+1)),
+           "agent": np.tile(range(0,params.num_agents),steps+1)
+        }
+    )
+
+    fig = px.line(df,x="x",y="y",color="agent",title="Agent Trajectories")
+    fig.update_layout(yaxis_range=[-params.enclosure_size,params.enclosure_size],xaxis_range=[-params.enclosure_size,params.enclosure_size])
+    fig.update_layout(width=size,height=size)
+    fig.write_image(file = name+".png")
+
+
 def toPandasFrame(agentPositions,colors=[],params=sim.SimParams()):
     steps = int(params.overall_time/params.dt)
     if colors == []:
