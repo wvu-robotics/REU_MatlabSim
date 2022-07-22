@@ -257,6 +257,7 @@ classdef Utility
         function combineMatFiles(matFilesFolder,SLparameters)
             %{
             SLparameters = ["cohesion","heightFactorPower","cohesionAscensionIgnore","cohesionAscensionMax","ascensionFactorPower","separation","alignment"];
+            SLparameters = ["cohesion","cohesionAscensionIgnore","cohPower","separation","alignment","k"];
             %}
             fileSearch = sprintf("%s/*.mat",matFilesFolder);
             dirData = dir(fileSearch);

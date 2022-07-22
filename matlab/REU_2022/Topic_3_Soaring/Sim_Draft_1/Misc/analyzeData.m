@@ -4,24 +4,31 @@ clear
 clc
 
 %% Load data
-fileName = "C:\Users\hombo\Documents\Github Repositories\REU_MatlabSim\matlab\REU_2022\Topic_3_Soaring\Sim_Draft_1\Output_Media\7-21-22\CombinedData_7_1920_22.mat";
+folderName = "E:\WVU_REU\7-21-22\Megarun 4";
+fileName = folderName + "\CombinedData_7_21_22.mat";
 data = load(fileName);
 
 %% Display data
-varNames = ["rngSeed","cohesion","heightFactorPower","cohesionAscensionIgnore","cohesionAscensionMax","ascensionFactorPower","separation","alignment"];
-varScales = ["linear","log","linear","linear","linear","linear","log","log"];
+%varNames = ["rngSeed","cohesion","heightFactorPower","cohesionAscensionIgnore","cohesionAscensionMax","ascensionFactorPower","separation","alignment"];
+%varScales = ["linear","log","linear","linear","linear","linear","log","log"];
+
+varNames = ["rngSeed","cohesion","cohesionAscensionIgnore","cohPower","separation","alignment","k"];
+varScales = ["linear","log","linear","linear","log","log","linear"];
+
+nameMap = containers.Map(varNames,["rng","coh","RAIgn","cohPow","sep","align","k"]);
 
 for i=1:(length(varNames)-1)
     for j=i+1:length(varNames)
         %Run comparison of vars i vs j
-        plotComparison(data,varNames(i),varScales(i),varNames(j),varScales(j),"surviving","heightScore","explorationPercent","thermalUseScore");
+        plotComparison(data,varNames(i),varScales(i),varNames(j),varScales(j),"surviving","heightScore","explorationPercent","thermalUseScore",nameMap);
     end
 end
 
 
 %% Good func
-function plotComparison(data,indep1,indep1Scale,indep2,indep2Scale,dep1,dep2,dep3,dep4)
-    figure('NumberTitle','off','Name',sprintf("%s VS %s",indep1,indep2));
+function plotComparison(data,indep1,indep1Scale,indep2,indep2Scale,dep1,dep2,dep3,dep4,nameMap)
+    figure('NumberTitle','off','Name',sprintf("%s VS %s",nameMap(indep1),nameMap(indep2)));
+    fprintf("Plotted %s vs %s.\n",indep1,indep2);
     tiledlayout(2,2);
     alpha = 1;
     
