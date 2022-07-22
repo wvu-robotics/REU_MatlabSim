@@ -19,9 +19,9 @@ data = load(fileName);
 
 %% Display data
 
-allNames = ["rngSeed","cohesion","heightFactorPower","cohesionAscensionIgnore","cohesionAscensionMax","cohPower","separation","alignment","separationHeightWidth","alignmentHeightWidth","k"];
-allScales = ["linear","log","linear","linear","linear","linear","log","log","linear","linear","linear"];
-allNicknames = ["rng","coh","hgtPow","RAIgn","RAMax","cohPow","sep","align","sepGap","alignGap","k"];
+allNames = ["rngSeed","cohesion","heightFactorPower","cohesionAscensionIgnore","cohesionAscensionMax","ascensionFactorPower","cohPower","separation","alignment","separationHeightWidth","alignmentHeightWidth","k"];
+allScales = ["linear","log","linear","linear","linear","linear","linear","log","log","linear","linear","linear"];
+allNicknames = ["rng","coh","hgtPow","RAIgn","RAMax","RAPow","cohPow","sep","align","sepGap","alignGap","k"];
 
 scaleMap = containers.Map(allNames,allScales);
 nameMap = containers.Map(allNames,allNicknames);
