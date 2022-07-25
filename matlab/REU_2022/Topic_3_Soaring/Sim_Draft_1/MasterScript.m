@@ -7,14 +7,14 @@ clc;
 simBatchCode = datestr(now,"yyyymmddHHMMSS");
 
 %% Add search paths for sim laws and agent functions
-addpath("Code of Laws");
-addpath("Agent Control Functions");
-addpath("Find Neighborhood Functions");
+addpath("Code_of_Laws");
+addpath("Agent_Control_Functions");
+addpath("Find_Neighborhood_Functions");
 addpath("Misc");
 
 %% setup output folders
 %Output Media folder
-rootFolder = "Output Media";
+rootFolder = "Output_Media";
 if(~exist(rootFolder,'dir'))
     mkdir(rootFolder);
 end
@@ -27,7 +27,7 @@ if(~exist(dateFolder,'dir'))
 end
 
 %Sim Batch folder
-simBatchFolder = sprintf('%s/SimBatch %s',dateFolder,simBatchCode);
+simBatchFolder = sprintf('%s/SimBatch_%s',dateFolder,simBatchCode);
 if(~exist(simBatchFolder,'dir'))
     mkdir(simBatchFolder);
 end
@@ -76,7 +76,7 @@ writematrix(outputVariables,outputExcelName,'Sheet',sheetNum,'Range',Utility.fin
 
 %% Iterate for each simulation excel column
 fprintf("Starting %g sim(s).\n",numSims);
-parfor sim = 1:numSims
+for sim = 1:numSims
     % Parse current SimLaw
     simColumn = simColumns(sim);
     SL = struct();
@@ -89,10 +89,6 @@ parfor sim = 1:numSims
         if(class(varValue) == "char")
             %Try evaluating string
             varValue = Utility.parTryEval(varValue);
-        end
-        if(varLabel == "Show")
-            fprintf("%s\n",varValue);
-            varValue
         end
         SL.(varLabel) = varValue;
     end

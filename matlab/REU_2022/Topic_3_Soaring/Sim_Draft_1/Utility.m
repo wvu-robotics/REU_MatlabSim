@@ -308,5 +308,36 @@ classdef Utility
                 averages(i) = sum(sums{i})/length(sums{i});
             end
         end
+        
+        function validFileNames = searchMatFiles(matFilesFolder,criteria)
+            %{
+            criteria = ["fileIn.surviving == 40"];
+            
+            %}
+            fileSearch = sprintf("%s/*.mat",matFilesFolder);
+            dirData = dir(fileSearch);
+            numFiles = size(dirData,1);
+            fileNames = {dirData.name};
+            validFileNames = strings(1,numFiles);
+            numValidFiles = 0;
+            for i=1:length(fileNames)
+                if(mod(i,100)==0)
+                    fprintf("fileIndex: %d\n",i);
+                end
+                fileName = sprintf('%s/%s',matFilesFolder,fileNames{i});
+                fileIn = load(fileName);
+                meetsCriteria = true;
+                for j=1:length(criteria)
+                    if(~eval(criteria(j)))
+                        meetsCriteria = false;
+                    end
+                end
+                if(meetsCriteria)
+                    numValidFiles = numValidFiles + 1;
+                    validFileNames(numValidFiles) = fileNames{i};
+                end
+            end
+            validFileNames = validFileNames(1:numValidFiles);
+        end
     end
 end
