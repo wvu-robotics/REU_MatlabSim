@@ -33,10 +33,11 @@ if __name__ == '__main__':
         Alignment(),
         SeparationInv2(),
         SteerToAvoid(params.neighbor_radius/4,params.neighbor_radius),
+        Inertia(),
         Rotation()
     ]
 
-    true_gains = np.array([3, 0, 1,1,0])
+    true_gains = np.array([3, 0, 1,1,1,0])
     orig_controller = fc(true_gains, orig_features)
     orig_controllers = [copy.deepcopy(orig_controller)
                         for i in range(params.num_agents)]
@@ -45,8 +46,8 @@ if __name__ == '__main__':
     initSimPos, initSimVels = sim.runSim(
         orig_controllers, params, progress_bar=True)
 
-    if not os.path.exists("Output/Full_Pipeline_Output"):
-        os.makedirs("Output/Full_Pipeline_Output")
+    if not os.path.exists("Output/Full_Pipeline_Output_Artificial"):
+        os.makedirs("Output/Full_Pipeline_Output_Artificial")
 
     print("Run Training Sims")
     # eventually would like to eliminate/reduce this step, and learn from primarily one big sim
@@ -55,7 +56,7 @@ if __name__ == '__main__':
     trainingParams.enclosure_size = 10
     trainingParams.init_vel_max = 1
     trainingParams.overall_time = 4
-    num_sims = 10
+    num_sims = 100
     
     posVelSlices = []
     # posVelSlices = data_prep.toPosVelSlices(initSimPos,params)
@@ -79,6 +80,7 @@ if __name__ == '__main__':
         "align": Alignment(),
         "sep": SeparationInv2(),
         "steer":SteerToAvoid(params.neighbor_radius/4,params.neighbor_radius),
+        "inertia":Inertia(),
         "rot":Rotation()
     }
 

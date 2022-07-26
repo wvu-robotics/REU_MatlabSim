@@ -3,19 +3,19 @@ import numpy as np
 
 class FeatureComboEnv(GenericSwarmController):
     # features and gains need to be the same length
-    def __init__(self,social_gains,social_features,env_gains,environmental_features,inertia=1):
+    def __init__(self,social_gains,social_features,env_gains,environmental_features):
         self.social_features = social_features
         self.environmental_features = environmental_features
         self.social_gains = social_gains
         self.env_gains = env_gains
-        self.inertia = inertia
+        # self.inertia = inertia
     def vel(self,agentPositions,agentVels,pos,v):
         v_gain = np.zeros(2)
         if(len(agentPositions) == 0):
             for i in range(len(self.environmental_features)):
                 environmental_component = self.env_gains[i]*self.environmental_features[i].compute(agentPositions,agentVels,pos,v)
                 v_gain += environmental_component
-            return v_gain + v*self.inertia
+            return v_gain #+ v*self.inertia
         for i in range(len(self.environmental_features)):
             environmental_component = self.env_gains[i]*self.environmental_features[i].compute(agentPositions,agentVels,pos,v)
             v_gain += environmental_component
@@ -26,4 +26,4 @@ class FeatureComboEnv(GenericSwarmController):
             # print("Component",component)
             # print("i",i)
             v_gain += social_component
-        return v_gain + (v*self.inertia)#, getting rid of inertia worked ALOT
+        return v_gain

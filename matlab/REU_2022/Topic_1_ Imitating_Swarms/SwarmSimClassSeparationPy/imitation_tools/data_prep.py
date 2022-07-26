@@ -28,14 +28,16 @@ def toPosVelSlices(agentPositions,params:SimParams):
 
 @dataclass
 class featureSlice:
-    features: dict
+    social_features: dict
+    env_features: dict
     last_vel: np.ndarray
     output_vel: np.ndarray
     motion_constrained: bool
     boundary_constrained: bool
 
-#rewriting this to generalized
-def featuresFromPosVelSlice(slice,params:SimParams,features:dict,neighborCaps=[0,np.inf]):
+#rewriting this to generalized for social_features and envFeatures
+def featuresFromPosVelSlice(slice,params:SimParams,social_features:dict,env_features:dict,neighborCaps=[0,np.inf]):
+
     featureSlices = []
     for agent in range(params.num_agents):
         agentPos = slice.pos[agent]
@@ -85,14 +87,21 @@ def featuresFromPosVelSlice(slice,params:SimParams,features:dict,neighborCaps=[0
         relevantPositions,relevantVelocities = neighborHood(agentPos,params.neighbor_radius,slice.pos,slice.vel)
 
         # reject on neighbor counts
+        # we're breaking the interface for other things, I need to think more about how to not break things
         if len(relevantPositions) < neighborCaps[0] or len(relevantPositions) > neighborCaps[1]:
-            continue
+            computed_social_features = {name:np.zeros(2) for name, features in social_features.items()}
+        else:
+            computed_social_features = {name:feature.compute(relevantPositions,relevantVelocities,agentPos,agentVel) for name,feature in social_features.items()}
 
-        computed_features = {name:feature.compute(relevantPositions,relevantVelocities,agentPos,agentVel) for name,feature in features.items()}
-        featureSlices.append(featureSlice(computed_features,agentVel,agentNextVel,motion_constrained,boundary_constrained))
+        computed_env_features = {name:feature.compute(relevantPositions,relevantVelocities,agentPos,agentVel) for name,feature in env_features.items()}
+
+    
+        featureSlices.append(featureSlice(computed_social_features,computed_env_features,agentVel,agentNextVel,motion_constrained,boundary_constrained))
     return featureSlices
 
-def toFeatureSlices(posVelSlices,features:dict,params:SimParams,threads = 8,neighborCaps=[1,np.inf],verbose=True):
+# abstracting to non-social features
+# TEST, come up with non-breaking way to do this(nah Stan was already messing with it)
+def toFeatureSlices(posVelSlices,social_features:dict,env_features:dict,params:SimParams,threads = 10,neighborCaps=[1,np.inf],verbose=True):
     #multiprocessing
     pool = Pool(threads)
     
@@ -100,11 +109,11 @@ def toFeatureSlices(posVelSlices,features:dict,params:SimParams,threads = 8,neig
     clumpedSlices = []
     if verbose:
         clumpedSlices = tqdm(pool.imap(
-            partial(featuresFromPosVelSlice,features=features,params=params,neighborCaps=neighborCaps),
+            partial(featuresFromPosVelSlice,social_features=social_features,env_features=env_features,params=params,neighborCaps=neighborCaps),
             posVelSlices),total=len(posVelSlices))
     else:
         clumpedSlices = pool.map(
-            partial(featuresFromPosVelSlice,features=features,params=params,neighborCaps=neighborCaps),
+            partial(featuresFromPosVelSlice,social_features=social_features,env_features=env_features,params=params,neighborCaps=neighborCaps),
             posVelSlices)
 
     featuresSlices = []

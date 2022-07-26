@@ -8,59 +8,69 @@ from multiprocessing import Pool
 
 from imitation_tools import data_prep
 
-#dummy var needed to use map--just using apply might be cleaner form, but this is cleaner code
-def runSimtoPosVel(dummy,controllers=[],params=sim.SimParams()):
-    agentPositions,agentVels = sim.runSim(controllers,params)
-    return data_prep.toPosVelSlices(agentPositions,params),agentPositions,agentVels
+# dummy var needed to use map--just using apply might be cleaner form, but this is cleaner code
+
+
+def runSimtoPosVel(dummy, controllers=[], params=sim.SimParams()):
+    agentPositions, agentVels = sim.runSim(controllers, params)
+    return data_prep.toPosVelSlices(agentPositions, params), agentPositions, agentVels
 
 
 # making new to preserve old compatibility
-def runSimsForFeatures(controllers=[],features = {},threads = 8,params=sim.SimParams(),num_sims=10,verbose=True,export_info =[]):
+def runSimsForFeatures(controllers=[], soc_features={}, env_features={}, threads=8, params=sim.SimParams(), num_sims=10, verbose=True, export_info=[]):
     if verbose:
         print("Running a batch of simulations")
     pool = Pool(threads)
-    posVelClumps = list(tqdm(pool.imap(partial(runSimtoPosVel,params=params,controllers=controllers),range(num_sims)),total=num_sims))
+    posVelClumps = list(tqdm(pool.imap(partial(runSimtoPosVel, params=params,
+                        controllers=controllers), range(num_sims)), total=num_sims))
     if export_info:
         if verbose: print("Exporting specific sims")
         for i in range(num_sims):
             if export_info and (i % export_info[2] == 0):
                 if len(export_info) == 4:
                     for controller in controllers:
-                        controller.setColor(export_info[3][int(i/export_info[2])]) #if you are doing rainbow, colors at each iteration
-                if verbose:print("Sim "+str(i))
-                export.export(export_info[0],export_info[1]+str(i),posVelClumps[i][1],posVelClumps[i][2],params=params,progress_bar=verbose)
+                        # if you are doing rainbow, colors at each iteration
+                        controller.setColor(
+                            export_info[3][int(i/export_info[2])])
+                if verbose: print("Sim "+str(i))
+                export.export(export_info[0], export_info[1]+str(i), posVelClumps[i]
+                              [1], posVelClumps[i][2], params=params, progress_bar=verbose)
 
-    posVelSlices  = []
+    posVelSlices = []
     for clump in posVelClumps:
         posVelSlices.extend(clump[0])
-    if verbose:print("Parsing to agent slices")
-    featureSlices = data_prep.toFeatureSlices(posVelSlices,features=features,params=params,verbose=verbose)
+    if verbose: print("Parsing to agent slices")
+    featureSlices = data_prep.toFeatureSlices(posVelSlices, social_features=soc_features, env_features=env_features, params = params, verbose = verbose)
     return featureSlices
 
 
 # outputs posVel slices, multithreaded
 # export info = [type,prefix name,every x iterations,colors] -- might generalize this elsewhere
-def runSims(controllers=[],threads = 8,params=sim.SimParams(),num_sims=10,verbose=True,ignoreMC=False,ignoreBC=True,export_info =[]):
+def runSims(controllers = [], threads = 8, params = sim.SimParams(), num_sims = 10, verbose = True, ignoreMC = False, ignoreBC = True, export_info = []):
     if verbose:
         print("Running a batch of simulations")
-    pool = Pool(threads)
-    posVelClumps = list(tqdm(pool.imap(partial(runSimtoPosVel,params=params,controllers=controllers),range(num_sims)),total=num_sims))
+    pool=Pool(threads)
+    posVelClumps=list(tqdm(pool.imap(partial(runSimtoPosVel, params=params,
+                      controllers=controllers), range(num_sims)), total=num_sims))
     if export_info:
         if verbose: print("Exporting specific sims")
         for i in range(num_sims):
             if export_info and (i % export_info[2] == 0):
                 if len(export_info) == 4:
                     for controller in controllers:
-                        controller.setColor(export_info[3][int(i/export_info[2])]) #if you are doing rainbow, colors at each iteration
-                if verbose:print("Sim "+str(i))
-                export.export(export_info[0],export_info[1]+str(i),posVelClumps[i][1],posVelClumps[i][2],params=params,progress_bar=verbose)
+                        # if you are doing rainbow, colors at each iteration
+                        controller.setColor(
+                            export_info[3][int(i/export_info[2])])
+                if verbose: print("Sim "+str(i))
+                export.export(export_info[0], export_info[1]+str(i), posVelClumps[i]
+                              [1], posVelClumps[i][2], params = params, progress_bar = verbose)
 
-    posVelSlices  = []
+    posVelSlices=[]
     for clump in posVelClumps:
         posVelSlices.extend(clump[0])
-    if verbose:print("Parsing to agent slices")
-    agentSlices = data_prep.toAgentSlices(posVelSlices,params=params,verbose=verbose,
-    ignoreConstrainedMotion=ignoreMC,ignoreBoundaryData=ignoreBC)
+    if verbose: print("Parsing to agent slices")
+    agentSlices=data_prep.toAgentSlices(posVelSlices, params = params, verbose = verbose,
+    ignoreConstrainedMotion = ignoreMC, ignoreBoundaryData = ignoreBC)
     return agentSlices
 
 # non multithreaded version
@@ -81,4 +91,3 @@ def runSims(controllers=[],threads = 8,params=sim.SimParams(),num_sims=10,verbos
 #     agentSlices = data_prep.toAgentSlices(posVelSlices,params=params,verbose=verbose,
 #     ignoreConstrainedMotion=ignoreMC,ignoreBoundaryData=ignoreBC)
 #     return agentSlices
-

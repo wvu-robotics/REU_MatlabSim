@@ -60,6 +60,15 @@ for s in range(1,steps):
 encSize = max_component*1.1/2
 
 
+nthFrame = 20
+slimmedPositions = []
+for i in range(len(agentPositions)):
+    if i%nthFrame ==0:
+        slimmedPositions.append(agentPositions[i])
+
+agentPositions = np.array(slimmedPositions)
+
+steps = len(agentPositions)
 
 print("Agent Positions",agentPositions)
 print("Overall Time",overall_time)
@@ -67,4 +76,6 @@ print("Steps",steps)
 print("Num Agents",num_agents)
 print("Enclosure Size",encSize)
 
-np.savez('100fish_parsed',agent_positions=agentPositions,overall_time=overall_time,steps=steps,num_agents=num_agents,enclosure_size=encSize)
+
+
+np.savez('100fish_parsed_every'+str(nthFrame)+'th_frame',agent_positions=agentPositions,overall_time=overall_time,steps=steps,num_agents=num_agents,enclosure_size=encSize)

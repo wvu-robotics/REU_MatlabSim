@@ -4,6 +4,7 @@ import shapely.geometry as geometry
 import shapely.ops as ops
 
 #class wrapper for generic non linear feature
+# I should put acceptable bounds with each features
 class Feature:
     # outputs 2d vel part nonlinearly, just from relevant positions and vels(only ones passed)
     def compute(self,agentPositions,agentVels,pos=np.zeros(2),v=np.zeros(2)):
@@ -64,6 +65,9 @@ class SteerToAvoid(Feature):
 
     def compute(self,agentPositions, agentVels, pos, v):
         origin = geometry.Point(pos[0],pos[1])
+        if np.linalg.norm(v) ==  0:
+            return np.zeros(2)
+        # print(v)
         orientation = (v/np.linalg.norm(v))*self.neighbor_radius
         toward = geometry.Point(pos[0]+orientation[0],pos[1]+orientation[1])
 
@@ -101,6 +105,10 @@ class Rotation(Feature):
         centroid = np.mean(agentPositions,axis=0)
         toCentroid =  centroid - pos
         return np.array([-toCentroid[1],toCentroid[0]])
+
+class Inertia(Feature):
+    def compute(self,agentPositions, agentVels, pos, v):
+        return v
 
 """
 class RectangularBoundSeparation(Feature):
