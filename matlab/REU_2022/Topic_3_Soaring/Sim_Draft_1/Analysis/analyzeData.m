@@ -4,7 +4,7 @@ clear
 clc
 
 %% Load data
-run = 4;
+run = 7;
 if(run == 23)
     fileName = "..\Megaruns\Megarun_2-3\7-1920-22\CombinedData_7_1920_22.mat";
     varNames = ["rngSeed","cohesion","heightFactorPower","cohesionAscensionIgnore","cohesionAscensionMax","ascensionFactorPower","separation","alignment"];
@@ -14,14 +14,17 @@ elseif(run == 4)
 elseif(run == 5)
     fileName = "..\Megaruns\Megarun_5\7-22-22\CombinedData_7_22_22.mat";
     varNames = ["rngSeed","cohesion","cohPower","separation","alignment","separationHeightWidth","alignmentHeightWidth"];
+elseif(run == 7)
+    fileName = "..\Megaruns\Megarun_7\7-25-22\CombinedData_7_25_22.mat";
+    varNames = ["cohesion","separation","alignment","cohPower","migration","numThermals","numAgents","rngSeed","funcName_agentControl"];
 end
 data = load(fileName);
 
 %% Display data
 
-allNames = ["rngSeed","cohesion","heightFactorPower","cohesionAscensionIgnore","cohesionAscensionMax","ascensionFactorPower","cohPower","separation","alignment","separationHeightWidth","alignmentHeightWidth","k"];
-allScales = ["linear","log","linear","linear","linear","linear","linear","log","log","linear","linear","linear"];
-allNicknames = ["rng","coh","hgtPow","RAIgn","RAMax","RAPow","cohPow","sep","align","sepGap","alignGap","k"];
+allNames = ["rngSeed","cohesion","heightFactorPower","cohesionAscensionIgnore","cohesionAscensionMax","ascensionFactorPower","cohPower","separation","alignment","separationHeightWidth","alignmentHeightWidth","k","migration","numThermals","numAgents","funcName_agentControl"];
+allScales = ["linear","log","linear","linear","linear","linear","linear","log","linear","linear","linear","linear","log","linear","linear","linear"];
+allNicknames = ["rng","coh","hgtPow","RAIgn","RAMax","RAPow","cohPow","sep","align","sepGap","alignGap","k","mig","#Thrms","#Agts","Ctrl"];
 
 scaleMap = containers.Map(allNames,allScales);
 nameMap = containers.Map(allNames,allNicknames);
@@ -52,7 +55,39 @@ function nextplot(data,indep1Name,indep1Scale,indep2Name,indep2Scale,depName,alp
 
     nexttile;
     %scatter3(UI1,UI2,avgDep,'Marker','o','MarkerEdgeAlpha',alpha,'MarkerFaceAlpha',alpha);
+    xTick = NaN;
+    yTick = NaN;
+    if(class(UI1) == "string")
+        valueMap = containers.Map(unique(UI1),1:length(unique(UI1)));
+        xTick = 1:size(UI1,1);
+        xTickLabel = strings(1,length(xTick));
+        xTickLabel(xTick) = UI1(xTick,1);
+        newUI1 = zeros(size(UI1));
+        for i=1:numel(UI1)
+            newUI1(i) = valueMap(UI1(i));
+        end
+        UI1 = newUI1;
+        set(gca,'XTick',xTick,'XTickLabel',xTickLabel);
+    end
+    if(class(UI2) == "string")
+        valueMap = containers.Map(unique(UI2),1:length(unique(UI2)));
+        yTick = 1:size(UI2,2);
+        yTickLabel = strings(1,length(yTick));
+        yTickLabel(yTick) = UI2(1,yTick);
+        newUI2 = zeros(size(UI2));
+        for i=1:numel(UI2)
+            newUI2(i) = valueMap(UI2(i));
+        end
+        UI2 = newUI2;
+        set(gca,'YTick',yTick,'YTickLabel',yTickLabel);
+    end
     surf(UI1,UI2,avgDep,'FaceAlpha',alpha);
+    if(~isnan(xTick))
+        set(gca,'XTick',xTick,'XTickLabel',xTickLabel);
+    end
+    if(~isnan(yTick))
+        set(gca,'YTick',yTick,'YTickLabel',yTickLabel);
+    end
     set(gca,'XScale',indep1Scale);
     set(gca,'YScale',indep2Scale);
     xlabel(indep1Name);

@@ -260,6 +260,7 @@ classdef Utility
             SLparameters = ["cohesion","cohesionAscensionIgnore","cohPower","separation","alignment","k"];
             SLparameters = ["cohesion","separation","alignment","cohPower","separationHeightWidth","alignmentHeightWidth"];
             SLparameters = ["cohesion","separation","alignment","cohPower","migration","numThermals","rngSeed"];
+            SLparameters = ["cohesion","separation","alignment","cohPower","migration","numThermals","numAgents","rngSeed","funcName_agentControl"];
             %}
             fileSearch = sprintf("%s/*.mat",matFilesFolder);
             dirData = dir(fileSearch);
@@ -284,10 +285,18 @@ classdef Utility
                 fileName = sprintf('%s/%s',matFilesFolder,fileNames{fileIndex});
                 fileIn = load(fileName);
                 for i=1:length(SLparameters)
-                    combinedData.(SLparameters(i)) = [combinedData.(SLparameters(i)),fileIn.SL.(SLparameters(i))];
+                    newVal = fileIn.SL.(SLparameters(i));
+                    if(class(newVal) == "char")
+                        newVal = string(newVal);
+                    end
+                    combinedData.(SLparameters(i)) = [combinedData.(SLparameters(i)),newVal];
                 end
                 for i=1:length(fields)
-                    combinedData.(fields{i}) = [combinedData.(fields{i}),fileIn.(fields{i})];
+                    newVal = fileIn.(fields{i});
+                    if(class(newVal) == "char")
+                        newVal = string(newVal);
+                    end
+                    combinedData.(fields{i}) = [combinedData.(fields{i}),newVal];
                 end
             end
             fileName = sprintf('%s/../%s',matFilesFolder,"CombinedData.mat");
