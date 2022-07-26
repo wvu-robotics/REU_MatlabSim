@@ -259,6 +259,7 @@ classdef Utility
             SLparameters = ["cohesion","heightFactorPower","cohesionAscensionIgnore","cohesionAscensionMax","ascensionFactorPower","separation","alignment"];
             SLparameters = ["cohesion","cohesionAscensionIgnore","cohPower","separation","alignment","k"];
             SLparameters = ["cohesion","separation","alignment","cohPower","separationHeightWidth","alignmentHeightWidth"];
+            SLparameters = ["cohesion","separation","alignment","cohPower","migration","numThermals","rngSeed"];
             %}
             fileSearch = sprintf("%s/*.mat",matFilesFolder);
             dirData = dir(fileSearch);
