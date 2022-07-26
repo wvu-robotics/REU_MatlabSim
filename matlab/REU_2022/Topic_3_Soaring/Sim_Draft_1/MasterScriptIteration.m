@@ -39,7 +39,7 @@ if(~exist(matFilesFolder,'dir'))
 end
 
 %% Set up input Excel sheet
-simLawExcel = "AdamsLawIteration.xlsx";
+simLawExcel = "UnifiedLawIteration.xlsx";
 sheetNum = 1;
 RAW = readcell(simLawExcel,'Sheet',sheetNum);
 % Convert missing to NaN
@@ -121,7 +121,7 @@ end
 %% Iterate through simulations
 fprintf("Starting simulations for %g combination(s).\n",combinations);
 numSims = combinations;
-parfor sim = 1:numSims
+for sim = 1:numSims
     %% Run Simulation
     SL = SLIterations(sim);
     simNumber = sim;

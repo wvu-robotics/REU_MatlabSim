@@ -4,7 +4,7 @@ clear
 clc
 
 %% Load data
-run = 5;
+run = 7;
 
 if(run == 23)
     fileName = "..\Megaruns\Megarun_2-3\7-1920-22\CombinedData_7_1920_22.mat";
@@ -15,6 +15,9 @@ elseif(run == 4)
 elseif(run == 5)
     fileName = "..\Megaruns\Megarun_5\7-22-22\CombinedData_7_22_22.mat";
     labels = ["rngSeed","cohesion","cohPower","separation","alignment","separationHeightWidth","alignmentHeightWidth"];
+elseif(run == 7)
+    fileName = "..\Megaruns\Megarun_7\7-25-22\CombinedData_7_25_22.mat";
+    labels = ["cohesion","separation","alignment","cohPower","migration","numThermals","numAgents","rngSeed","funcName_agentControl"];
 end
 data = load(fileName);
 

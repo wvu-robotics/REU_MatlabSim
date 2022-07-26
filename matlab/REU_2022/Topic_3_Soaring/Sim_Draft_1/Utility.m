@@ -259,6 +259,8 @@ classdef Utility
             SLparameters = ["cohesion","heightFactorPower","cohesionAscensionIgnore","cohesionAscensionMax","ascensionFactorPower","separation","alignment"];
             SLparameters = ["cohesion","cohesionAscensionIgnore","cohPower","separation","alignment","k"];
             SLparameters = ["cohesion","separation","alignment","cohPower","separationHeightWidth","alignmentHeightWidth"];
+            SLparameters = ["cohesion","separation","alignment","cohPower","migration","numThermals","rngSeed"];
+            SLparameters = ["cohesion","separation","alignment","cohPower","migration","numThermals","numAgents","rngSeed","funcName_agentControl"];
             %}
             fileSearch = sprintf("%s/*.mat",matFilesFolder);
             dirData = dir(fileSearch);
@@ -283,10 +285,18 @@ classdef Utility
                 fileName = sprintf('%s/%s',matFilesFolder,fileNames{fileIndex});
                 fileIn = load(fileName);
                 for i=1:length(SLparameters)
-                    combinedData.(SLparameters(i)) = [combinedData.(SLparameters(i)),fileIn.SL.(SLparameters(i))];
+                    newVal = fileIn.SL.(SLparameters(i));
+                    if(class(newVal) == "char")
+                        newVal = string(newVal);
+                    end
+                    combinedData.(SLparameters(i)) = [combinedData.(SLparameters(i)),newVal];
                 end
                 for i=1:length(fields)
-                    combinedData.(fields{i}) = [combinedData.(fields{i}),fileIn.(fields{i})];
+                    newVal = fileIn.(fields{i});
+                    if(class(newVal) == "char")
+                        newVal = string(newVal);
+                    end
+                    combinedData.(fields{i}) = [combinedData.(fields{i}),newVal];
                 end
             end
             fileName = sprintf('%s/../%s',matFilesFolder,"CombinedData.mat");
@@ -306,6 +316,53 @@ classdef Utility
             averages = zeros(1,length(indepValues));
             for i=1:length(indepValues)
                 averages(i) = sum(sums{i})/length(sums{i});
+            end
+        end
+        
+        function validFileNames = searchMatFiles(matFilesFolder,criteria)
+            %{
+            criteria = ["fileIn.surviving == 40"];
+            
+            %}
+            fileSearch = sprintf("%s/*.mat",matFilesFolder);
+            dirData = dir(fileSearch);
+            numFiles = size(dirData,1);
+            fileNames = {dirData.name};
+            validFileNames = strings(1,numFiles);
+            numValidFiles = 0;
+            for i=1:length(fileNames)
+                if(mod(i,100)==0)
+                    fprintf("fileIndex: %d\n",i);
+                end
+                fileName = sprintf('%s/%s',matFilesFolder,fileNames{i});
+                fileIn = load(fileName);
+                meetsCriteria = true;
+                for j=1:length(criteria)
+                    if(~eval(criteria(j)))
+                        meetsCriteria = false;
+                    end
+                end
+                if(meetsCriteria)
+                    numValidFiles = numValidFiles + 1;
+                    validFileNames(numValidFiles) = fileNames{i};
+                end
+            end
+            validFileNames = validFileNames(1:numValidFiles);
+        end
+
+        %% Write excel file from combined MAT file
+        function writeToExcel
+            fileName = 'Megaruns/Megarun_5/7-22-22/CombinedData_7_22_22.mat'; 
+            
+            data=load(fileName);
+            f=fieldnames(data);
+            outputName = 'Megarun 5 Data.xlsx';
+            writecell(f',outputName);
+            for k=1:size(f,1)
+                Row = '2';
+                Column = char(64 + k);
+                writematrix(data.(f{k})',outputName,'Range',[Column,Row])
+                fprintf('Writing column %g of %g\n',k,size(f,1))
             end
         end
     end
