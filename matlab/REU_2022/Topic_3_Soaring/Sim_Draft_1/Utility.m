@@ -339,5 +339,21 @@ classdef Utility
             end
             validFileNames = validFileNames(1:numValidFiles);
         end
+
+        %% Write excel file from combined MAT file
+        function writeToExcel
+            fileName = 'Megaruns/Megarun_5/7-22-22/CombinedData_7_22_22.mat'; 
+            
+            data=load(fileName);
+            f=fieldnames(data);
+            outputName = 'Megarun 5 Data.xlsx';
+            writecell(f',outputName);
+            for k=1:size(f,1)
+                Row = '2';
+                Column = char(64 + k);
+                writematrix(data.(f{k})',outputName,'Range',[Column,Row])
+                fprintf('Writing column %g of %g\n',k,size(f,1))
+            end
+        end
     end
 end
