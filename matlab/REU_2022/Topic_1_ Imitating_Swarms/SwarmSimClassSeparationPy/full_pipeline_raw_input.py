@@ -60,10 +60,10 @@ if __name__ == '__main__':
     learnedParams.enclosure_size = enclosure_edge
 
     learning_soc_features = {
-        # "coh": Cohesion(),
+        "coh": Cohesion(),
         "align": Alignment(),
-        # "sep": SeparationInv2(),
-        # # "sepExp": SeparationExp(),
+        "sep": SeparationInv2(),
+        "sepExp": SeparationExp(),
 
         # # "sep6": SeparationInv6(),
         # # "sep12": SeparationInv12(),
@@ -96,18 +96,18 @@ if __name__ == '__main__':
     posVelSlices = transformations.lowPassFilterVels(posVelSlices, 0.05)
 
     # need to apply a low pass filter by agent step
-    # learnedMCs = learnMotionConstraints(posVelSlices, learnedParams)
+    learnedMCs = learnMotionConstraints(posVelSlices, learnedParams)
 
-    # print("Learned MCs", learnedMCs)
-    learnedParams.agent_max_vel = 7
-    # learnedMCs["max_vel"]
+    print("Learned MCs", learnedMCs)
+    learnedParams.agent_max_vel = learnedMCs["max_vel"]
     # other two aren't learned properly yet
 
-    # np.random.shuffle(posVelSlices)
-    # radius = learnNeighborRadius(
-    #     posVelSlices[:1000], learnedParams, learning_features)
-    # print("Learned Radius", radius)
-    radius = 5.5
+    # need to work on running this in a fasterish form
+    np.random.shuffle(posVelSlices)
+    radius = learnNeighborRadius(
+        posVelSlices[:500], learnedParams, learning_soc_features,learning_env_features)
+    print("Learned Radius", radius)
+    # radius = 5.5
     learnedParams.neighbor_radius = radius
 
     featureSlices = data_prep.toFeatureSlices(

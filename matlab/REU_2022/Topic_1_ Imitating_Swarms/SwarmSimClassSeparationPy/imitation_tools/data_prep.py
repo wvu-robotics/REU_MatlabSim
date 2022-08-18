@@ -101,7 +101,7 @@ def featuresFromPosVelSlice(slice,params:SimParams,social_features:dict,env_feat
 
 # abstracting to non-social features
 # TEST, come up with non-breaking way to do this(nah Stan was already messing with it)
-def toFeatureSlices(posVelSlices,social_features:dict,env_features:dict,params:SimParams,threads = 10,neighborCaps=[1,np.inf],verbose=True):
+def toFeatureSlices(posVelSlices,social_features:dict,env_features:dict,params:SimParams,threads = 12,neighborCaps=[1,np.inf],verbose=True):
     #multiprocessing
     pool = Pool(threads)
     
@@ -257,7 +257,7 @@ def agentSliceFromPosVelSlice(slice,params:SimParams,neighborCaps=[0,np.inf],ign
     return agentSlices
 
 #this can be multiprocessed, maybe also allow turning off certain slices
-def toAgentSlices(posVelSlices,params:SimParams,threads = 8,neighborCaps=[1,np.inf],ignoreConstrainedMotion=False,ignoreBoundaryData=True,verbose=True):
+def toAgentSlices(posVelSlices,params:SimParams,threads = 12,neighborCaps=[1,np.inf],ignoreConstrainedMotion=False,ignoreBoundaryData=True,verbose=True):
     #multiprocessing
     pool = Pool(threads)
     

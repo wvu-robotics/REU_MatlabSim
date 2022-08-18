@@ -19,7 +19,7 @@ def get_avg_fps(PIL_Image_object):
     return None
 
 # I should probably take in as input
-cutter_filename = "badMultiFeature.gif" 
+cutter_filename = "MARS_Shooting_&_Moving.MOV" 
 
 maxFrames = 1000
 

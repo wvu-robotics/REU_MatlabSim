@@ -51,7 +51,7 @@ def learnMotionConstraints(posVelSlices: list, params: SimParams, verbose=True) 
     # px.line(x=np.arange(len(agent0Vels)),
     #     y=agent0Vels_filtered, title="Agent 0 Vels Filtered").show()
 
-    all_vels_flat = all_vels.flatten()
+    # all_vels_flat = all_vels.flatten()
     # # print(all_vels_flat.shape)
     # all_vels_flat = np.sort(all_vels_flat)
 
@@ -61,12 +61,8 @@ def learnMotionConstraints(posVelSlices: list, params: SimParams, verbose=True) 
 
     # all_plot.write_image("all_vels.png")
 
-    # throw out top 1%, average 10%
-    perc1 = int(0.01*len(all_vels_flat))
-    perc5 = int(0.05*len(all_vels_flat))
-
-    tops = all_vels_flat[-perc5:-perc1]
-    max_vel = np.max(tops)
+    # might need to parameterize this bound
+    max_vel = np.percentile(all_vels, 99)
 
     return {"max_vel": max_vel, "max_accel": max_accel, "max_turn_rate": max_turn_rate}
 
@@ -91,7 +87,7 @@ def dataForLinReg(featureSlices: list, params: SimParams, verbose=True):
 # used in GA for neighbor radius
 
 
-def fitnessLinearReg(posVelSlices: list, params: SimParams, learning_features: dict):
+def fitnessLinearReg(posVelSlices: list, params: SimParams, learning_soc_features: dict, learning_env_features: dict):
     def fitness(radius, sol_id):
         # only do genetic with on the neighbor radius, with fitness doing a linear regression
         localParams = copy.deepcopy(params)
@@ -100,7 +96,7 @@ def fitnessLinearReg(posVelSlices: list, params: SimParams, learning_features: d
         # hrm maybe should be constraining motion more
         # I might migrate to new interface for speed
         agentSlices = toFeatureSlices(
-            posVelSlices, learning_features, localParams, verbose=False)
+            posVelSlices, social_features=learning_soc_features, env_features=learning_env_features, params=localParams, verbose=False)
 
         if len(agentSlices) == 0:
             return -np.inf
@@ -136,26 +132,26 @@ def fitnessLinearReg(posVelSlices: list, params: SimParams, learning_features: d
 # involves first pass linear regression-might be better to return gains from that at some point
 
 
-def learnNeighborRadius(posVelSlices: list, params: SimParams, learning_features: dict, verbose=True) -> int:
-    fitnessFunc = fitnessLinearReg(posVelSlices, params, learning_features)
+def learnNeighborRadius(posVelSlices: list, params: SimParams, learning_soc_features: dict, learning_env_features: dict, verbose=True) -> int:
+    fitnessFunc = fitnessLinearReg(posVelSlices, params, learning_soc_features, learning_env_features)
 
     if verbose:
         print("Running genetic algorithm to learn radius:")
-    num_generations = 10
+    num_generations=10
     if verbose:
-        with tqdm(total=num_generations) as pbar:
-            ga_instance = pygad.GA(
-                num_generations=num_generations,
-                num_parents_mating=6,
-                fitness_func=fitnessFunc,
-                sol_per_pop=15,
-                num_genes=1,
+        with tqdm(total = num_generations) as pbar:
+            ga_instance=pygad.GA(
+                num_generations = num_generations,
+                num_parents_mating = 6,
+                fitness_func = fitnessFunc,
+                sol_per_pop = 15,
+                num_genes = 1,
                 # mutation_type="adaptive",
-                mutation_probability=1,
-                gene_type=float,
+                mutation_probability = 1,
+                gene_type = float,
                 # ,{'low': 0, 'high': 10}, {'low': 0, 'high': 10},{'low': 0, 'high': 10}],
-                gene_space=[{'low': 0, 'high': 10}],
-                on_generation=lambda _: pbar.update(
+                gene_space = [{'low': 0, 'high': 10}],
+                on_generation = lambda _: pbar.update(
                     1)  # make progress bar work
             )
             ga_instance.run()
