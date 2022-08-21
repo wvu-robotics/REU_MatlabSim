@@ -11,11 +11,11 @@ import copy
 import os
 
 if __name__ == '__main__':
-    dir = 'teaching_swarm_data/100_guppies_trex/'
-    filename = '100fish_parsed.npz'
+    dir = 'teaching_swarm_data/Rezec_robots/'
+    filename = 'Rezec_Robot_Swarm_Data.npz'
     datazip = np.load(dir+filename)
 
-    num_agents = datazip['num_agents']
+    num_agents = datazip['number_agents']
     overall_time = datazip['overall_time']
     steps = datazip['steps']
 
