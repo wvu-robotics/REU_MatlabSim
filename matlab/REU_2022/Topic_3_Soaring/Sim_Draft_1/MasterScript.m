@@ -70,7 +70,7 @@ outputTitleRow = size(RAW,1) + 5;
 % Write label 'OUTPUT'
 writecell({'OUTPUT'},outputExcelName,'Sheet',sheetNum,'Range',Utility.findSSPos(outputTitleRow,1),'AutoFitWidth',0);
 % Write labels of output variables
-outputVariables = ["simNumber";"timeStart";"timeEnd";"surviving";"flightTime";"finalHeightMax";"finalHeightMin";"finalHeightAvg"];
+outputVariables = ["simNumber";"rngSeed";"timeStart";"timeEnd";"surviving";"collisionDeaths";"groundDeaths";"flightTime";"heightScore";"explorationPercent";"thermalUseScore";"finalHeightMax";"finalHeightMin";"finalHeightAvg"];
 outputRow = outputTitleRow + 1;
 writematrix(outputVariables,outputExcelName,'Sheet',sheetNum,'Range',Utility.findSSPos(outputRow,varLabelColumn));
 
