@@ -6,9 +6,10 @@ function outputData = MainScriptFunction(SL, simNumber, videoName)
     
     %% Set RNG Seed
     if(~isfield(SL,"rngSeed") || isnan(SL.rngSeed))
+        fprintf("Warning, generating custom rngSeed!\n");
         SL.rngSeed = round(mod(now*10^6,10^9));
     end
-    rng(SL.rngSeed);
+    rng(SL.rngSeed,'threefry');
 
     %% Load simulation parameters
     % Initialize thermals as a matrix of Thermals
@@ -70,9 +71,9 @@ function outputData = MainScriptFunction(SL, simNumber, videoName)
             end
 
             %% Print
-%             if mod(step,steps/1000) == 0
-%                 fprintf("%04.1f%% through Run #%g \n",100*step/steps, simNumber);
-%             end
+            if mod(step,steps/1000) == 0
+                fprintf("%04.1f%% through Run #%g \n",100*step/steps, simNumber);
+            end
         else
             fprintf("Everybody died in Run # %g\n", simNumber);
             break
