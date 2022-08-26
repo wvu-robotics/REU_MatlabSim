@@ -10,6 +10,7 @@ import numpy as np
 
 # use exact fitness function
 
+# needs to be fixed for social features
 
 def testTrueNeighborRadius(posVelSlices: list, orig_params: SimParams, learning_features: dict):
     fitness_fn = fitnessLinearReg(posVelSlices, orig_params, learning_features)

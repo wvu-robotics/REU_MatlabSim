@@ -33,9 +33,9 @@ if __name__ == '__main__':
 
     # need an npz with num_agents, overall_time, steps, agentPositions, enclosure size
     datazip = np.load(
-        'teaching_swarm_data/Rezec_robots/Rezec_Robot_Swarm_Data.npz')
+        'teaching_swarm_data/100_guppies_trex/100fish_parsed.npz')
 
-    num_agents = datazip['number_agents']
+    num_agents = datazip['num_agents']
     overall_time = datazip['overall_time']
     steps = datazip['steps']
 
@@ -94,7 +94,7 @@ if __name__ == '__main__':
 
     posVelSlices = data_prep.toPosVelSlices(agentPositions, learnedParams)
 
-    # posVelSlices = transformations.lowPassFilterVels(posVelSlices, 0.05)
+    posVelSlices = transformations.lowPassFilterVels(posVelSlices, 0.05)
 
     # need to apply a low pass filter by agent step
     learnedMCs = learnMotionConstraints(posVelSlices, learnedParams)

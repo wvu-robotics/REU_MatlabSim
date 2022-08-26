@@ -124,7 +124,12 @@ def fitnessLinearReg(posVelSlices: list, params: SimParams, learning_soc_feature
             loss += np.sum(np.abs(v_pred-v_actual))
 
         # low radius penalty
-        radPenalty = len(agentSlices)/(len(posVelSlices) * params.num_agents)
+
+        # scale by the max possible traj error
+        maxTrajError = params.enclosure_size*len(posVelSlices)*params.num_agents*0
+
+        # as agentSlices goes up, penalty goes down
+        radPenalty = (len(agentSlices)/(len(posVelSlices) * params.num_agents)) * 1
 
         return -loss/len(agentSlices) - radPenalty  # normalized between runs
     return fitness

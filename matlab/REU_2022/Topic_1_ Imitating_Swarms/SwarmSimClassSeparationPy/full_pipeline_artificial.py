@@ -6,6 +6,7 @@ from sim_tools import media_export as export
 from imitation_tools import data_prep
 from features.features import *
 from models.featureCombo import FeatureCombo as fc
+from models.featureComboEnv import FeatureComboEnv as fcE
 
 from tqdm import tqdm
 import numpy as np
@@ -27,18 +28,23 @@ params = sim.SimParams(
 )
 
 if __name__ == '__main__':
+
     # INITIAL GENERATION
-    orig_features = [
+    orig_soc_features = [
         Cohesion(),
         Alignment(),
         SeparationInv2(),
         SteerToAvoid(params.neighbor_radius/4,params.neighbor_radius),
-        Inertia(),
-        Rotation()
+        Rotation(),
     ]
 
+    orig_env_features = [
+        Inertia(),
+    ]
+
+
     true_gains = np.array([3, 0, 1,1,1,0])
-    orig_controller = fc(true_gains, orig_features)
+    orig_controller = fcE(true_gains[:len(orig_soc_features)],orig_soc_features,true_gains[len(orig_soc_features):], orig_env_features)
     orig_controllers = [copy.deepcopy(orig_controller)
                         for i in range(params.num_agents)]
 
@@ -75,26 +81,30 @@ if __name__ == '__main__':
         posVelSlices.extend(data_prep.toPosVelSlices(
             trainPositions, trainingParams))
 
-    learning_features = {
+    social_features = {
         "coh": Cohesion(),
         "align": Alignment(),
         "sep": SeparationInv2(),
         "steer":SteerToAvoid(params.neighbor_radius/4,params.neighbor_radius),
-        "inertia":Inertia(),
         "rot":Rotation()
     }
 
-    # VALIDATION
-    realFeatureSlices = data_prep.toFeatureSlices(
-        posVelSlices, learning_features, trainingParams)
-    print("Neighbor radius true loss", testTrueNeighborRadius(
-        posVelSlices, trainingParams, learning_features))
-    print("Gain true loss for linear", testTrueGainsLinear(
-        true_gains, realFeatureSlices, trainingParams))
-    print("Gain true loss for nonlinear", testTrueGainsNonLinear(
-        true_gains, realFeatureSlices, trainingParams))
+    env_features = {
+        "inertia": Inertia(),
+    }
 
-    plotNeighborRadius(posVelSlices, trainingParams, learning_features)
+    # VALIDATION
+# 
+    # realFeatureSlices = data_prep.toFeatureSlices(
+    #     posVelSlices, social_features,env_features, trainingParams)
+    # print("Neighbor radius true loss", testTrueNeighborRadius(
+    #     posVelSlices, trainingParams, social_features,env_features))
+    # print("Gain true loss for linear", testTrueGainsLinear(
+    #     true_gains, realFeatureSlices, trainingParams))
+    # print("Gain true loss for nonlinear", testTrueGainsNonLinear(
+    #     true_gains, realFeatureSlices, trainingParams))
+
+    # plotNeighborRadius(posVelSlices, trainingParams, social_features,env_features)
 
     # LEARNING
     # being very explicit here, only transferring from original exactly what we will transfer
@@ -111,15 +121,15 @@ if __name__ == '__main__':
     # other two aren't learned properly yet
 
     radius = learnNeighborRadius(
-        posVelSlices, learnedParams, learning_features)
+        posVelSlices, learnedParams, social_features,env_features)
     print("Learned Radius", radius)
     learnedParams.neighbor_radius = radius
 
     featureSlices = data_prep.toFeatureSlices(
-        posVelSlices, learning_features, learnedParams)
+        posVelSlices, social_features,env_features, learnedParams)
 
     linear_gains = learnGainsLinearRegression(
-        featureSlices, learnedParams, learning_features)
+        featureSlices, learnedParams, social_features,env_features)
     print("Linear gains", linear_gains)
 
     improved_gains = learnGainsNonLinearOptimization(
@@ -132,7 +142,10 @@ if __name__ == '__main__':
     learnedParams.overall_time = params.overall_time
     learnedParams.enclosure_size = params.enclosure_size
 
-    imitation_controller = fc(improved_gains, list(learning_features.values()))
+    soc_gains = improved_gains[:len(social_features)]
+    env_gains = improved_gains[len(social_features):]
+    imitation_controller = fcE(soc_gains, list(
+        social_features.values()), env_gains, list(env_features.values()))
     imitated_controllers = [copy.deepcopy(
         imitation_controller) for i in range(learnedParams.num_agents)]
     for controller in imitated_controllers:
