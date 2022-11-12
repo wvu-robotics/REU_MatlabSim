@@ -32,3 +32,6 @@ def lowPassFilterVels(pvsIn: list, cutoff):
     # print("Filtered",filteredVels)
     filteredPVS = [posVelSlice(pvsIn[i].pos,pvsIn[i].vel,filteredVels[i]) for i in range(len(pvsIn))]
     return filteredPVS
+
+def gaussianNoisePositions(agentPositions, mag, mu=0, sigma=1):
+    return agentPositions + mag*np.random.normal(scale=sigma, size=agentPositions.shape)

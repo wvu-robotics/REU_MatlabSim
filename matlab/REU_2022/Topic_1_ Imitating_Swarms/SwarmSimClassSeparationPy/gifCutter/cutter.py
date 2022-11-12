@@ -19,25 +19,32 @@ def get_avg_fps(PIL_Image_object):
     return None
 
 # I should probably take in as input
-cutter_filename = "MARS_Shooting_&_Moving.MOV" 
+filename = "MARS_Shooting_&_Moving.MOV" 
 
 maxFrames = 1000
+def cut(cutter_filename):
+    print(cutter_filename)
+    im = Image.open(cutter_filename)
 
-im = Image.open(cutter_filename)
+    out_filename = "cut"+cutter_filename
+    fps_in = get_avg_fps(im)
+    print("fps:",fps_in)
 
-out_filename = "cut"+cutter_filename
-fps_in = get_avg_fps(im)
-print("fps:",fps_in)
+    try:
+        frames = []
+        cv2Vid = cv2.VideoCapture(cutter_filename)
+        for i in range(maxFrames):
+            ret,frame = cv2Vid.read()
+            frame = cv2.cvtColor(frame,cv2.COLOR_RGB2BGR)
+            frames.append(frame)
 
-try:
-    frames = []
-    cv2Vid = cv2.VideoCapture(cutter_filename)
-    for i in range(maxFrames):
-        ret,frame = cv2Vid.read()
-        frame = cv2.cvtColor(frame,cv2.COLOR_RGB2BGR)
-        frames.append(frame)
+        imageio.mimsave(out_filename,frames,fps=fps_in)
 
-    imageio.mimsave(out_filename,frames,fps=fps_in)
+    except EOFError:
+        print("Not enough frames/can't read")
 
-except EOFError:
-    print("Not enough frames/can't read")
+names = ["fish"]
+
+for name in names:
+    cut(name + "_orig.gif")
+    cut(name + "_imit.gif")

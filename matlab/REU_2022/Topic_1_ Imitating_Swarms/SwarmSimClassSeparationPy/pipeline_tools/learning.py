@@ -129,7 +129,7 @@ def fitnessLinearReg(posVelSlices: list, params: SimParams, learning_soc_feature
         maxTrajError = params.enclosure_size*len(posVelSlices)*params.num_agents*0
 
         # as agentSlices goes up, penalty goes down
-        radPenalty = (len(agentSlices)/(len(posVelSlices) * params.num_agents)) * 1
+        radPenalty = (len(agentSlices)/(len(posVelSlices) * params.num_agents)) * 0 # let's run without for last run of results...
 
         return -loss/len(agentSlices) - radPenalty  # normalized between runs
     return fitness

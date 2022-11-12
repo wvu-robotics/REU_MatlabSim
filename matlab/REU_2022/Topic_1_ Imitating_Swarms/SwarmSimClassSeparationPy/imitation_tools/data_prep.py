@@ -94,8 +94,11 @@ def featuresFromPosVelSlice(slice,params:SimParams,social_features:dict,env_feat
             computed_social_features = {name:feature.compute(relevantPositions,relevantVelocities,agentPos,agentVel) for name,feature in social_features.items()}
 
         computed_env_features = {name:feature.compute(relevantPositions,relevantVelocities,agentPos,agentVel) for name,feature in env_features.items()}
+        
+        # hack, but needed to work atm
+        if len(env_features.values()) == 0:
+            computed_env_features = {"dummy":np.zeros(2)}
 
-    
         featureSlices.append(featureSlice(computed_social_features,computed_env_features,agentVel,agentNextVel,motion_constrained,boundary_constrained))
     return featureSlices
 
