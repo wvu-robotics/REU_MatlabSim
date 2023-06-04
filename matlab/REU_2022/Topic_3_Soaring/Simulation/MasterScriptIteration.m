@@ -10,37 +10,39 @@ simBatchCode = datestr(now,"yyyymmddHHMMSS");
 addpath("Code_of_Laws");
 addpath("Agent_Control_Functions");
 addpath("Find_Neighborhood_Functions");
-addpath("Misc");
 
-%% setup output folders
-%Output Media folder
-rootFolder = "Output_Media";
-if(~exist(rootFolder,'dir'))
-    mkdir(rootFolder);
+%% Setup output folders
+% Output Media folder
+outputFolderRoot = "../Output_Media";
+if(~exist(outputFolderRoot,'dir'))
+    mkdir(outputFolderRoot);
 end
 
-%Date folder
+% Date folder
 date = datestr(now,"mm-dd-yy");
-dateFolder = sprintf('%s/%s',rootFolder,date);
-if(~exist(dateFolder,'dir'))
-    mkdir(dateFolder);
+outputFolderDate = sprintf('%s/%s',outputFolderRoot,date);
+if(~exist(outputFolderDate,'dir'))
+    mkdir(outputFolderDate);
 end
 
-%Sim Batch folder
-simBatchFolder = sprintf('%s/SimBatch_%s',dateFolder,simBatchCode);
+% Sim Batch folder
+simBatchFolder = sprintf('%s/SimBatch_%s',outputFolderDate,simBatchCode);
 if(~exist(simBatchFolder,'dir'))
     mkdir(simBatchFolder);
 end
 
-%Mat files folder
+% Mat files folder
 matFilesFolder = sprintf('%s/MatFiles',simBatchFolder);
 if(~exist(matFilesFolder,'dir'))
     mkdir(matFilesFolder);
 end
 
-%% Set up input Excel sheet
-simLawExcel = "UnifiedLawIteration_2.xlsx";
+%% Choose sim law
+simLawExcel = "Law_40Survivors.xlsx";
 sheetNum = 1;
+
+%% Parse sim law Excel sheet
+fprintf("Parsing Excel sheet... ");
 RAW = readcell(simLawExcel,'Sheet',sheetNum);
 % Convert missing to NaN
 for i=1:size(RAW,1)
@@ -51,8 +53,6 @@ for i=1:size(RAW,1)
     end
 end
 
-%% Parse input Excel sheet
-fprintf("Reading Excel sheet.\n");
 varLabelColumn = 2;
 startingColumn = 3;
 startingRow = 1;
@@ -88,9 +88,10 @@ for row = startingRow:size(RAW,1)
         changedVariables(length(changedVariables)+1) = varLabel;
     end
 end
+fprintf("Done!\n");
 
 %% Prepare large SL with all iterations
-fprintf("Preparing SL for %d combinations.\n",combinations);
+fprintf("Preparing SL for %d combinations... ",combinations);
 SLIterations(1:combinations) = struct();
 repeat = 1;
 
@@ -112,8 +113,10 @@ for i=1:size(varLabels,1)
     end
     repeat = repeat * numValues;
 end
+fprintf("Done!\n");
 
-fprintf("Done. Ready to iterate over variables:\n");
+% Print variables to iterate
+fprintf("Ready to iterate over variables:\n");
 for i=1:length(changedVariables)
     fprintf(" - %s\n",changedVariables(i));
 end
@@ -121,14 +124,17 @@ end
 %% Iterate through simulations
 fprintf("Starting simulations for %g combination(s).\n",combinations);
 numSims = combinations;
-parfor sim = 1:numSims
+for sim = 1:numSims
     %% Run Simulation
     SL = SLIterations(sim);
     simNumber = sim;
     videoName = sprintf('%s/%d_SimRender.avi',simBatchFolder,simNumber);
     outputData = MainScriptFunction(SL, simNumber, videoName);
-    bigOutputData(sim) = outputData;
+    % Store simulation output in big struct array
+    % Not preallocated because MainScriptFunction determines struct headers
+    bigOutputData(sim) = outputData; %#ok<SAGROW> 
     fprintf("Finished sim %d.\n",simNumber);
+    
     %% Save sim outputData to .mat file
     outputDataName = sprintf("%s/%d_OutputData.mat",matFilesFolder,simNumber);
     Utility.parSave(outputDataName,outputData);
@@ -136,18 +142,10 @@ end
 
 fprintf("Finished simulations.\n");
 
-%% Save data to Excel sheet
-outputStructCode = sprintf('%s/%s_%s.mat',simBatchFolder,'%s',simBatchCode);
-outputExcelName = sprintf('%s/SimData_%s.xlsx',simBatchFolder,simBatchCode);
-outputVariables = ["simNumber";"rngSeed";"timeStart";"timeEnd";"surviving";"collisionDeaths";"groundDeaths";"flightTime";"heightScore";"explorationPercent";"thermalUseScore";"finalHeightMax";"finalHeightMin";"finalHeightAvg"];
-Utility.notifyACP();
-Utility.generateOutputStruct(outputStructCode,matFilesFolder,changedVariables,outputVariables);
-%Utility.generateOutputExcelSheet(outputExcelName,matFilesFolder,RAW,changedVariables,outputVariables);
+%% Combine all output data into single file
+fprintf("Combining files... ");
+Utility.combineMatFiles(matFilesFolder, changedVariables, simBatchCode);
 fprintf("Done!\n");
 
-%% microwave
-microwave = false;
-if(microwave)
-    [y,Fs] = audioread("microwave.mp3");
-    sound(y,Fs)
-end
+%% Finished simulation
+fprintf("Done!\n");

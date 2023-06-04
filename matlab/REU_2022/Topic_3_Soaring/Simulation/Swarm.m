@@ -10,6 +10,8 @@ classdef Swarm < handle
         thermalMap
         simFig
         video
+        ax
+        colorbars
         
         lineCircle = NaN
         lineNeighbors = NaN
@@ -256,7 +258,7 @@ classdef Swarm < handle
                         posY = thisPos(2);
                         posZ = thisPos(3);
                         textPos = sprintf("X: %+4.0fm\nY: %+4.0fm\nY: %+4.0fm\n",posX,posY,posZ);
-                        heading = currentAgent.heading;
+                        % heading = currentAgent.heading;
                         headingDeg = mod(currentAgent.heading*180/pi,360);
                         bankAngle = currentAgent.bankAngle*180/pi;
                         textAng = sprintf("Heading: %3.0fdeg\nBank: %+2.0fdeg\n",headingDeg,bankAngle);
@@ -396,8 +398,11 @@ classdef Swarm < handle
             obj.thermalMap.renderThermals();
             obj.renderAgents();
 
-            ax = gca;
-            ax.Position = [0.2 0.1 0.8 0.8];
+            if(SL.showText)
+                obj.ax(1).Position = [0.2 0.15 0.7 0.7];
+            else
+                obj.ax(1).Position = [0.1 0.1 0.8 0.8];
+            end
             if SL.followAgent
                  xlim([obj.agents(obj.thisAgent).position(1) - SL.followRadius, obj.agents(obj.thisAgent).position(1) + SL.followRadius]);
                  ylim([obj.agents(obj.thisAgent).position(2) - SL.followRadius, obj.agents(obj.thisAgent).position(2) + SL.followRadius]);
@@ -405,8 +410,16 @@ classdef Swarm < handle
                 xlim(SL.mapSize);
                 ylim(SL.mapSize);
             end
-            ax.PositionConstraint = 'outerposition';
-            currFrame = getframe(obj.simFig);
+            obj.ax(1).PositionConstraint = 'outerposition';
+            
+            linkprop(obj.ax, {'XLim', 'YLim', 'ZLim', 'Position', 'View'});
+            obj.colorbars(2).Position(2:4) = obj.colorbars(1).Position(2:4);
+            if(SL.resolutionDPI == -1)
+                currFrame = getframe(obj.simFig);
+            else
+                cdata = print(obj.simFig,'-RGBImage',sprintf("-r%g",SL.resolutionDPI));
+                currFrame = im2frame(cdata);
+            end
             writeVideo(obj.video,currFrame);
             pause(0.0001);
             hold off
@@ -421,19 +434,62 @@ classdef Swarm < handle
             open(obj.video);
             obj.simFig = figure('Visible',SL.Show);
             obj.simFig.Position = [0 0 1024 768];
+            if(~isfield(SL,"resolutionDPI") || isnan(SL.resolutionDPI))
+                SL.resolutionDPI = -1;
+            end
             % Initialize map background
             clf
             xlim(SL.mapSize);
             ylim(SL.mapSize);
             daspect([1 1 1]);
-            colorbar;
+            
+            axa = gca;
+            axa(2) = copyobj(axa, axa.Parent);
+            linkprop(axa, {'XLim', 'YLim', 'ZLim', 'Position', 'View'});
+            set(axa(2), 'Color', 'None', 'XColor', 'none', 'YColor', 'none', 'ZColor', 'none');
+            
+            c(1) = colorbar(axa(1));
+            c(1).Location = 'eastoutside';
             cbLimits = [-1,SL.thermalStrengthMax];
-            colors = [6 42 127; 41 76 247; 102 59 231; 162 41 216; 222 24 200; 255 192 203] / 255;
-            x = [0:obj.thermalMap.thermalPixels/(length(colors)-1):obj.thermalMap.thermalPixels];
-            map = interp1(x/obj.thermalMap.thermalPixels,colors,linspace(0,1,obj.thermalMap.thermalPixels)); % Creates a color gradient for the map
-            colormap();%map);
-            set(gca,'clim',cbLimits);
-
+            % colors = [6 42 127; 41 76 247; 102 59 231; 162 41 216; 222 24 200; 255 192 203] / 255;
+            % x = 0:obj.thermalMap.thermalPixels/(length(colors)-1):obj.thermalMap.thermalPixels;
+            % map = interp1(x/obj.thermalMap.thermalPixels,colors,linspace(0,1,obj.thermalMap.thermalPixels)); % Creates a color gradient for the map
+            colormap(); %map);
+            set(axa(1),'clim',cbLimits);
+            axa(1).FontSize = 12;
+            c(1).FontSize = 12;
+            c(1).Title.String = "Updraft Speed [m/s]";
+            c(1).Title.Rotation = 90;
+            c(1).Title.HorizontalAlignment = 'center';
+            c(1).Title.VerticalAlignment = 'middle';
+            c(1).Title.Units = 'normalized';
+            c(1).Title.Position = [2.4, 0.5, 0];
+            c(1).Title.FontSize = 12;
+            c(1).Title.FontName = "Arial";
+            c(1).Title.Color = [0.1,0.1,0.1];
+            
+            c(2) = colorbar(axa(2));
+            c(2).Location = 'eastoutside';
+            set(axa(2),'clim',[SL.agentFloor,SL.agentCeiling]);
+            %c(2).Ticks = [SL.agentFloor:500:(SL.agentCeiling-500),SL.agentCeiling];
+            c(2).Ticks = SL.agentFloor:(SL.agentCeiling-SL.agentFloor)/5:SL.agentCeiling;
+            c(2).TickLabels = {c(2).Ticks};
+            set(axa(2),'Colormap',hsv2rgb([(0:0.8/255:0.8)',ones(256,2)]));
+            c(2).Position(1) = 0.91;
+            c(2).FontSize = 12;
+            c(2).Title.String = "Agent Height [m]";
+            c(2).Title.Rotation = 90;
+            c(2).Title.HorizontalAlignment = 'center';
+            c(2).Title.VerticalAlignment = 'middle';
+            c(2).Title.Units = 'normalized';
+            c(2).Title.Position = [3.6, 0.5, 0];
+            c(2).Title.FontSize = 12;
+            c(2).Title.FontName = "Arial";
+            c(2).Title.Color = [0.1,0.1,0.1];
+            
+            obj.ax = axa;
+            obj.colorbars = c;
+            obj.simLaw = SL;
         end
         
         % Close Video

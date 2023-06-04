@@ -203,27 +203,6 @@ classdef Utility
             fprintf("Done!\n");
         end
         
-        %% Send notification to ACP via pushover
-        function notifyACP()
-            url = "https://api.pushover.net/1/messages.json";
-            appToken = "a5q8yhpz3t9c7pzzmrmzczpejcyozy";
-            ACPToken = "uti2e2jd1jhtujgbtnaaop95rubtmq";
-            message = "Simulation Complete.";
-            success = false;
-            for i=1:10
-                if(success)
-                    break
-                else
-                    try
-                        webwrite(url,'token',appToken,'user',ACPToken,'message',message); 
-                        success = true;
-                    catch
-                        success = false;
-                    end
-                end
-            end
-        end
-        
         %% Clean .mat files of certain parameters
         function cleanMatFiles(matFilesFolder,badParameters)
             fileSearch = sprintf("%s/*.mat",matFilesFolder);
@@ -254,8 +233,9 @@ classdef Utility
         end
         
         %% Combine .mat files with certain parameters
-        function combineMatFiles(matFilesFolder,SLparameters)
+        function combineMatFiles(matFilesFolder,SLparameters,simBatchCode)
             %{
+            % Some common values for SLparameters used in testing
             SLparameters = ["cohesion","heightFactorPower","cohesionAscensionIgnore","cohesionAscensionMax","ascensionFactorPower","separation","alignment"];
             SLparameters = ["cohesion","cohesionAscensionIgnore","cohPower","separation","alignment","k"];
             SLparameters = ["cohesion","separation","alignment","cohPower","separationHeightWidth","alignmentHeightWidth"];
@@ -266,20 +246,29 @@ classdef Utility
             dirData = dir(fileSearch);
             numFiles = size(dirData,1);
             fileNames = {dirData.name};
+            
+            % Load first .mat file to scrap output data fields
             firstFileName = sprintf('%s/%s',matFilesFolder,fileNames{1});
             firstFileIn = load(firstFileName);
-            fields = fieldnames(firstFileIn);
-            fields(find(contains(fields,'SL'))) = [];
+            
+            % Scrap output data fields
+            outputFields = fieldnames(firstFileIn);
+            outputFields(contains(outputFields,'SL')) = [];
+
+            % Remove output data fields already marked in SLparameters
+            outputFields(contains(outputFields,SLparameters)) = [];
 
             for i=1:length(SLparameters)
                 combinedData.(SLparameters(i)) = [];
             end
-            for i=1:length(fields)
-                combinedData.(fields{i}) = [];
+            for i=1:length(outputFields)
+                combinedData.(outputFields{i}) = [];
             end
             
+            % Iterate through .mat files
             for fileIndex=numFiles:-1:1
                 if(mod(fileIndex,100)==0)
+                    % Print fileIndex every 100 files
                     fprintf("fileIndex: %d\n",fileIndex);
                 end
                 fileName = sprintf('%s/%s',matFilesFolder,fileNames{fileIndex});
@@ -291,15 +280,15 @@ classdef Utility
                     end
                     combinedData.(SLparameters(i)) = [combinedData.(SLparameters(i)),newVal];
                 end
-                for i=1:length(fields)
-                    newVal = fileIn.(fields{i});
+                for i=1:length(outputFields)
+                    newVal = fileIn.(outputFields{i});
                     if(class(newVal) == "char")
                         newVal = string(newVal);
                     end
-                    combinedData.(fields{i}) = [combinedData.(fields{i}),newVal];
+                    combinedData.(outputFields{i}) = [combinedData.(outputFields{i}),newVal];
                 end
             end
-            fileName = sprintf('%s/../%s',matFilesFolder,"CombinedData.mat");
+            fileName = sprintf('%s/../%s_%s.mat',matFilesFolder,"CombinedData",simBatchCode);
             save(fileName,'-struct','combinedData');
         end
         
