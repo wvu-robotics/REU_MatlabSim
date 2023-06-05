@@ -89,6 +89,7 @@ function outputData = MainScriptFunction(SL, simNumber, videoName)
     outputData.rngSeed = SL.rngSeed;
     outputData.timeEnd = datestr(now,"HH:MM:SS");
     outputData.surviving = swarm.Living;
+    outputData.survivingPercent = swarm.Living / SL.numAgents;
     outputData.collisionDeaths = swarm.collisionDeaths;
     outputData.groundDeaths = swarm.groundDeaths;
     outputData.flightTime = swarm.flightTime;

@@ -38,7 +38,7 @@ if(~exist(matFilesFolder,'dir'))
 end
 
 %% Choose sim law
-simLawExcel = "Law_40Survivors.xlsx";
+simLawExcel = "Law_Megarun6Example.xlsx";
 sheetNum = 1;
 
 %% Parse sim law Excel sheet
