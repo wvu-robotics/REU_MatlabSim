@@ -3,6 +3,10 @@ close all;
 clear;
 clc;
 
+%% Choose sim law
+simLawExcel = "Law_40SurvivorsExample.xlsx";
+sheetNum = 1;
+
 %% Generate unique code for simulation batch, from date
 simBatchCode = datestr(now,"yyyymmddHHMMSS");
 
@@ -36,10 +40,6 @@ matFilesFolder = sprintf('%s/MatFiles',simBatchFolder);
 if(~exist(matFilesFolder,'dir'))
     mkdir(matFilesFolder);
 end
-
-%% Choose sim law
-simLawExcel = "Law_Megarun6Example.xlsx";
-sheetNum = 1;
 
 %% Parse sim law Excel sheet
 fprintf("Parsing Excel sheet... ");
@@ -116,10 +116,15 @@ end
 fprintf("Done!\n");
 
 % Print variables to iterate
-fprintf("Ready to iterate over variables:\n");
-for i=1:length(changedVariables)
-    fprintf(" - %s\n",changedVariables(i));
+if(~isempty(changedVariables))
+    fprintf("Ready to iterate over variables:\n");
+    for i=1:length(changedVariables)
+        fprintf(" - %s\n",changedVariables(i));
+    end
+else
+    fprintf("No variables to iterate over.\n");
 end
+
 
 %% Iterate through simulations
 fprintf("Starting simulations for %g combination(s).\n",combinations);
