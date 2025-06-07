@@ -1,0 +1,22 @@
+Values of Chosen Target Sim @ Index 23318
+cohesion = 1000
+separation = 0.3
+alignment = 0.001
+cohPower = 0
+migration = 1e-21
+numThermals = 9
+numAgents = 40
+rngSeed = 2
+funcName_agentControl = agentControl_Unified
+
+Output Metrics of Chosen Target Sim @ Index 23318
+surviving = 40
+collisionDeaths = 0
+groundDeaths = 0
+flightTime = 288000
+heightScore = 5.5318e+08
+explorationPercent = 67
+thermalUseScore = 56708
+finalHeightMax = 2271.22
+finalHeightMin = 752.903
+finalHeightAvg = 2001.57
