@@ -2,14 +2,14 @@
 
 ## Basic Description
 
-As described in the [Simulation](/Simulation/README.md) section, the results of this project were gathered by running large numbers of simulations in batches, called "megaruns". Over the course of this project, 7 megaruns were executed, totaling over 140,000 individual simulations. This immense computation was made possible by distributing the work across 160 threads on the West Virginia University Robotics server cluster computer.
+As described in the [Simulation](../Simulation/README.md) section, the results of this project were gathered by running large numbers of simulations in batches, called "megaruns". Over the course of this project, 7 megaruns were executed, totaling over 140,000 individual simulations. This immense computation was made possible by distributing the work across 160 threads on the West Virginia University Robotics server cluster computer.
 
 While the first megarun's results are not included (due to being based on deprecated simulation structure), the results of megaruns 2-7 are organized as follows:
-- [Megaruns 2-3](/Megaruns/Megarun_2-3/)
-- [Megarun 4](/Megaruns/Megarun_4/)
-- [Megarun 5](/Megaruns/Megarun_5/)
-- [Megarun 6](/Megaruns/Megarun_6/)
-- [Megarun 7](/Megaruns/Megarun_7/)
+- [Megaruns 2-3](/Megarun_2-3/)
+- [Megarun 4](/Megarun_4/)
+- [Megarun 5](/Megarun_5/)
+- [Megarun 6](/Megarun_6/)
+- [Megarun 7](/Megarun_7/)
 
 ## Folder Structure
 The purpose of each megarun folder is to archive the megarun simulation batch it represents. Each folder will contain the following 2 files:
