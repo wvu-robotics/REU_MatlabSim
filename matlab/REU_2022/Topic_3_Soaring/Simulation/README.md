@@ -111,7 +111,7 @@ While the current simulation infrastructure leaves many results to be generated 
 
 ### Adding New Agent Controllers or Find Neighborhood Functions
 
-Beyond editing simulation parameters, the easiest change to make is adding new agent controllers or new find neighborhood functions. To add a new version of either of these, it is recommended to go to their respective folders, [Simulation/Agent_Control_Functions](/Agent_Control_Functions/) and [Simulation/Find_Neighborhood_Functions](/Find_Neighborhood_Functions/), and to copy an existing function to preserve function syntax. Give your new function a unique name, edit the function, and use the function's name as a parameter in your "law" file. The respective paremeters are "funcName_agentControl" and "funcName_findNeighborhood".
+Beyond editing simulation parameters, the easiest change to make is adding new agent controllers or new find neighborhood functions. To add a new version of either of these, it is recommended to go to their respective folders, [Simulation/Agent_Control_Functions](Agent_Control_Functions/) and [Simulation/Find_Neighborhood_Functions](Find_Neighborhood_Functions/), and to copy an existing function to preserve function syntax. Give your new function a unique name, edit the function, and use the function's name as a parameter in your "law" file. The respective paremeters are "funcName_agentControl" and "funcName_findNeighborhood".
 
 ### Adding Other Features and Parameters
 
